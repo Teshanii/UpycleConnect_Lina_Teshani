@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Langues</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { display: flex; min-height: 100vh; background-color: #f8f9fa; }
+        .sidebar { width: 250px; background: #343a40; color: white; padding: 20px; }
+        .sidebar a { color: white; text-decoration: none; display: block; padding: 10px; border-radius: 5px; }
+        .sidebar a:hover, .sidebar a.active { background: #495057; }
+        .content { flex: 1; padding: 30px; }
+        .card { padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h3>UpcycleConnect</h3>
+        <hr>
+        <a href="index.html">Tableau de bord</a>
+        <a href="utilisateurs.html">Utilisateurs</a>
+        <a href="categories.html">Catégories</a>
+        <a href="prestations.html">Prestations</a>
+        <a href="evenements.html">Événements</a>
+        <a href="annonces.html">Annonces</a>
+        <a href="box.html">Box / Conteneurs</a>
+        <a href="messages.html">Forum</a>
+        <a href="finance.html">Finance</a>
+        <a href="langues.html" class="active">Langues</a>
+    </div>
+
+    <div class="content">
+        <h2 class="mb-4">Gestion des Langues</h2>
+        <div class="card mb-4">
+            <h5>Ajouter une langue</h5>
+            <form id="f-lang">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" id="code" class="form-control" placeholder="Code ISO (ex: fr, en, es)" maxlength="2" required>
+                    </div>
+                    <div class="col-md-8">
+                        <input type="text" id="nom" class="form-control" placeholder="Nom complet (ex: Espagnol)" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Ajouter la langue</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Code ISO</th>
+                        <th>Nom de la langue</th>
+                    </tr>
+                </thead>
+                <tbody id="corps"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API = "http://localhost:8080/api/langues";
+
+        async function load() {
+            const res = await fetch(API);
+            const data = await res.json();
+            const tbody = document.getElementById("corps");
+            tbody.innerHTML = "";
+
+            if (data) {
+                data.forEach(l => {
+                    tbody.innerHTML += `<tr>
+                        <td><strong>${l.code.toUpperCase()}</strong></td>
+                        <td>${l.nom}</td>
+                    </tr>`;
+                });
+            }
+        }
+
+        document.getElementById("f-lang").onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                code: document.getElementById("code").value.toLowerCase(),
+                nom: document.getElementById("nom").value
+            };
+            await fetch(API, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            e.target.reset();
+            load();
+        };
+
+        load();
+    </script>
+</body>
+</html>

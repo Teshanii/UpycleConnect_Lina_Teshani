@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Gestion de Forum</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { display: flex; min-height: 100vh; background-color: #f8f9fa; }
+        .sidebar { width: 250px; background: #343a40; color: white; padding: 20px; }
+        .sidebar a { color: white; text-decoration: none; display: block; padding: 10px; border-radius: 5px; }
+        .sidebar a:hover, .sidebar a.active { background: #495057; }
+        .content { flex: 1; padding: 30px; }
+        .card { padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h3>UpcycleConnect</h3>
+        <hr>
+        <a href="index.html">Tableau de bord</a>
+        <a href="utilisateurs.html">Utilisateurs</a>
+        <a href="categories.html">Catégories</a>
+        <a href="prestations.html">Prestations</a>
+        <a href="evenements.html">Événements</a>
+        <a href="annonces.html">Annonces</a>
+        <a href="box.html">Box / Conteneurs</a>
+        <a href="messages.html" class="active">Forum</a>
+        <a href="finance.html">Finance</a>
+        <a href="langues.html">Langues</a>
+    </div>
+
+    <div class="content">
+        <h2 class="mb-4">Gestion des messages</h2>
+        <div class="card">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Auteur</th>
+                        <th>Message</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="corps"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API = "http://localhost:8080/api/messages";
+
+        async function load() {
+            const res = await fetch(API);
+            const data = await res.json();
+            const tbody = document.getElementById("corps");
+            tbody.innerHTML = "";
+
+            if (data) {
+                data.forEach(m => {
+                    const statut = m.est_modere === 1 ? '<span class="text-danger">Modéré</span>' : '<span class="text-success"> Visible</span>';
+                    const btnMod = m.est_modere === 0 ? `<button class="btn btn-warning btn-sm" onclick="moderer(${m.id})">Modérer</button>` : "";
+
+                    tbody.innerHTML += `<tr>
+                        <td>${m.auteur}</td>
+                        <td>${m.contenu}</td>
+                        <td>${statut}</td>
+                        <td>
+                            ${btnMod}
+                            <button class="btn btn-danger btn-sm" onclick="del(${m.id})">Supprimer</button>
+                        </td>
+                    </tr>`;
+                });
+            }
+        }
+
+        async function moderer(id) {
+            if(confirm("Masquer ce message du forum ?")) {
+                await fetch(`${API}/${id}`, { method: 'PUT' });
+                load();
+            }
+        }
+
+        async function del(id) {
+            if(confirm("Supprimer définitivement ce message ?")) {
+                await fetch(`${API}/${id}`, { method: 'DELETE' });
+                load();
+            }
+        }
+
+        load();
+    </script>
+</body>
+</html>
