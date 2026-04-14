@@ -1,14 +1,18 @@
 package main
 
+// --- UTILISATEURS & SECURITE ---
 type User struct {
-	Id      int    `json:"id"`
-	Nom     string `json:"nom"`
-	Pre     string `json:"pre"`
-	Mail    string `json:"mail"`
-	Mdp     string `json:"mdp"`
-	IdRole  int    `json:"id_role"`
-	Role    string `json:"role"`
-	EstActif int   `json:"est_actif"` 
+	Id             int    `json:"id"`
+	Nom            string `json:"nom"`
+	Pre            string `json:"pre"`
+	Mail           string `json:"mail"`
+	Mdp            string `json:"mdp"`
+	IdRole         int    `json:"id_role"`
+	Role           string `json:"role"`
+	EstActif       int    `json:"est_actif"`
+	EstVerifie 	   int    `json:"est_verifie"`
+	ScoreUpcycling int    `json:"score_upcycling"` // Suivi impact citoyen 
+	OneSignalId    string `json:"onesignal_id"`    // Pour les notifs push
 }
 
 type Role struct {
@@ -16,67 +20,75 @@ type Role struct {
 	Lib string `json:"lib"`
 }
 
+// --- RÉFÉRENTIEL & INTERNATIONALISATION ---
 type Categories struct {
 	Id  int    `json:"id"`
-	Nom string `json:"nom"`
+	Nom string `json:"nom"` // Code technique (ex: BOIS) 
 }
 
+type Langue struct {
+	Id   int    `json:"id"`
+	Code string `json:"code"` 
+	Nom  string `json:"nom"`
+}
+
+// --- MÉTIER : PRESTATIONS & ÉVÉNEMENTS ---
 type Prestations struct {
-	Id    int     `json:"id"`
-	Nom   string  `json:"nom"`
-	Prix  float64 `json:"prix"`
-	Desc  string  `json:"desc"`
+	Id   int     `json:"id"`
+	Nom  string  `json:"nom"`
+	Prix float64 `json:"prix"`
+	Desc string  `json:"desc"` // Description du service 
 }
 
 type Evenements struct {
 	Id               int     `json:"id"`
 	Titre            string  `json:"titre"`
 	Date             string  `json:"date"`
-	Prix             float64 `json:"prix"`
+	Prix             float64 `json:"prix"` // Entre 20€ et 100€ 
 	Place            int     `json:"place"`
 	IdAnim           int     `json:"id_anim"`
 	Anim             string  `json:"anim"`
-	StatutValidation int     `json:"statut_validation"` 
+	StatutValidation int     `json:"statut_validation"` // 0=Attente, 1=Validé 
 }
 
-
-type Langue struct {
-	Id   int    `json:"id"`
-	Code string `json:"code"`
-	Nom  string `json:"nom"`
-}
-
-
+// --- LOGISTIQUE : BOX & ANNONCES ---
 type Box struct {
 	Id          int    `json:"id"`
 	Adresse     string `json:"adresse"`
-	CapaciteMax int    `json:"capacite_max"`
+	CapaciteMax int    `json:"capacite_max"` 
 }
 
 type Annonce struct {
 	Id               int    `json:"id"`
 	Titre            string `json:"titre"`
-	StatutValidation int    `json:"statut_validation"`
+	Description      string `json:"description"`       // Pour la modal de détail
+	TypeOffre        string `json:"type_offre"`        // "Don" ou "Vente" 
+	Categorie        string `json:"categorie"`         // ex: "Bois"
+	StatutValidation int    `json:"statut_validation"` 
 	Auteur           string `json:"auteur"`
 }
 
+// --- COMMUNAUTÉ ---
 type ForumMessage struct {
 	Id        int    `json:"id"`
 	Contenu   string `json:"contenu"`
 	Auteur    string `json:"auteur"`
-	EstModere int    `json:"est_modere"`
+	Date      string `json:"date"`       // Pour le suivi chronologique
+	EstModere int    `json:"est_modere"` 
 }
 
+// --- FINANCES (STRIPE) ---
 type Transaction struct {
-	Id      int     `json:"id"`
-	Montant float64 `json:"montant"`
-	Type    string  `json:"type"`
-	Date    string  `json:"date"`
-	Libelle string  `json:"libelle"`
+	Id        int     `json:"id"`
+	Montant   float64 `json:"montant"`
+	RefStripe string  `json:"ref_stripe"` 
+	Statut    string  `json:"statut"`     // succeeded, pending...
+	Type      string  `json:"type"`       // "abonnement", "formation", "commission" 
+	Date      string  `json:"date"`
 }
 
 type TypeAbonnement struct {
 	Id   int     `json:"id"`
-	Nom  string  `json:"nom"`
+	Nom  string  `json:"nom"` 
 	Prix float64 `json:"prix"`
 }

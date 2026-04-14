@@ -1,0 +1,41 @@
+/* Couleurs du projet UpcycleConnect */
+:root {
+    --primary-green: #2E6B3F;   /* Vert Logo/Action */
+    --accent-beige: #AF9164;    /* Beige/Or Accents */
+    --bg-light: #F6F6F8;        /* Fond clair */
+    --text-main: #505F79;       /* Gris/Bleu Texte */
+}
+
+body {
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card {
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.btn-primary-upcycle {
+    background-color: var(--primary-green);
+    color: white;
+    border: none;
+    transition: 0.3s;
+}
+
+.btn-primary-upcycle:hover {
+    background-color: #245431;
+    color: white;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary-green) !important;
+    border-bottom: 3px solid var(--primary-green) !important;
+}
+
+.captcha-box {
+    background-color: #f1f3f5;
+    border-left: 5px solid var(--accent-beige);
+    padding: 15px;
+}

@@ -50,6 +50,11 @@ func main() {
 	
 	mux.HandleFunc("PUT /api/evenements/valider/{id}", handleValidation)
 
+	mux.HandleFunc("POST /api/register", handleRegister)
+	mux.HandleFunc("POST /api/login", handleLogin)
+
+	mux.HandleFunc("PUT /api/verify/{token}", handleVerify)
+
 	fmt.Println("Serveur pret sur http://localhost:8080")
 	
 	http.ListenAndServe(":8080", middlewareCORS(mux))
