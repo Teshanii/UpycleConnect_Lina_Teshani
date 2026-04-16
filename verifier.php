@@ -3,7 +3,7 @@ $token = $_GET['token'] ?? '';
 
 if ($token) {
     // On appelle notre API Go via CURL (comme pour l'inscription)
-    $ch = curl_init("http://localhost:8080/api/verify/" . $token);
+    $ch = curl_init('http://upcycle_api:8080/api/register');
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_exec($ch);

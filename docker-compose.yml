@@ -1,0 +1,53 @@
+services:
+
+  # La base de donnees MySQL qui stocke tout
+  database:
+    image: mysql:8.0
+    container_name: upcycle_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: upcycle_connect
+    volumes:
+      - data_db:/var/lib/mysql
+      - ./api_backend/database.sql:/docker-entrypoint-initdb.d/database.sql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - net_upcycle
+
+  # L'API Go qui gère toute la logique
+  api:
+    build:
+      context: .
+      dockerfile: ./api_backend/dockerfile
+    container_name: upcycle_api
+    ports:
+      - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - net_upcycle
+
+  # PHP Apache qui sert les pages PHP du front
+  web:
+    image: php:8.2-apache
+    container_name: upcycle_web
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - api
+    networks:
+      - net_upcycle
+
+networks:
+  net_upcycle:
+    driver: bridge
+
+volumes:
+  data_db:

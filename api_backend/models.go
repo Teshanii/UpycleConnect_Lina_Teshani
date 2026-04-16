@@ -10,8 +10,8 @@ type User struct {
 	IdRole         int    `json:"id_role"`
 	Role           string `json:"role"`
 	EstActif       int    `json:"est_actif"`
-	EstVerifie 	   int    `json:"est_verifie"`
-	ScoreUpcycling int    `json:"score_upcycling"` // Suivi impact citoyen 
+	EstVerifie     int    `json:"est_verifie"`
+	ScoreUpcycling int    `json:"score_upcycling"` // Suivi impact citoyen
 	OneSignalId    string `json:"onesignal_id"`    // Pour les notifs push
 }
 
@@ -23,12 +23,12 @@ type Role struct {
 // --- RÉFÉRENTIEL & INTERNATIONALISATION ---
 type Categories struct {
 	Id  int    `json:"id"`
-	Nom string `json:"nom"` // Code technique (ex: BOIS) 
+	Nom string `json:"nom"` // Code technique (ex: BOIS)
 }
 
 type Langue struct {
 	Id   int    `json:"id"`
-	Code string `json:"code"` 
+	Code string `json:"code"`
 	Nom  string `json:"nom"`
 }
 
@@ -37,35 +37,38 @@ type Prestations struct {
 	Id   int     `json:"id"`
 	Nom  string  `json:"nom"`
 	Prix float64 `json:"prix"`
-	Desc string  `json:"desc"` // Description du service 
+	Desc string  `json:"desc"` // Description du service
 }
 
 type Evenements struct {
 	Id               int     `json:"id"`
 	Titre            string  `json:"titre"`
 	Date             string  `json:"date"`
-	Prix             float64 `json:"prix"` // Entre 20€ et 100€ 
+	Prix             float64 `json:"prix"` // Entre 20€ et 100€
 	Place            int     `json:"place"`
 	IdAnim           int     `json:"id_anim"`
 	Anim             string  `json:"anim"`
-	StatutValidation int     `json:"statut_validation"` // 0=Attente, 1=Validé 
+	StatutValidation int     `json:"statut_validation"` // 0=Attente, 1=Validé
 }
 
 // --- LOGISTIQUE : BOX & ANNONCES ---
 type Box struct {
 	Id          int    `json:"id"`
 	Adresse     string `json:"adresse"`
-	CapaciteMax int    `json:"capacite_max"` 
+	CapaciteMax int    `json:"capacite_max"`
 }
 
 type Annonce struct {
-	Id               int    `json:"id"`
-	Titre            string `json:"titre"`
-	Description      string `json:"description"`       // Pour la modal de détail
-	TypeOffre        string `json:"type_offre"`        // "Don" ou "Vente" 
-	Categorie        string `json:"categorie"`         // ex: "Bois"
-	StatutValidation int    `json:"statut_validation"` 
-	Auteur           string `json:"auteur"`
+	Id               int     `json:"id"`
+	Titre            string  `json:"titre"`
+	Description      string  `json:"description"`
+	TypeOffre        string  `json:"type_offre"`
+	Categorie        string  `json:"categorie"`
+	StatutValidation int     `json:"statut_validation"`
+	Auteur           string  `json:"auteur"`
+	IdUser           int     `json:"id_user"`
+	Prix             float64 `json:"prix"`
+	StatutAnnonce    string  `json:"statut_annonce"`
 }
 
 // --- COMMUNAUTÉ ---
@@ -73,22 +76,48 @@ type ForumMessage struct {
 	Id        int    `json:"id"`
 	Contenu   string `json:"contenu"`
 	Auteur    string `json:"auteur"`
-	Date      string `json:"date"`       // Pour le suivi chronologique
-	EstModere int    `json:"est_modere"` 
+	Date      string `json:"date"` // Pour le suivi chronologique
+	EstModere int    `json:"est_modere"`
 }
 
 // --- FINANCES (STRIPE) ---
 type Transaction struct {
 	Id        int     `json:"id"`
 	Montant   float64 `json:"montant"`
-	RefStripe string  `json:"ref_stripe"` 
-	Statut    string  `json:"statut"`     // succeeded, pending...
-	Type      string  `json:"type"`       // "abonnement", "formation", "commission" 
+	RefStripe string  `json:"ref_stripe"`
+	Statut    string  `json:"statut"` // succeeded, pending...
+	Type      string  `json:"type"`   // "abonnement", "formation", "commission"
 	Date      string  `json:"date"`
 }
 
 type TypeAbonnement struct {
 	Id   int     `json:"id"`
-	Nom  string  `json:"nom"` 
+	Nom  string  `json:"nom"`
 	Prix float64 `json:"prix"`
+}
+
+// --- DEMANDES DE BOX ---
+type DemandeBox struct {
+	Id          int    `json:"id"`
+	IdUser      int    `json:"id_user"`
+	Description string `json:"description"`
+	Statut      string `json:"statut"`
+}
+
+// --- INSCRIPTIONS ---
+type Inscription struct {
+	Id      int     `json:"id"`
+	IdUser  int     `json:"id_user"`
+	IdEvent int     `json:"id_event"`
+	Titre   string  `json:"titre"`
+	Date    string  `json:"date"`
+	Prix    float64 `json:"prix"`
+}
+
+type ArticleConseil struct {
+	Id      int    `json:"id"`
+	Titre   string `json:"titre"`
+	Contenu string `json:"contenu"`
+	Type    string `json:"type"`
+	Date    string `json:"date"`
 }

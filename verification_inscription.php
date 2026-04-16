@@ -17,7 +17,7 @@ $data = [
 ];
 
 // 3. Appel de l'API Go via CURL (Couplage demandé) 
-$ch = curl_init('http://localhost:8080/api/register');
+$ch = curl_init('http://upcycle_api:8080/api/register');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
@@ -29,9 +29,9 @@ curl_close($ch);
 // 4. Gestion de la réponse de Go
 if ($httpCode === 201) {
     header('Location: connexion.php?success=registered');
-} else {
+}  else {
     $resData = json_decode($response, true);
-    $error = $resData['error'] ?? "Erreur lors de l'inscription";
+    $error = $resData['error'] ?? "Erreur lors de l'inscription (code: $httpCode - $response)";
     header('Location: inscription.php?error=' . urlencode($error));
 }
 exit;

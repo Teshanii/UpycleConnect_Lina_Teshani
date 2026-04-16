@@ -1,0 +1,29 @@
+    # == ETAPE 1 (multi-stage) : On compile le code Go ==
+# On prend une image Go pour pouvoir compiler
+FROM golang:1.25 AS builder
+
+# Notre dossier de travail dans le conteneur
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+COPY api_backend/ .
+
+# On compile : ca transforme notre code en un fichier executable "main"
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+
+# == ETAPE 2 (multi-stage) : Image finale legere ==
+# On utilise Alpine (mini Linux ~5MB) au lieu de garder l'image Go (~800MB)
+# C'est ca le principe du multi-stage : on garde juste l'essentiel
+FROM alpine:latest
+
+WORKDIR /app
+
+# On recupere juste le fichier "main" compilé depuis l'etape 1
+COPY --from=builder /app/main .
+
+# Notre API tourne sur le port 8080
+EXPOSE 8080
+
+# On lance l'API
+CMD ["./main"]

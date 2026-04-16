@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 
@@ -38,7 +39,7 @@ func handleUsers(w http.ResponseWriter, r *http.Request) {
 			SELECT u.id_user, u.nom, u.prenom, u.email, u.est_actif, r.libelle_role, u.id_role, u.score_upcycling, u.onesignal_player_id, u.est_verifie 
 			FROM utilisateurs u 
 			JOIN roles r ON u.id_role = r.id_role`)
-		
+
 		if err != nil {
 			http.Error(w, "Erreur SQL lors de la lecture", http.StatusInternalServerError)
 			return
@@ -67,8 +68,8 @@ func handleUsers(w http.ResponseWriter, r *http.Request) {
 			json.NewDecoder(r.Body).Decode(&u)
 			// On met à jour TOUS les champs, y compris le statut de vérification mail
 			bd.Exec(`UPDATE utilisateurs SET nom=?, prenom=?, email=?, id_role=?, est_actif=?, score_upcycling=?, onesignal_player_id=?, est_verifie=? 
-					 WHERE id_user=?`, 
-					 u.Nom, u.Pre, u.Mail, u.IdRole, u.EstActif, u.ScoreUpcycling, u.OneSignalId, u.EstVerifie, id)
+					 WHERE id_user=?`,
+				u.Nom, u.Pre, u.Mail, u.IdRole, u.EstActif, u.ScoreUpcycling, u.OneSignalId, u.EstVerifie, id)
 			w.WriteHeader(http.StatusOK)
 		} else {
 			_, err := bd.Exec("DELETE FROM utilisateurs WHERE id_user=?", id)
@@ -97,7 +98,7 @@ func handleUsers(w http.ResponseWriter, r *http.Request) {
 		_, err = bd.Exec(`INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, id_role, est_actif, score_upcycling, onesignal_player_id, est_verifie) 
 						 VALUES (?,?,?,?,?,1,?,?,?)`,
 			u.Nom, u.Pre, u.Mail, string(hash), u.IdRole, u.ScoreUpcycling, u.OneSignalId, u.EstVerifie)
-		
+
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Erreur SQL ou email déjà pris."})
@@ -205,18 +206,59 @@ func handleAnnonces(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case "GET":
-		lignes, _ := bd.Query("SELECT a.id_annonce, a.titre, a.statut_validation, u.nom FROM annonces a JOIN utilisateurs u ON a.id_user_auteur = u.id_user")
-		var res []Annonce
-		for lignes.Next() {
-			var a Annonce
-			lignes.Scan(&a.Id, &a.Titre, &a.StatutValidation, &a.Auteur)
-			res = append(res, a)
+		idUser := r.URL.Query().Get("id_user")
+		var lignes *sql.Rows
+		if idUser != "" {
+			lignes, _ = bd.Query("SELECT id_annonce, titre, description, categorie, type_annonce, prix, statut_validation, statut_annonce FROM annonces WHERE id_user_auteur = ?", idUser)
+			var res []Annonce
+			for lignes.Next() {
+				var a Annonce
+				lignes.Scan(&a.Id, &a.Titre, &a.Description, &a.Categorie, &a.TypeOffre, &a.Prix, &a.StatutValidation, &a.StatutAnnonce)
+				res = append(res, a)
+			}
+			json.NewEncoder(w).Encode(res)
+		} else {
+			lignes, _ = bd.Query("SELECT a.id_annonce, a.titre, a.statut_validation, u.nom FROM annonces a JOIN utilisateurs u ON a.id_user_auteur = u.id_user")
+			var res []Annonce
+			for lignes.Next() {
+				var a Annonce
+				lignes.Scan(&a.Id, &a.Titre, &a.StatutValidation, &a.Auteur)
+				res = append(res, a)
+			}
+			json.NewEncoder(w).Encode(res)
 		}
-		json.NewEncoder(w).Encode(res)
+	case "POST":
+		var a Annonce
+		json.NewDecoder(r.Body).Decode(&a)
+		bd.Exec("INSERT INTO annonces (titre, description, categorie, type_annonce, prix, id_user_auteur) VALUES (?,?,?,?,?,?)",
+			a.Titre, a.Description, a.Categorie, a.TypeOffre, a.Prix, a.IdUser)
+		points := 10
+		if a.TypeOffre == "don" {
+			points = 20
+		}
+		bd.Exec("UPDATE utilisateurs SET score_upcycling = score_upcycling + ? WHERE id_user = ?", points, a.IdUser)
+		w.WriteHeader(http.StatusCreated)
+
 	case "PUT":
-		bd.Exec("UPDATE annonces SET statut_validation = 1 WHERE id_annonce = ?", id)
+		var a Annonce
+		json.NewDecoder(r.Body).Decode(&a)
+		if a.Titre != "" {
+			bd.Exec("UPDATE annonces SET titre=?, description=?, categorie=?, type_annonce=?, prix=? WHERE id_annonce=?",
+				a.Titre, a.Description, a.Categorie, a.TypeOffre, a.Prix, id)
+		} else {
+			bd.Exec("UPDATE annonces SET statut_validation = 1 WHERE id_annonce = ?", id)
+		}
 		w.WriteHeader(http.StatusOK)
+
 	case "DELETE":
+		var idUser int
+		var typeAnnonce string
+		bd.QueryRow("SELECT id_user_auteur, type_annonce FROM annonces WHERE id_annonce = ?", id).Scan(&idUser, &typeAnnonce)
+		points := 10
+		if typeAnnonce == "don" {
+			points = 20
+		}
+		bd.Exec("UPDATE utilisateurs SET score_upcycling = score_upcycling - ? WHERE id_user = ?", points, idUser)
 		bd.Exec("DELETE FROM annonces WHERE id_annonce = ?", id)
 		w.WriteHeader(http.StatusOK)
 	}
@@ -322,14 +364,69 @@ func handleLangues(w http.ResponseWriter, r *http.Request) {
 // --- ACTIVATION DU COMPTE PAR TOKEN ---
 func handleVerify(w http.ResponseWriter, r *http.Request) {
 	token := r.PathValue("token")
-	
+
 	// On cherche l'utilisateur avec ce token et on passe est_verifie à 1
 	res, _ := bd.Exec("UPDATE utilisateurs SET est_verifie = 1 WHERE token_verification = ?", token)
-	
+
 	lignesImpactees, _ := res.RowsAffected()
 	if lignesImpactees > 0 {
 		w.WriteHeader(http.StatusOK)
 	} else {
 		w.WriteHeader(http.StatusNotFound) // Token non trouvé
 	}
+}
+
+// --- GESTION DES DEMANDES DE BOX ---
+func handleDemandesBox(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	switch r.Method {
+	case "GET":
+		lignes, _ := bd.Query("SELECT id_demande, id_user, description, statut FROM demandes_box")
+		var res []DemandeBox
+		for lignes.Next() {
+			var d DemandeBox
+			lignes.Scan(&d.Id, &d.IdUser, &d.Description, &d.Statut)
+			res = append(res, d)
+		}
+		json.NewEncoder(w).Encode(res)
+	case "POST":
+		var d DemandeBox
+		json.NewDecoder(r.Body).Decode(&d)
+		bd.Exec("INSERT INTO demandes_box (id_user, description) VALUES (?,?)", d.IdUser, d.Description)
+		w.WriteHeader(http.StatusCreated)
+	}
+}
+
+// --- GESTION DES INSCRIPTIONS ---
+func handleInscriptions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	switch r.Method {
+	case "GET":
+		idUser := r.URL.Query().Get("id_user")
+		lignes, _ := bd.Query("SELECT i.id_inscription, i.id_event, e.titre, e.date_debut, e.prix_actuel FROM inscriptions i JOIN evenements e ON i.id_event = e.id_event WHERE i.id_user = ?", idUser)
+		var res []Inscription
+		for lignes.Next() {
+			var i Inscription
+			lignes.Scan(&i.Id, &i.IdEvent, &i.Titre, &i.Date, &i.Prix)
+			res = append(res, i)
+		}
+		json.NewEncoder(w).Encode(res)
+	case "POST":
+		var i Inscription
+		json.NewDecoder(r.Body).Decode(&i)
+		bd.Exec("INSERT INTO inscriptions (id_user, id_event) VALUES (?,?)", i.IdUser, i.IdEvent)
+		w.WriteHeader(http.StatusCreated)
+	}
+}
+
+func handleConseils(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	lignes, _ := bd.Query("SELECT id_article, titre, contenu, type, date_creation FROM article_conseil")
+	var res []ArticleConseil
+	for lignes.Next() {
+		var a ArticleConseil
+		lignes.Scan(&a.Id, &a.Titre, &a.Contenu, &a.Type, &a.Date)
+		res = append(res, a)
+	}
+	json.NewEncoder(w).Encode(res)
 }
