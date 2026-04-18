@@ -100,8 +100,10 @@ type TypeAbonnement struct {
 type DemandeBox struct {
 	Id          int    `json:"id"`
 	IdUser      int    `json:"id_user"`
+	IdBox       int    `json:"id_box"`
 	Description string `json:"description"`
 	Statut      string `json:"statut"`
+	Code        string `json:"code"`
 }
 
 // --- INSCRIPTIONS ---

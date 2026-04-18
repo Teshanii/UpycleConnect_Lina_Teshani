@@ -1,18 +1,16 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"regexp"
 
-	"crypto/rand" // Pour générer un token aléatoire
-    "fmt"
-    "net/smtp"   // Pour l'envoi de mail
+	"crypto/rand" 
+	"fmt"
+	"net/smtp"   
 
 	"golang.org/x/crypto/bcrypt"
 )
-
 
 type LoginRequest struct {
 	Email string `json:"email"`
@@ -36,7 +34,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// 1. Vérifications basiques
+	// 1. Vérifications de base
 	if u.Nom == "" || u.Pre == "" || u.Mail == "" || u.Mdp == "" || u.IdRole == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Tous les champs sont obligatoires."})
@@ -62,17 +60,15 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Mdp), bcrypt.DefaultCost)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Erreur serveur lors du hachage."})
 		return
 	}
 
-	// On génère 16 octets aléatoires et on les transforme en texte (hexadécimal)
+	// Génération d'un token cryptographique hexadécimal unique
 	b := make([]byte, 16)
 	rand.Read(b)
 	token := fmt.Sprintf("%x", b)
 
-	// 4. Insertion en base de données
-	// On ajoute 'token_verification' et on met 'est_verifie' à 0 par défaut
+	// 4. Insertion avec 'token_verification' et 'est_verifie' à 0 (compte inactif)
 	_, err = bd.Exec(`INSERT INTO utilisateurs 
         (nom, prenom, email, mot_de_passe, id_role, est_actif, token_verification, est_verifie) 
         VALUES (?,?,?,?,?,1,?,0)`,
@@ -80,11 +76,11 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Erreur lors de la création du compte."})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Erreur lors de la création."})
 		return
 	}
 
-	// Le mot-clé 'go' permet d'envoyer le mail sans faire attendre l'utilisateur
+	// Envoi du mail en arrière-plan (Goroutine) pour ne pas bloquer l'inscription
 	go envoyerMailVerification(u.Mail, token)
 
 	w.WriteHeader(http.StatusCreated)
@@ -104,12 +100,11 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// 1. Récupérer l'utilisateur (On ajoute est_verifie à la sélection)
 	var u User
 	var hashMdp string
-	var estVerifie int // Variable locale pour le test
+	var estVerifie int
 
-	// On cherche l'utilisateur par mail uniquement pour le moment
+	// On récupère est_verifie pour bloquer la connexion si le mail n'est pas validé
 	err := bd.QueryRow(`
 		SELECT u.id_user, u.nom, u.prenom, u.email, u.mot_de_passe, u.id_role, r.libelle_role, u.est_verifie 
 		FROM utilisateurs u 
@@ -118,16 +113,12 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		Scan(&u.Id, &u.Nom, &u.Pre, &u.Mail, &hashMdp, &u.IdRole, &u.Role, &estVerifie)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Identifiants incorrects ou compte banni."})
-			return
-		}
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Identifiants incorrects ou compte banni."})
 		return
 	}
 
-	// 2. Comparer le mot de passe fourni avec le Hash en base
+	// Vérification du mot de passe haché
 	err = bcrypt.CompareHashAndPassword([]byte(hashMdp), []byte(req.Mdp))
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -135,38 +126,40 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Si le mot de passe est bon, on regarde si le compte est activé
+	// BLOCAGE : Si le mail n'est pas vérifié, on renvoie une erreur 403
 	if estVerifie == 0 {
-		w.WriteHeader(http.StatusForbidden) // 403 Forbidden
+		w.WriteHeader(http.StatusForbidden) 
 		json.NewEncoder(w).Encode(map[string]string{"error": "Votre compte n'est pas encore activé. Vérifiez vos emails."})
 		return
 	}
 
-	u.Mdp = "" // Sécurité : on vide le mdp avant de renvoyer les infos
+	u.Mdp = "" 
 	json.NewEncoder(w).Encode(u)
 }
 
 func envoyerMailVerification(destinataire string, token string) {
-    // Configuration de ton serveur de test (ex: Gmail ou Mailtrap pour tes tests locaux)
-    from := "ton.email@gmail.com"
-    password := "ton_mot_de_passe_application" // À générer dans ton compte Google
+    // PARAMÈTRES RÉELS GMAIL
+    from := "ton.email@gmail.com" 
+    // Utilise un "Mot de passe d'application" de 16 caractères généré dans Google
+    password := "xxxx xxxx xxxx xxxx" 
 
     smtpHost := "smtp.gmail.com"
     smtpPort := "587"
 
-    // Corps du mail
+    // Lien cliquable pointant vers verifier.php
+    // Note : Remplace 'localhost' par l'IP de ton serveur si tu déploies en ligne.
+    lien := "http://upcycle_api/verifier.php?token=" + token
+
     sujet := "Subject: UpcycleConnect - Activez votre compte\r\n"
-    corps := "\r\nBienvenue sur UpcycleConnect !\r\n\r\n" +
-             "Veuillez cliquer sur le lien ci-dessous pour activer votre compte :\r\n" +
-             "http://localhost/UPCYCLECONNECT_LINA_TESHANI/verifier.php?token=" + token
+    corps := "\r\nBonjour,\r\n\r\nBienvenue sur UpcycleConnect ! Pour valider votre inscription, cliquez sur le lien ci-dessous :\r\n\r\n" + lien + "\r\n\r\nMerci !"
 
     message := []byte(sujet + corps)
-
-    // Authentification et envoi
     auth := smtp.PlainAuth("", from, password, smtpHost)
+    
+    // Expédition réelle via SMTP
     err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{destinataire}, message)
     
     if err != nil {
-        fmt.Println("Erreur envoi mail:", err)
+        fmt.Println("Erreur critique envoi mail :", err)
     }
 }

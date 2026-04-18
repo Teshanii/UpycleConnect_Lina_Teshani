@@ -16,6 +16,8 @@ CREATE TABLE utilisateurs (
     onesignal_player_id VARCHAR(255), -- ID technique pour les notifications push
     est_actif TINYINT DEFAULT 1,
     id_role INT NOT NULL,
+    token_verification VARCHAR(255),
+    est_verifie TINYINT DEFAULT 0
     FOREIGN KEY (id_role) REFERENCES roles(id_role)
 ) ENGINE=InnoDB;
 
