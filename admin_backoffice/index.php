@@ -94,11 +94,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
             document.getElementById('nb-c').innerText = await fetchLen('categories');
             document.getElementById('nb-p').innerText = await fetchLen('prestations');
             document.getElementById('nb-e').innerText = await fetchLen('evenements');
-            // ... charger les autres stats ici
+            document.getElementById('nb-box-req').innerText = await fetchLen('demandes_box');
+            
         }
 
         chargerStats();
-        setInterval(chargerStats, 60000); // Rafraîchissement toutes les minutes
+        setInterval(chargerStats, 60000); 
     </script>
 </body>
 </html>

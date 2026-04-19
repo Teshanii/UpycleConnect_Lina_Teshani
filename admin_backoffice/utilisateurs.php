@@ -203,7 +203,7 @@ include 'includes/header.php';
             document.getElementById("form-title").innerText = "Gestion du profil";
         }
 
-        // Lancement au chargement de la page
+       
         load(); loadRoles();
     </script>
 </body>

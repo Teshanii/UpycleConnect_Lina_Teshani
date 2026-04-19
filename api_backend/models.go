@@ -1,6 +1,6 @@
 package main
 
-// --- UTILISATEURS & SECURITE ---
+
 type User struct {
 	Id             int    `json:"id"`
 	Nom            string `json:"nom"`
@@ -20,7 +20,7 @@ type Role struct {
 	Lib string `json:"lib"`
 }
 
-// --- RÉFÉRENTIEL & INTERNATIONALISATION ---
+
 type Categories struct {
 	Id  int    `json:"id"`
 	Nom string `json:"nom"` // Code technique (ex: BOIS)
@@ -32,7 +32,7 @@ type Langue struct {
 	Nom  string `json:"nom"`
 }
 
-// --- MÉTIER : PRESTATIONS & ÉVÉNEMENTS ---
+
 type Prestations struct {
 	Id   int     `json:"id"`
 	Nom  string  `json:"nom"`
@@ -51,7 +51,7 @@ type Evenements struct {
 	StatutValidation int     `json:"statut_validation"` // 0=Attente, 1=Validé
 }
 
-// --- LOGISTIQUE : BOX & ANNONCES ---
+
 type Box struct {
 	Id          int    `json:"id"`
 	Adresse     string `json:"adresse"`
@@ -72,7 +72,7 @@ type Annonce struct {
 	Photo            string  `json:"photo"`
 }
 
-// --- COMMUNAUTÉ ---
+
 type ForumMessage struct {
 	Id        int    `json:"id"`
 	Contenu   string `json:"contenu"`
@@ -81,12 +81,12 @@ type ForumMessage struct {
 	EstModere int    `json:"est_modere"`
 }
 
-// --- FINANCES (STRIPE) ---
+
 type Transaction struct {
 	Id        int     `json:"id"`
 	Montant   float64 `json:"montant"`
 	RefStripe string  `json:"ref_stripe"`
-	Statut    string  `json:"statut"` // succeeded, pending...
+	Statut    string  `json:"statut"` 
 	Type      string  `json:"type"`   // "abonnement", "formation", "commission"
 	Date      string  `json:"date"`
 }
@@ -97,7 +97,7 @@ type TypeAbonnement struct {
 	Prix float64 `json:"prix"`
 }
 
-// --- DEMANDES DE BOX ---
+
 type DemandeBox struct {
 	Id          int    `json:"id"`
 	IdUser      int    `json:"id_user"`
@@ -107,7 +107,7 @@ type DemandeBox struct {
 	Code        string `json:"code"`
 }
 
-// --- INSCRIPTIONS ---
+
 type Inscription struct {
 	Id      int     `json:"id"`
 	IdUser  int     `json:"id_user"`

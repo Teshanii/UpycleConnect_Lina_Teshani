@@ -62,7 +62,6 @@ include 'includes/header.php';
     <script>
         const API = "http://localhost:8080/api/prestations";
 
-        // CHARGEMENT (Appel API Go)
         async function load() {
             try {
                 const res = await fetch(API);

@@ -34,7 +34,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// 1. Vérifications de base
+	
 	if u.Nom == "" || u.Pre == "" || u.Mail == "" || u.Mdp == "" || u.IdRole == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Tous les champs sont obligatoires."})
@@ -47,7 +47,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Vérifier si l'email existe déjà
+	
 	var existe int
 	err := bd.QueryRow("SELECT COUNT(*) FROM utilisateurs WHERE email = ?", u.Mail).Scan(&existe)
 	if err != nil || existe > 0 {
@@ -56,14 +56,14 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Hacher le mot de passe avec bcrypt
+	
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Mdp), bcrypt.DefaultCost)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	// Génération d'un token cryptographique hexadécimal unique
+	// Génération d'un token 
 	b := make([]byte, 16)
 	rand.Read(b)
 	token := fmt.Sprintf("%x", b)
@@ -146,8 +146,7 @@ func envoyerMailVerification(destinataire string, token string) {
     smtpHost := "smtp.gmail.com"
     smtpPort := "587"
 
-    // Lien cliquable pointant vers verifier.php
-    // Note : Remplace 'localhost' par l'IP de ton serveur si tu déploies en ligne.
+  
     lien := "http://127.0.0.1/verifier.php?token=" + token
 
     sujet := "Subject: UpcycleConnect - Activez votre compte\r\n"

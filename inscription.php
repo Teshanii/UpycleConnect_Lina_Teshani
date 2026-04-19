@@ -1,6 +1,5 @@
 <?php
 session_start();
-// Logique du captcha (inspirée de ton ancien projet)
 $_SESSION['captcha_question'] = "Quelle est la couleur principale d'UpcycleConnect ?";
 $_SESSION['captcha_reponse'] = "vert";
 ?>

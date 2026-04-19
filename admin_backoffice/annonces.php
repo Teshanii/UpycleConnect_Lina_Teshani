@@ -1,5 +1,5 @@
 <?php 
-// 1. Inclusion du header (sécurité et ressources)
+
 include 'includes/header.php'; 
 ?>
 

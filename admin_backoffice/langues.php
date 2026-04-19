@@ -7,7 +7,7 @@ include 'includes/header.php';
 
     <div class="content">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Internationalisation (I18n)</h2>
+            <h2>Langues</h2>
             <div class="badge bg-light text-dark p-2">Session Admin : <strong><?= htmlspecialchars($_SESSION['user_prenom']) ?></strong></div>
         </div>
 
@@ -106,7 +106,6 @@ include 'includes/header.php';
             }
         };
 
-        // SUPPRESSION (DELETE /api/langues/{id})
         async function del(id) {
             if(confirm("Désactiver cette langue ? Les traductions associées resteront en base mais ne seront plus affichées.")) {
                 const res = await fetch(`${API}/${id}`, { method: 'DELETE' });

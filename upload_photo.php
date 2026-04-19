@@ -1,5 +1,5 @@
 <?php
-// Ce fichier reçoit la photo et la sauvegarde dans le dossier uploads/
+
 
 if (isset($_FILES['photo']) && $_FILES['photo']['error'] === 0) {
     

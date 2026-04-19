@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// --- GESTION DES RÔLES ---
+
 func handleRoles(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		lignes, err := bd.Query("SELECT id_role, libelle_role FROM roles")
@@ -27,15 +27,14 @@ func handleRoles(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION DES UTILISATEURS (Admin Total) ---
+
 func handleUsers(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	w.Header().Set("Content-Type", "application/json")
 
 	switch r.Method {
 	case "GET":
-		// On récupère tous les utilisateurs avec leur rôle (jointure avec la table roles)
-		// On ajoute aussi est_verifie pour savoir si le compte est activé par mail
+		
 		lignes, err := bd.Query(`
 			SELECT u.id_user, u.nom, u.prenom, u.email, u.est_actif, r.libelle_role, u.id_role, u.score_upcycling, u.onesignal_player_id, u.est_verifie 
 			FROM utilisateurs u 
@@ -105,7 +104,7 @@ func handleUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION DES CATÉGORIES ---
+
 func handleCategories(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	w.Header().Set("Content-Type", "application/json")
@@ -135,7 +134,7 @@ func handleCategories(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION DES PRESTATIONS ---
+
 func handlePrestations(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	w.Header().Set("Content-Type", "application/json")
@@ -165,7 +164,7 @@ func handlePrestations(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION DES ÉVÉNEMENTS ---
+
 func handleEvenements(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	w.Header().Set("Content-Type", "application/json")
@@ -196,7 +195,7 @@ func handleValidation(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// --- GESTION DES ANNONCES ---
+
 func handleAnnonces(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	w.Header().Set("Content-Type", "application/json")
@@ -274,7 +273,7 @@ func handleAnnonces(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION DES BOX ---
+
 func handleBox(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	w.Header().Set("Content-Type", "application/json")
@@ -299,7 +298,7 @@ func handleBox(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION FINANCE ---
+
 func handleTransactions(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method == "GET" {
@@ -328,7 +327,7 @@ func handleAbonnements(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION MESSAGES FORUM ---
+
 func handleMessages(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	w.Header().Set("Content-Type", "application/json")
@@ -351,7 +350,7 @@ func handleMessages(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION DES LANGUES ---
+
 func handleLangues(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method == "GET" {
@@ -371,7 +370,7 @@ func handleLangues(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- ACTIVATION DU COMPTE PAR TOKEN ---
+
 func handleVerify(w http.ResponseWriter, r *http.Request) {
 	token := r.PathValue("token")
 	// On cherche l'utilisateur avec ce token et on active son compte
@@ -384,7 +383,7 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION DES DEMANDES DE BOX ---
+
 func handleDemandesBox(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
@@ -405,7 +404,7 @@ func handleDemandesBox(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION DES INSCRIPTIONS ---
+
 // Le particulier peut s'inscrire à un événement et voir ses inscriptions
 func handleInscriptions(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -428,7 +427,7 @@ func handleInscriptions(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION DES CONSEILS ---
+
 func handleConseils(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	lignes, _ := bd.Query("SELECT id_article, titre, contenu, type, date_creation FROM article_conseil")

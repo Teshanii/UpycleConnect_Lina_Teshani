@@ -1,5 +1,5 @@
 <?php
-// init_session.php
+
 session_start();
 
 // On récupère les données envoyées en JSON par le JavaScript de connexion.php

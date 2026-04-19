@@ -116,7 +116,7 @@ include 'includes/header.php';
             } catch (err) { console.error("Erreur API Go:", err); }
         }
 
-        // VALIDATION ADMIN (PUT /api/evenements/valider/{id})
+        // VALIDATION ADMIN
         async function valider(id) {
             if(confirm("En validant, cet atelier sera ouvert aux réservations payantes pour les particuliers.")) {
                 const res = await fetch(`${API}/valider/${id}`, { method: 'PUT' });

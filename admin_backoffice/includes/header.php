@@ -1,8 +1,6 @@
 <?php
 session_start();
 
-// PROTECTION DE SESSION CENTRALISÉE
-// On vérifie si l'utilisateur est connecté et s'il possède le rôle Admin (1)
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
     header('Location: ../connexion.php?error=access_denied');
     exit;

@@ -77,11 +77,9 @@ include 'includes/header.php';
             }
         }
 
-        // ACTION DE MODÉRATION / RESTAURATION (Appel PUT /api/messages/{id})
         async function changerStatut(id, nouvelEtat) {
             const action = nouvelEtat === 1 ? "masquer" : "réactiver";
             if(confirm(`Voulez-vous ${action} ce message ?`)) {
-                // On envoie le nouvel état (0 ou 1) à l'API Go
                 const res = await fetch(`${API}/${id}`, { 
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -91,7 +89,6 @@ include 'includes/header.php';
             }
         }
 
-        // SUPPRESSION TOTALE (Appel DELETE /api/messages/{id})
         async function supprimerDefinitif(id) {
             if(confirm("Action critique : Supprimer définitivement ce message de la base de données ?")) {
                 const res = await fetch(`${API}/${id}`, { method: 'DELETE' });

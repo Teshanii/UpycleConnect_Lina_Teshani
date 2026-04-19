@@ -99,7 +99,6 @@ if (isset($_SESSION['user_id'])) {
             };
 
             try {
-                // 1. Appel à l'API Go pour la validation technique
                 const response = await fetch("http://127.0.0.1:8080/api/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -109,7 +108,6 @@ if (isset($_SESSION['user_id'])) {
                 const data = await response.json();
 
                 if (response.ok) {
-                    // 2. Initialisation de la session PHP si le compte est OK et vérifié
                     const sessionRes = await fetch("init_session.php", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
