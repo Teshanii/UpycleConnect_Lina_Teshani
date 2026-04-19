@@ -53,6 +53,12 @@ $id = $_GET['id'] ?? 0;
                 <textarea class="form-control" id="description" rows="3"></textarea>
             </div>
 
+            <!-- Champ pour changer la photo si besoin -->
+            <div class="mb-3">
+                <label class="form-label">Nouvelle photo (optionnel)</label>
+                <input type="file" class="form-control" id="photo" accept="image/*">
+            </div>
+
             <div class="mb-3">
                 <label><input type="radio" name="type" value="don" id="don"> Don gratuit</label>
                 <label class="ms-3"><input type="radio" name="type" value="vente" id="vente"> Vente</label>
@@ -71,7 +77,7 @@ $id = $_GET['id'] ?? 0;
 <script>
 var id = <?php echo $id; ?>;
 
-// Charger les données existantes
+// Charger les données existantes de l'annonce
 fetch('http://localhost:8080/api/annonces?id_user=<?php echo $_SESSION['user_id']; ?>')
     .then(function(res) { return res.json(); })
     .then(function(data) {
@@ -90,16 +96,34 @@ fetch('http://localhost:8080/api/annonces?id_user=<?php echo $_SESSION['user_id'
     });
 
 function modifier() {
+    var photoFile = document.getElementById('photo').files[0];
+
+    // Si une nouvelle photo est choisie, on l'upload d'abord
+    if (photoFile) {
+        var formData = new FormData();
+        formData.append('photo', photoFile);
+        fetch('../upload_photo.php', { method: 'POST', body: formData })
+            .then(function(res) { return res.json(); })
+            .then(function(data) { envoyerModif(data.chemin); });
+    } else {
+        envoyerModif('');
+    }
+}
+
+function envoyerModif(cheminPhoto) {
+    var body = {
+        titre: document.getElementById('titre').value,
+        description: document.getElementById('description').value,
+        categorie: document.getElementById('categorie').value,
+        type_offre: document.querySelector('input[name="type"]:checked').value,
+        prix: parseFloat(document.getElementById('prix').value) || 0
+    };
+    if (cheminPhoto) body.photo = cheminPhoto;
+
     fetch('http://localhost:8080/api/annonces/' + id, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            titre: document.getElementById('titre').value,
-            description: document.getElementById('description').value,
-            categorie: document.getElementById('categorie').value,
-            type_offre: document.querySelector('input[name="type"]:checked').value,
-            prix: parseFloat(document.getElementById('prix').value) || 0
-        })
+        body: JSON.stringify(body)
     }).then(function(res) {
         if (res.ok) {
             document.getElementById('msg').innerHTML = '<div class="alert alert-success">Annonce modifiée !</div>';

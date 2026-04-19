@@ -55,6 +55,7 @@ fetch('http://localhost:8080/api/annonces?id_user=<?php echo $_SESSION['user_id'
                     '<h5 class="mb-1">' + a.titre + '</h5>' +
                     '<p class="text-muted small mb-1">Catégorie : ' + (a.categorie || 'Non renseignée') + '</p>' +
                     '<p class="mb-2">' + (a.description || '') + '</p>' +
+                    (a.photo ? '<img src="http://localhost/' + a.photo + '" style="max-width:150px; border-radius:8px;" class="mb-2"><br>' : '') +
                     type + ' ' + validation + ' ' + statutAnnonce +
                     '</div>' +
                     '<div class="ms-3">' +

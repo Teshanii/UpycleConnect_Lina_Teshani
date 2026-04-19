@@ -18,7 +18,7 @@ if (!isset($_SESSION['user_id'])) {
 
 <nav class="navbar" style="background-color: var(--primary-green);">
     <div class="container">
-        <a class="navbar-brand text-white fw-bold" href="dashboard.php">🌿 UpcycleConnect</a>
+        <a class="navbar-brand text-white fw-bold" href="dashboard.php"> UpcycleConnect</a>
         <a href="../connexion.php?logout=1" class="btn btn-outline-light btn-sm">Déconnexion</a>
     </div>
 </nav>
@@ -28,7 +28,7 @@ if (!isset($_SESSION['user_id'])) {
 
     <div class="card mx-auto mt-3" style="max-width:550px;">
         <div class="card-body">
-            <h4 style="color:var(--primary-green);">📦 Déposer une annonce</h4>
+            <h4 style="color:var(--primary-green);"> Déposer une annonce</h4>
             <p class="text-muted small">Votre annonce sera vérifiée avant publication.</p>
 
             <!-- Zone pour afficher les messages succès/erreur -->

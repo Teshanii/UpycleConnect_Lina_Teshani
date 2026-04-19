@@ -34,12 +34,12 @@ func handleUsers(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		// On ajoute u.est_verifie à la requête SQL
+		// On récupère tous les utilisateurs avec leur rôle (jointure avec la table roles)
+		// On ajoute aussi est_verifie pour savoir si le compte est activé par mail
 		lignes, err := bd.Query(`
 			SELECT u.id_user, u.nom, u.prenom, u.email, u.est_actif, r.libelle_role, u.id_role, u.score_upcycling, u.onesignal_player_id, u.est_verifie 
 			FROM utilisateurs u 
 			JOIN roles r ON u.id_role = r.id_role`)
-
 		if err != nil {
 			http.Error(w, "Erreur SQL lors de la lecture", http.StatusInternalServerError)
 			return
@@ -47,14 +47,15 @@ func handleUsers(w http.ResponseWriter, r *http.Request) {
 		var res []User
 		for lignes.Next() {
 			var u User
-			// On scanne tous les champs y compris u.EstVerifie
+			// On scanne tous les champs y compris est_verifie
 			lignes.Scan(&u.Id, &u.Nom, &u.Pre, &u.Mail, &u.EstActif, &u.Role, &u.IdRole, &u.ScoreUpcycling, &u.OneSignalId, &u.EstVerifie)
 			res = append(res, u)
 		}
 		json.NewEncoder(w).Encode(res)
 
 	case "PUT", "DELETE":
-		// Sécurité : Vérifier si on essaie de toucher à un Admin
+		// Sécurité : on vérifie que l'utilisateur ciblé n'est pas un admin
+		// Si c'est un admin, on bloque l'action
 		var targetRoleID int
 		err := bd.QueryRow("SELECT id_role FROM utilisateurs WHERE id_user = ?", id).Scan(&targetRoleID)
 		if err == nil && targetRoleID == 1 {
@@ -62,18 +63,17 @@ func handleUsers(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(map[string]string{"error": "Sécurité : Impossible de modifier ou supprimer un Administrateur."})
 			return
 		}
-
 		if r.Method == "PUT" {
 			var u User
 			json.NewDecoder(r.Body).Decode(&u)
-			// On met à jour TOUS les champs, y compris le statut de vérification mail
-			bd.Exec(`UPDATE utilisateurs SET nom=?, prenom=?, email=?, id_role=?, est_actif=?, score_upcycling=?, onesignal_player_id=?, est_verifie=? 
-					 WHERE id_user=?`,
+			// On met à jour tous les champs y compris le statut de vérification mail
+			bd.Exec(`UPDATE utilisateurs SET nom=?, prenom=?, email=?, id_role=?, est_actif=?, score_upcycling=?, onesignal_player_id=?, est_verifie=? WHERE id_user=?`,
 				u.Nom, u.Pre, u.Mail, u.IdRole, u.EstActif, u.ScoreUpcycling, u.OneSignalId, u.EstVerifie, id)
 			w.WriteHeader(http.StatusOK)
 		} else {
 			_, err := bd.Exec("DELETE FROM utilisateurs WHERE id_user=?", id)
 			if err != nil {
+				// Si la suppression échoue c'est probablement à cause de clés étrangères (annonces, events...)
 				w.WriteHeader(http.StatusConflict)
 				json.NewEncoder(w).Encode(map[string]string{"error": "L'utilisateur est lié à des annonces ou événements."})
 				return
@@ -82,23 +82,20 @@ func handleUsers(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "POST":
+		// Création d'un utilisateur par l'admin (différent de l'inscription normale)
 		var u User
 		if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
+		// On hashé le mot de passe avant de le stocker
 		hash, err := bcrypt.GenerateFromPassword([]byte(u.Mdp), bcrypt.DefaultCost)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
-		// Lors d'une création manuelle par l'Admin, on peut décider du statut de vérification
-		_, err = bd.Exec(`INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, id_role, est_actif, score_upcycling, onesignal_player_id, est_verifie) 
-						 VALUES (?,?,?,?,?,1,?,?,?)`,
+		_, err = bd.Exec(`INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, id_role, est_actif, score_upcycling, onesignal_player_id, est_verifie) VALUES (?,?,?,?,?,1,?,?,?)`,
 			u.Nom, u.Pre, u.Mail, string(hash), u.IdRole, u.ScoreUpcycling, u.OneSignalId, u.EstVerifie)
-
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Erreur SQL ou email déjà pris."})
@@ -174,8 +171,7 @@ func handleEvenements(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case "GET":
-		query := "SELECT e.id_event, e.titre, e.date_debut, e.prix_actuel, e.places_max, e.statut_validation, u.nom, e.id_animateur FROM evenements e JOIN utilisateurs u ON e.id_animateur = u.id_user"
-		lignes, _ := bd.Query(query)
+		lignes, _ := bd.Query("SELECT e.id_event, e.titre, e.date_debut, e.prix_actuel, e.places_max, e.statut_validation, u.nom, e.id_animateur FROM evenements e JOIN utilisateurs u ON e.id_animateur = u.id_user")
 		var res []Evenements
 		for lignes.Next() {
 			var e Evenements
@@ -209,15 +205,18 @@ func handleAnnonces(w http.ResponseWriter, r *http.Request) {
 		idUser := r.URL.Query().Get("id_user")
 		var lignes *sql.Rows
 		if idUser != "" {
-			lignes, _ = bd.Query("SELECT id_annonce, titre, description, categorie, type_annonce, prix, statut_validation, statut_annonce FROM annonces WHERE id_user_auteur = ?", idUser)
+			// Si on passe un id_user dans l'URL, on filtre les annonces de cet utilisateur
+			// On récupère aussi la photo pour l'afficher dans mes_annonces.php
+			lignes, _ = bd.Query("SELECT id_annonce, titre, description, categorie, type_annonce, prix, statut_validation, statut_annonce, photo FROM annonces WHERE id_user_auteur = ?", idUser)
 			var res []Annonce
 			for lignes.Next() {
 				var a Annonce
-				lignes.Scan(&a.Id, &a.Titre, &a.Description, &a.Categorie, &a.TypeOffre, &a.Prix, &a.StatutValidation, &a.StatutAnnonce)
+				lignes.Scan(&a.Id, &a.Titre, &a.Description, &a.Categorie, &a.TypeOffre, &a.Prix, &a.StatutValidation, &a.StatutAnnonce, &a.Photo)
 				res = append(res, a)
 			}
 			json.NewEncoder(w).Encode(res)
 		} else {
+			// Sans id_user, l'admin voit toutes les annonces avec le nom de l'auteur
 			lignes, _ = bd.Query("SELECT a.id_annonce, a.titre, a.statut_validation, u.nom FROM annonces a JOIN utilisateurs u ON a.id_user_auteur = u.id_user")
 			var res []Annonce
 			for lignes.Next() {
@@ -230,27 +229,37 @@ func handleAnnonces(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		var a Annonce
 		json.NewDecoder(r.Body).Decode(&a)
-		bd.Exec("INSERT INTO annonces (titre, description, categorie, type_annonce, prix, id_user_auteur) VALUES (?,?,?,?,?,?)",
-			a.Titre, a.Description, a.Categorie, a.TypeOffre, a.Prix, a.IdUser)
+		// On insère l'annonce avec la photo (chemin du fichier uploadé)
+		bd.Exec("INSERT INTO annonces (titre, description, categorie, type_annonce, prix, id_user_auteur, photo) VALUES (?,?,?,?,?,?,?)",
+			a.Titre, a.Description, a.Categorie, a.TypeOffre, a.Prix, a.IdUser, a.Photo)
+		// On ajoute des points au score : +10 pour une vente, +20 pour un don
 		points := 10
 		if a.TypeOffre == "don" {
 			points = 20
 		}
 		bd.Exec("UPDATE utilisateurs SET score_upcycling = score_upcycling + ? WHERE id_user = ?", points, a.IdUser)
 		w.WriteHeader(http.StatusCreated)
-
 	case "PUT":
 		var a Annonce
 		json.NewDecoder(r.Body).Decode(&a)
 		if a.Titre != "" {
-			bd.Exec("UPDATE annonces SET titre=?, description=?, categorie=?, type_annonce=?, prix=? WHERE id_annonce=?",
-				a.Titre, a.Description, a.Categorie, a.TypeOffre, a.Prix, id)
+			if a.Photo != "" {
+				// Si une nouvelle photo est fournie, on la met à jour aussi
+				bd.Exec("UPDATE annonces SET titre=?, description=?, categorie=?, type_annonce=?, prix=?, photo=? WHERE id_annonce=?",
+					a.Titre, a.Description, a.Categorie, a.TypeOffre, a.Prix, a.Photo, id)
+			} else {
+				// Pas de nouvelle photo, on touche pas à la photo existante
+				bd.Exec("UPDATE annonces SET titre=?, description=?, categorie=?, type_annonce=?, prix=? WHERE id_annonce=?",
+					a.Titre, a.Description, a.Categorie, a.TypeOffre, a.Prix, id)
+			}
 		} else {
+			// C'est l'admin qui valide l'annonce
 			bd.Exec("UPDATE annonces SET statut_validation = 1 WHERE id_annonce = ?", id)
 		}
 		w.WriteHeader(http.StatusOK)
 
 	case "DELETE":
+		// Avant de supprimer, on récupère le type et l'auteur pour déduire les points
 		var idUser int
 		var typeAnnonce string
 		bd.QueryRow("SELECT id_user_auteur, type_annonce FROM annonces WHERE id_annonce = ?", id).Scan(&idUser, &typeAnnonce)
@@ -258,6 +267,7 @@ func handleAnnonces(w http.ResponseWriter, r *http.Request) {
 		if typeAnnonce == "don" {
 			points = 20
 		}
+		// On retire les points du score avant de supprimer
 		bd.Exec("UPDATE utilisateurs SET score_upcycling = score_upcycling - ? WHERE id_user = ?", points, idUser)
 		bd.Exec("DELETE FROM annonces WHERE id_annonce = ?", id)
 		w.WriteHeader(http.StatusOK)
@@ -364,15 +374,13 @@ func handleLangues(w http.ResponseWriter, r *http.Request) {
 // --- ACTIVATION DU COMPTE PAR TOKEN ---
 func handleVerify(w http.ResponseWriter, r *http.Request) {
 	token := r.PathValue("token")
-
-	// On cherche l'utilisateur avec ce token et on passe est_verifie à 1
+	// On cherche l'utilisateur avec ce token et on active son compte
 	res, _ := bd.Exec("UPDATE utilisateurs SET est_verifie = 1 WHERE token_verification = ?", token)
-
 	lignesImpactees, _ := res.RowsAffected()
 	if lignesImpactees > 0 {
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusOK) // Token trouvé, compte activé
 	} else {
-		w.WriteHeader(http.StatusNotFound) // Token non trouvé
+		w.WriteHeader(http.StatusNotFound) // Token non trouvé ou déjà utilisé
 	}
 }
 
@@ -398,6 +406,7 @@ func handleDemandesBox(w http.ResponseWriter, r *http.Request) {
 }
 
 // --- GESTION DES INSCRIPTIONS ---
+// Le particulier peut s'inscrire à un événement et voir ses inscriptions
 func handleInscriptions(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
@@ -419,6 +428,7 @@ func handleInscriptions(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// --- GESTION DES CONSEILS ---
 func handleConseils(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	lignes, _ := bd.Query("SELECT id_article, titre, contenu, type, date_creation FROM article_conseil")
