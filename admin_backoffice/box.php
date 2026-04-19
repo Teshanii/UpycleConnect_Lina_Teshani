@@ -1,5 +1,4 @@
 <?php 
-// 1. Inclusion du header (Gère la sécurité Admin et les ressources)
 include 'includes/header.php'; 
 ?>
 
@@ -13,7 +12,7 @@ include 'includes/header.php';
         </div>
 
         <p class="text-muted">
-            Configurez ici les points de dépôt physiques. Selon le sujet, ces box permettent aux citoyens de déposer des objets validés.
+            Configurez ici les points de dépôt physiques. Ces box permettent aux citoyens de déposer des objets validés.
         </p>
 
         <div class="row mb-4">

@@ -1,5 +1,4 @@
 <?php 
-// 1. Inclusion du header (Gère la sécurité Admin et les ressources)
 include 'includes/header.php'; 
 ?>
 
@@ -13,8 +12,8 @@ include 'includes/header.php';
         </div>
 
         <p class="text-muted">
-            Conformément à la Mission 1, vous validez les ateliers créés par les salariés avant leur publication. 
-            [cite_start]Les tarifs doivent être compris entre 20€ et 100€ selon le barème de l'entreprise[cite: 88, 307, 309].
+            Il faut validez les ateliers créés par les salariés avant leur publication. 
+            Les tarifs doivent être compris entre 20€ et 100€ selon le barème de l'entreprise.
         </p>
 
         <div class="card mb-4 p-3 shadow-sm border-0">
@@ -31,7 +30,7 @@ include 'includes/header.php';
                         <input type="datetime-local" id="date" class="form-control" required>
                     </div>
                     <div class="col-md-2">
-                        <label class="small text-muted">Prix (€)</label>
+                        <label class="small text-muted">Prix</label>
                         <input type="number" step="0.01" id="prix" class="form-control" placeholder="20-100" required>
                     </div>
                     <div class="col-md-1">

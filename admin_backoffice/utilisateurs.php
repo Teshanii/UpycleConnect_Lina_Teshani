@@ -1,5 +1,4 @@
 <?php 
-// Inclusion du header qui gère la session, la sécurité Admin et les balises <head>
 include 'includes/header.php'; 
 ?>
 
@@ -12,7 +11,7 @@ include 'includes/header.php';
             <div class="badge bg-light text-dark p-2">Session : <strong><?= htmlspecialchars($_SESSION['user_prenom']) ?></strong></div>
         </div>
 
-        <p class="text-muted">Gérez les comptes citoyens et artisans, surveillez les scores d'impact et modérez les accès au système.</p>
+        <p class="text-muted">Gérez les comptes, surveillez les scores d'impact et modérez les accès au système.</p>
 
         <div class="card mb-4 p-3 shadow-sm border-0">
             <h5 id="form-title">Gestion du profil</h5>

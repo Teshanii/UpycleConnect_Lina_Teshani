@@ -1,5 +1,4 @@
 <?php 
-// 1. Inclusion du header (Gère la sécurité Admin et les ressources)
 include 'includes/header.php'; 
 ?>
 
@@ -13,7 +12,7 @@ include 'includes/header.php';
         </div>
 
         <p class="text-muted">
-            Suivez ici l'intégralité de l'activité financière. [cite_start]Les revenus proviennent des abonnements premium, des commissions sur ventes et des inscriptions aux ateliers[cite: 291, 301, 307].
+            Suivez ici l'intégralité de l'activité financière. Les revenus proviennent des abonnements premium, des commissions sur ventes et des inscriptions aux ateliers.
         </p>
 
         <div class="row mb-4 g-4">
@@ -21,21 +20,21 @@ include 'includes/header.php';
                 <div class="card bg-primary text-white p-3 border-0 shadow-sm">
                     <small>Total Collecté (Stripe)</small>
                     <h2 id="total-rev">0.00 €</h2>
-                    [cite_start]<p class="small mb-0">Revenus validés et encaissés [cite: 108]</p>
+                    <p class="small mb-0">Revenus validés et encaissés</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card bg-success text-white p-3 border-0 shadow-sm">
                     <small>Abonnements & Commissions</small>
                     <h3 id="total-comm">0.00 €</h3>
-                    [cite_start]<p class="small mb-0">Particuliers et Professionnels [cite: 291, 301]</p>
+                    <p class="small mb-0">Particuliers et Professionnels</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card bg-info text-white p-3 border-0 shadow-sm">
                     <small>Ventes Ateliers / Formations</small>
                     <h3 id="total-form">0.00 €</h3>
-                    [cite_start]<p class="small mb-0">Inscriptions individuelles [cite: 307, 308]</p>
+                    <p class="small mb-0">Inscriptions individuelles</p>
                 </div>
             </div>
         </div>
@@ -82,7 +81,6 @@ include 'includes/header.php';
 
                         if(isSuccess) {
                             totalEncaisse += t.montant;
-                            // Réflexion experte : On simule la ventilation par type pour la démo
                             if(t.type === 'formation') totalAteliers += t.montant;
                             else totalCommissions += t.montant;
                         }

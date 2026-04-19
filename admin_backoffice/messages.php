@@ -1,5 +1,4 @@
 <?php 
-// 1. Inclusion du header (Gère la sécurité Admin et les ressources)
 include 'includes/header.php'; 
 ?>
 
@@ -13,8 +12,8 @@ include 'includes/header.php';
         </div>
 
         <p class="text-muted">
-            [cite_start]En tant qu'Administrateur Général, vous supervisez l'intégralité des échanges[cite: 94]. 
-            [cite_start]Vous pouvez contrôler le travail de modération des salariés, restaurer des messages ou purger la base de données[cite: 92, 95].
+            Ici il faut superviser l'intégralité des échanges. 
+            Il est possible de contrôler le travail de modération des salariés, restaurer des messages ou purger la base de données.
         </p>
 
         <div class="card p-3 shadow-sm border-0">
@@ -54,7 +53,7 @@ include 'includes/header.php';
                             ? '<span class="badge bg-danger">Masqué (Par Modération)</span>' 
                             : '<span class="badge bg-success">Visible sur le Forum</span>';
                         
-                        // RÉFLEXION EXPERTE : L'Admin peut masquer OU restaurer (contrairement au salarié)
+                        
                         const btnToggle = isModere 
                             ? `<button class="btn btn-outline-success btn-sm me-1" onclick="changerStatut(${m.id}, 0)">Réactiver</button>` 
                             : `<button class="btn btn-warning btn-sm me-1" onclick="changerStatut(${m.id}, 1)">Masquer</button>`;

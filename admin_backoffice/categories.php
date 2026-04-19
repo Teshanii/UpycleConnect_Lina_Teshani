@@ -1,5 +1,4 @@
 <?php 
-// 1. Inclusion du header (Gère la sécurité Admin et les ressources)
 include 'includes/header.php'; 
 ?>
 
@@ -13,8 +12,8 @@ include 'includes/header.php';
         </div>
 
         <p class="text-muted">
-            Définissez ici les codes techniques des catégories. [cite_start]Ces codes permettent aux artisans de filtrer les matériaux par type[cite: 13, 18]. 
-            [cite_start]Les traductions se configurent dans l'onglet <strong>Langues</strong>[cite: 113].
+            Définir ici les codes techniques des catégories. Ces codes permettent aux artisans de filtrer les matériaux par type. 
+            Les traductions se configurent dans l'onglet <strong>Langues</strong>.
         </p>
 
         <div class="card mb-4 p-3 shadow-sm border-0">

@@ -1,5 +1,4 @@
 <?php 
-// 1. Inclusion du header (Gère la sécurité Admin et les ressources)
 include 'includes/header.php'; 
 ?>
 
@@ -13,7 +12,7 @@ include 'includes/header.php';
         </div>
 
         <p class="text-muted">
-            Définissez ici les services officiels d'UpcycleConnect. [cite_start]Ce catalogue permet aux artisans de proposer des prestations régulières et de qualité aux citoyens[cite: 13, 82].
+            Définir ici les services officiels d'UpcycleConnect. Ce catalogue permet aux artisans de proposer des prestations aux citoyens.
         </p>
 
         <div class="card mb-4 p-3 shadow-sm border-0">

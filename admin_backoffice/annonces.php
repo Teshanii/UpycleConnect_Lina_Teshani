@@ -13,8 +13,8 @@ include 'includes/header.php';
         </div>
 
         <p class="text-muted">
-            [cite_start]Selon la Mission 1, vous devez vérifier le contenu des annonces de dons ou ventes avant validation[cite: 71]. 
-            [cite_start]Toute action (Approbation/Refus) déclenche une notification automatique vers le particulier[cite: 103].
+            Vous devez vérifier le contenu des annonces de dons ou ventes avant validation[cite: 71]. 
+            Toute action (Approbation/Refus) déclenche une notification automatique vers le particulier[cite: 103].
         </p>
 
         <div class="card p-3 shadow-sm border-0">
@@ -142,7 +142,6 @@ include 'includes/header.php';
             }
         }
 
-        // SUPPRIMER / REFUSER (Action de modération)
         async function del() {
             const id = document.getElementById("edit-id").value;
             if (confirm("Refuser cette annonce ? L'utilisateur recevra une notification de refus.")) {

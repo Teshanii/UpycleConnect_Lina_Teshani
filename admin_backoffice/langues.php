@@ -1,5 +1,4 @@
 <?php 
-// 1. Inclusion du header (Gère la sécurité Admin et les ressources)
 include 'includes/header.php'; 
 ?>
 
@@ -13,8 +12,8 @@ include 'includes/header.php';
         </div>
 
         <p class="text-muted">
-            [cite_start]Conformément aux exigences de la Mission 1, cette interface permet de rendre la plateforme multilingue dynamiquement[cite: 113]. 
-            [cite_start]Une fois une langue activée ici, le système permet de traduire les catégories, les services et les conseils[cite: 89, 102].
+            Cette interface permet de rendre la plateforme multilingue dynamiquement. 
+            Une fois une langue activée ici, le système permet de traduire les catégories, les services et les conseils.
         </p>
 
         <div class="card mb-4 p-3 shadow-sm border-0">
@@ -37,7 +36,7 @@ include 'includes/header.php';
         </div>
 
         <div class="card p-3 shadow-sm border-0">
-            <h5 class="mb-3">Langues configurées dans le SI</h5>
+            <h5 class="mb-3">Langues configurées</h5>
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-dark">

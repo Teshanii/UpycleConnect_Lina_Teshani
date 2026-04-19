@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// 1. Sécurité : Vérifier si l'utilisateur est Admin
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
     header('Location: ../connexion.php?error=access_denied');
     exit;
