@@ -94,7 +94,7 @@ if (isset($_SESSION['user_id'])) {
 
             try {
                 // 1. Appel à l'API Go pour la validation technique
-                const response = await fetch("http://upcycle_api:8080/api/login", {
+                const response = await fetch("http://127.0.0.1:8080/api/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)

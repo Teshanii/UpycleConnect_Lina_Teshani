@@ -139,16 +139,16 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 func envoyerMailVerification(destinataire string, token string) {
     // PARAMÈTRES RÉELS GMAIL
-    from := "ton.email@gmail.com" 
+    from := "teshanifernandotf@gmail.com" 
     // Utilise un "Mot de passe d'application" de 16 caractères généré dans Google
-    password := "xxxx xxxx xxxx xxxx" 
+    password := "zubw icfo hfuh lqbu" 
 
     smtpHost := "smtp.gmail.com"
     smtpPort := "587"
 
     // Lien cliquable pointant vers verifier.php
     // Note : Remplace 'localhost' par l'IP de ton serveur si tu déploies en ligne.
-    lien := "http://upcycle_api/verifier.php?token=" + token
+    lien := "http://127.0.0.1/verifier.php?token=" + token
 
     sujet := "Subject: UpcycleConnect - Activez votre compte\r\n"
     corps := "\r\nBonjour,\r\n\r\nBienvenue sur UpcycleConnect ! Pour valider votre inscription, cliquez sur le lien ci-dessous :\r\n\r\n" + lien + "\r\n\r\nMerci !"
