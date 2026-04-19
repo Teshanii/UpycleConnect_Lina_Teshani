@@ -1,9 +1,15 @@
 <?php
 session_start();
 
+// Déconnexion si logout=1
+if (isset($_GET['logout'])) {
+    session_destroy();
+    session_unset();
+}
+
 // 1. Redirection si déjà connecté
 if (isset($_SESSION['user_id'])) {
-    header('Location: admin_backoffice/index.php');
+    header('Location: index.php');
     exit;
 }
 ?>

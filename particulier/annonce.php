@@ -1,5 +1,6 @@
 <?php
 session_start();
+// Si pas connecté, retour connexion
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../connexion.php');
     exit;
@@ -17,8 +18,8 @@ if (!isset($_SESSION['user_id'])) {
 
 <nav class="navbar" style="background-color: var(--primary-green);">
     <div class="container">
-        <a class="navbar-brand text-white fw-bold" href="dashboard.php"> UpcycleConnect</a>
-        <a href="../connexion.php" class="btn btn-outline-light btn-sm">Déconnexion</a>
+        <a class="navbar-brand text-white fw-bold" href="dashboard.php">🌿 UpcycleConnect</a>
+        <a href="../connexion.php?logout=1" class="btn btn-outline-light btn-sm">Déconnexion</a>
     </div>
 </nav>
 
@@ -27,9 +28,10 @@ if (!isset($_SESSION['user_id'])) {
 
     <div class="card mx-auto mt-3" style="max-width:550px;">
         <div class="card-body">
-            <h4 style="color:var(--primary-green);"> Déposer une annonce</h4>
+            <h4 style="color:var(--primary-green);">📦 Déposer une annonce</h4>
             <p class="text-muted small">Votre annonce sera vérifiée avant publication.</p>
 
+            <!-- Zone pour afficher les messages succès/erreur -->
             <div id="msg"></div>
 
             <div class="mb-3">
@@ -53,6 +55,12 @@ if (!isset($_SESSION['user_id'])) {
                 <textarea class="form-control" id="description" rows="3"></textarea>
             </div>
 
+            <!-- Champ photo -->
+            <div class="mb-3">
+                <label class="form-label">Photo de l'objet</label>
+                <input type="file" class="form-control" id="photo" accept="image/*">
+            </div>
+
             <div class="mb-3">
                 <label><input type="radio" name="type" value="don" checked> Don gratuit</label>
                 <label class="ms-3"><input type="radio" name="type" value="vente"> Vente</label>
@@ -70,6 +78,30 @@ if (!isset($_SESSION['user_id'])) {
 
 <script>
 function envoyer() {
+
+    // On récupère la photo choisie par l'utilisateur
+    var photoFile = document.getElementById('photo').files[0];
+
+    // Si une photo a été choisie, on l'upload d'abord
+    if (photoFile) {
+        var formData = new FormData();
+        formData.append('photo', photoFile);
+
+        // On envoie la photo à upload_photo.php qui la sauvegarde et nous renvoie son chemin
+        fetch('../upload_photo.php', { method: 'POST', body: formData })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                // Une fois la photo uploadée, on envoie l'annonce avec le chemin de la photo
+                envoyerAnnonce(data.chemin);
+            });
+    } else {
+        // Pas de photo, on envoie l'annonce sans photo
+        envoyerAnnonce('');
+    }
+}
+
+// Fonction qui envoie l'annonce à l'API Go
+function envoyerAnnonce(cheminPhoto) {
     fetch('http://localhost:8080/api/annonces', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,7 +111,8 @@ function envoyer() {
             description: document.getElementById('description').value,
             type_offre: document.querySelector('input[name="type"]:checked').value,
             prix: parseFloat(document.getElementById('prix').value) || 0,
-            id_user: <?php echo $_SESSION['user_id']; ?>
+            id_user: <?php echo $_SESSION['user_id']; ?>,
+            photo: cheminPhoto
         })
     }).then(function(res) {
         if (res.ok) {
