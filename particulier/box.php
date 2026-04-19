@@ -18,7 +18,7 @@ if (!isset($_SESSION['user_id'])) {
 <nav class="navbar" style="background-color: var(--primary-green);">
     <div class="container">
         <a class="navbar-brand text-white fw-bold" href="dashboard.php"> UpcycleConnect</a>
-        <a href="../connexion.php" class="btn btn-outline-light btn-sm">Déconnexion</a>
+        <a href="../connexion.php?logout=1" class="btn btn-outline-light btn-sm">Déconnexion</a>
     </div>
 </nav>
 

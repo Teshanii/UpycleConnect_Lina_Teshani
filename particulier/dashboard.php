@@ -20,7 +20,7 @@ if (!isset($_SESSION['user_id'])) {
     <div class="container">
         <a class="navbar-brand text-white fw-bold" href="dashboard.php"> UpcycleConnect</a>
         <span class="text-white me-3">Bonjour, <?php echo $_SESSION['user_prenom']; ?> !</span>
-        <a href="../connexion.php" class="btn btn-outline-light btn-sm">Déconnexion</a>
+        <a href="../connexion.php?logout=1" class="btn btn-outline-light btn-sm">Déconnexion</a>
     </div>
 </nav>
 

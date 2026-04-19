@@ -69,6 +69,7 @@ type Annonce struct {
 	IdUser           int     `json:"id_user"`
 	Prix             float64 `json:"prix"`
 	StatutAnnonce    string  `json:"statut_annonce"`
+	Photo            string  `json:"photo"`
 }
 
 // --- COMMUNAUTÉ ---
