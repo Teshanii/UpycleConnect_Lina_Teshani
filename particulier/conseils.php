@@ -26,7 +26,6 @@ if (!isset($_SESSION['user_id'])) {
     <a href="dashboard.php" style="color:var(--primary-green);">← Retour</a>
     <h4 class="mt-3" style="color:var(--primary-green);"> Espace Conseils</h4>
     <p class="text-muted small">Articles et tutoriels publiés par nos salariés.</p>
-
     <div id="liste"></div>
 </div>
 
@@ -39,12 +38,11 @@ fetch('http://localhost:8080/api/conseils')
             data.forEach(function(a) {
                 html += '<div class="card mb-3 p-3">' +
                     '<h5>' + a.titre + '</h5>' +
-                    '<p class="text-muted small">' + a.type + ' — ' + a.date + '</p>' +
                     '<p>' + a.contenu + '</p>' +
                     '</div>';
             });
         } else {
-            html = '<p class="text-muted">Aucun article disponible pour le moment.</p>';
+            html = '<p class="text-muted">Aucun article disponible.</p>';
         }
         document.getElementById('liste').innerHTML = html;
     });

@@ -54,13 +54,15 @@ CREATE TABLE objets (
 CREATE TABLE annonces (
     id_annonce INT AUTO_INCREMENT PRIMARY KEY,
     titre VARCHAR(150) NOT NULL,
-    type_don_vente ENUM('don', 'vente') DEFAULT 'don',
-    prix_vente DECIMAL(10,2) DEFAULT 0.00,
-    statut_validation TINYINT DEFAULT 0, -- 0=Attente, 1=Validé
+    statut_validation TINYINT DEFAULT 0,
     id_user_auteur INT NOT NULL,
-    id_objet INT NOT NULL,
-    FOREIGN KEY (id_user_auteur) REFERENCES utilisateurs(id_user),
-    FOREIGN KEY (id_objet) REFERENCES objets(id_objet)
+    description TEXT,
+    categorie VARCHAR(50),
+    type_annonce VARCHAR(10) DEFAULT 'don',
+    prix DECIMAL(10,2) DEFAULT 0.00,
+    statut_annonce VARCHAR(20) DEFAULT 'disponible',
+    photo VARCHAR(255),
+    FOREIGN KEY (id_user_auteur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
 CREATE TABLE box (
@@ -148,7 +150,26 @@ CREATE TABLE recoit_notif (
     FOREIGN KEY (id_notif) REFERENCES notifications(id_notif)
 ) ENGINE=InnoDB;
 
+
+CREATE TABLE article_conseil (
+    id_article INT AUTO_INCREMENT PRIMARY KEY,
+    titre VARCHAR(255) NOT NULL,
+    contenu TEXT NOT NULL,
+    type VARCHAR(50),
+    id_auteur INT NOT NULL,
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE inscriptions (
+    id_inscription INT AUTO_INCREMENT PRIMARY KEY,
+    id_user INT NOT NULL,
+    id_event INT NOT NULL,
+    date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
 -- INSERTIONS INITIALES
 INSERT INTO roles (libelle_role) VALUES ('Admin'), ('Salarie'), ('Professionnel et Artisan'), ('Particulier');
 INSERT INTO langues (code_iso, nom_langue) VALUES ('fr', 'Français'), ('en', 'English');
 INSERT INTO types_abonnements (nom_offre, prix_mensuel_actuel) VALUES ('Gratuit', 0.00), ('Premium Artisan', 29.99);
+INSERT INTO evenements (titre, date_debut, prix_actuel, places_max, statut_validation, id_animateur) 
+VALUES ('Atelier Palette', '2026-04-10 14:00:00', 15.00, 10, 1, 2);

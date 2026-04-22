@@ -384,23 +384,28 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// --- GESTION DES DEMANDES DE BOX ---
+// demande de depot dans une box
 func handleDemandesBox(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	switch r.Method {
-	case "GET":
-		lignes, _ := bd.Query("SELECT id_demande, id_user, description, statut FROM demandes_box")
+
+	if r.Method == "GET" {
+		lignes, _ := bd.Query("SELECT id_demande, id_user, id_box, statut_check FROM demandes_depot")
 		var res []DemandeBox
 		for lignes.Next() {
 			var d DemandeBox
-			lignes.Scan(&d.Id, &d.IdUser, &d.Description, &d.Statut)
+			lignes.Scan(&d.Id, &d.IdUser, &d.IdBox, &d.Statut)
 			res = append(res, d)
 		}
 		json.NewEncoder(w).Encode(res)
-	case "POST":
+	}
+
+	if r.Method == "POST" {
 		var d DemandeBox
 		json.NewDecoder(r.Body).Decode(&d)
-		bd.Exec("INSERT INTO demandes_box (id_user, description) VALUES (?,?)", d.IdUser, d.Description)
+		// on cree l'objet d'abord puis la demande
+		result, _ := bd.Exec("INSERT INTO objets (description) VALUES (?)", d.Description)
+		idObjet, _ := result.LastInsertId()
+		bd.Exec("INSERT INTO demandes_depot (id_user, id_objet, id_box) VALUES (?,?,?)", d.IdUser, idObjet, d.IdBox)
 		w.WriteHeader(http.StatusCreated)
 	}
 }
@@ -425,6 +430,11 @@ func handleInscriptions(w http.ResponseWriter, r *http.Request) {
 		json.NewDecoder(r.Body).Decode(&i)
 		bd.Exec("INSERT INTO inscriptions (id_user, id_event) VALUES (?,?)", i.IdUser, i.IdEvent)
 		w.WriteHeader(http.StatusCreated)
+
+	case "DELETE":
+		id := r.PathValue("id")
+		bd.Exec("DELETE FROM inscriptions WHERE id_inscription = ?", id)
+		w.WriteHeader(http.StatusOK)
 	}
 }
 

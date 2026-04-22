@@ -28,7 +28,7 @@ if (!isset($_SESSION['user_id'])) {
     <div class="card mx-auto mt-3" style="max-width:550px;">
         <div class="card-body">
             <h4 style="color:var(--primary-green);"> Demander une box</h4>
-            <p class="text-muted small">Décrivez votre objet. Un admin validera et vous enverra un code pour ouvrir la box.</p>
+            <p class="text-muted small">Décrivez votre objet et choisissez une box. Un admin validera et vous enverra un code pour ouvrir la box.</p>
 
             <div id="msg"></div>
 
@@ -37,19 +37,38 @@ if (!isset($_SESSION['user_id'])) {
                 <textarea class="form-control" id="description" rows="3" placeholder="Ex: Une vieille chaise en bois..."></textarea>
             </div>
 
+            <div class="mb-3">
+                <label class="form-label">Choisir une box</label>
+                <select class="form-select" id="id_box">
+                    <option value="">Chargement...</option>
+                </select>
+            </div>
+
             <button class="btn btn-primary-upcycle w-100" onclick="envoyer()">ENVOYER LA DEMANDE</button>
         </div>
     </div>
 </div>
 
 <script>
+// on charge les box disponibles
+fetch('http://localhost:8080/api/box')
+    .then(r => r.json())
+    .then(data => {
+        const sel = document.getElementById('id_box');
+        sel.innerHTML = '';
+        data.forEach(b => {
+            sel.innerHTML += `<option value="${b.id}">${b.adresse}</option>`;
+        });
+    });
+
 function envoyer() {
     fetch('http://localhost:8080/api/demandes_box', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             id_user: <?php echo $_SESSION['user_id']; ?>,
-            description: document.getElementById('description').value
+            description: document.getElementById('description').value,
+            id_box: parseInt(document.getElementById('id_box').value)
         })
     }).then(function(res) {
         if (res.ok) {

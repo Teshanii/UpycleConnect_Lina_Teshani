@@ -37,6 +37,7 @@ func main() {
 	mux.HandleFunc("/api/annonces/{id}", handleAnnonces)
 
 	mux.HandleFunc("/api/inscriptions", handleInscriptions)
+	mux.HandleFunc("/api/inscriptions/{id}", handleInscriptions)
 
 	mux.HandleFunc("/api/transactions", handleTransactions)
 	mux.HandleFunc("/api/abonnements", handleAbonnements)

@@ -35,7 +35,6 @@ if (!isset($_SESSION['user_id'])) {
 <script>
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
-// Affiche les événements disponibles
 fetch('http://localhost:8080/api/evenements')
     .then(function(res) { return res.json(); })
     .then(function(data) {
@@ -44,7 +43,7 @@ fetch('http://localhost:8080/api/evenements')
             if (e.statut_validation === 1) {
                 html += '<div class="card mb-2 p-3">' +
                     '<strong>' + e.titre + '</strong>' +
-                    '<p class="text-muted small mb-1"> ' + e.date + ' —  ' + e.prix + '€ —  ' + e.place + ' places</p>' +
+                    '<p class="text-muted small mb-1">' + e.date + ' — ' + e.prix + '€ — ' + e.place + ' places</p>' +
                     '<button class="btn btn-primary-upcycle btn-sm" onclick="sinscrire(' + e.id + ')">S\'inscrire</button>' +
                     '</div>';
             }
@@ -53,7 +52,6 @@ fetch('http://localhost:8080/api/evenements')
         document.getElementById('evenements').innerHTML = html;
     });
 
-// Affiche les inscriptions du particulier
 function chargerInscriptions() {
     fetch('http://localhost:8080/api/inscriptions?id_user=' + userId)
         .then(function(res) { return res.json(); })
@@ -63,7 +61,8 @@ function chargerInscriptions() {
                 data.forEach(function(i) {
                     html += '<div class="card mb-2 p-3">' +
                         '<strong>' + i.titre + '</strong>' +
-                        '<p class="text-muted small mb-0"> ' + i.date + ' —  ' + i.prix + '€</p>' +
+                        '<p class="text-muted small mb-1">' + i.date + ' — ' + i.prix + '€</p>' +
+                        '<button class="btn btn-danger btn-sm" onclick="seDesinscrire(' + i.id + ')">Se désinscrire</button>' +
                         '</div>';
                 });
             } else {
@@ -81,6 +80,17 @@ function sinscrire(idEvent) {
     }).then(function(res) {
         if (res.ok) {
             alert('Inscription réussie !');
+            chargerInscriptions();
+        }
+    });
+}
+
+function seDesinscrire(idInscription) {
+    fetch('http://localhost:8080/api/inscriptions/' + idInscription, {
+        method: 'DELETE'
+    }).then(function(res) {
+        if (res.ok) {
+            alert('Désinscription effectuée !');
             chargerInscriptions();
         }
     });

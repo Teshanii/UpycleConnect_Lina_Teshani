@@ -99,10 +99,15 @@ type TypeAbonnement struct {
 
 // --- DEMANDES DE BOX ---
 type DemandeBox struct {
-	Id          int    `json:"id"`
-	IdUser      int    `json:"id_user"`
-	Description string `json:"description"`
-	Statut      string `json:"statut"`
+	Id            int    `json:"id"`
+	IdUser        int    `json:"id_user"`
+	IdObjet       int    `json:"id_objet"`
+	IdBox         int    `json:"id_box"`
+	Description   string `json:"description"`
+	Statut        string `json:"statut"`
+	CodeOuverture string `json:"code_ouverture"`
+	CodeBarre     string `json:"code_barre_scan"`
+	Date          string `json:"date"`
 }
 
 // --- INSCRIPTIONS ---
