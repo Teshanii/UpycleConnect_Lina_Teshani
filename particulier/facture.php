@@ -1,0 +1,87 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) { header('Location: ../connexion.php'); exit; }
+
+require_once '../vendor/autoload.php';
+
+$id_event  = intval($_GET['id_event']);
+$ref       = htmlspecialchars($_GET['ref']);
+$montant   = floatval($_GET['montant']);
+$nom       = $_SESSION['user_nom'];
+$prenom    = $_SESSION['user_prenom'];
+$email     = $_SESSION['user_email'];
+$date      = date('d/m/Y');
+
+// Récupérer le titre de l'atelier
+$pdo = new PDO('mysql:host=database;dbname=upcycle_connect', 'root', 'root');
+$stmt = $pdo->prepare("SELECT titre, date_debut FROM evenements WHERE id_event = ?");
+$stmt->execute([$id_event]);
+$event = $stmt->fetch();
+$titre_atelier = $event ? $event['titre'] : 'Atelier';
+
+// Générer le PDF avec FPDF
+$pdf = new FPDF();
+$pdf->AddPage();
+$pdf->SetFont('Arial', 'B', 20);
+
+// En-tête
+$pdf->SetTextColor(45, 106, 79); // vert UpcycleConnect
+$pdf->Cell(0, 15, 'UpcycleConnect', 0, 1, 'C');
+$pdf->SetFont('Arial', '', 11);
+$pdf->SetTextColor(100, 100, 100);
+$pdf->Cell(0, 6, 'Plateforme de l\'upcycling intelligent', 0, 1, 'C');
+$pdf->Ln(5);
+
+// Ligne séparatrice
+$pdf->SetDrawColor(45, 106, 79);
+$pdf->SetLineWidth(0.5);
+$pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
+$pdf->Ln(8);
+
+// Titre facture
+$pdf->SetFont('Arial', 'B', 16);
+$pdf->SetTextColor(0, 0, 0);
+$pdf->Cell(0, 10, 'FACTURE', 0, 1, 'C');
+$pdf->Ln(5);
+
+// Infos client
+$pdf->SetFont('Arial', 'B', 12);
+$pdf->Cell(0, 8, 'Informations client :', 0, 1);
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(0, 7, 'Nom : ' . $prenom . ' ' . $nom, 0, 1);
+$pdf->Cell(0, 7, 'Email : ' . $email, 0, 1);
+$pdf->Cell(0, 7, 'Date : ' . $date, 0, 1);
+$pdf->Ln(5);
+
+// Détail achat
+$pdf->SetFont('Arial', 'B', 12);
+$pdf->Cell(0, 8, 'Detail de l\'achat :', 0, 1);
+$pdf->SetFillColor(240, 248, 240);
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(130, 10, $titre_atelier, 1, 0, 'L', true);
+$pdf->Cell(60, 10, number_format($montant, 2) . ' EUR', 1, 1, 'R', true);
+$pdf->Ln(3);
+
+// Total
+$pdf->SetFont('Arial', 'B', 12);
+$pdf->Cell(130, 10, 'TOTAL TTC', 1, 0, 'L');
+$pdf->SetTextColor(45, 106, 79);
+$pdf->Cell(60, 10, number_format($montant, 2) . ' EUR', 1, 1, 'R');
+$pdf->SetTextColor(0, 0, 0);
+$pdf->Ln(5);
+
+// Référence paiement
+$pdf->SetFont('Arial', '', 10);
+$pdf->SetTextColor(150, 150, 150);
+$pdf->Cell(0, 7, 'Reference paiement : ' . $ref, 0, 1);
+$pdf->Cell(0, 7, 'Paiement traite par Stripe', 0, 1);
+$pdf->Ln(10);
+
+// Pied de page
+$pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
+$pdf->Ln(5);
+$pdf->SetFont('Arial', 'I', 9);
+$pdf->Cell(0, 6, 'Merci pour votre confiance ! UpcycleConnect - contact@upcycle-connect.online', 0, 1, 'C');
+
+// Télécharger le PDF
+$pdf->Output('D', 'facture_' . $ref . '.pdf');

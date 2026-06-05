@@ -73,10 +73,10 @@ fetch('http://localhost:8080/api/users')
 
             // badges débloqués
             var badges = '';
-            if (score >= 100) badges += '<span class="badge me-1" style="background-color:var(--accent-beige);"> Éco-citoyen</span>';
-            if (score >= 250) badges += '<span class="badge me-1" style="background-color:var(--accent-beige);"> Recycleur</span>';
-            if (score >= 500) badges += '<span class="badge me-1" style="background-color:var(--accent-beige);"> Expert</span>';
-            if (score >= 1000) badges += '<span class="badge me-1" style="background-color:var(--accent-beige);"> Légende</span>';
+            if (score >= 100) badges += '<span class="badge bg-success me-1">Eco-citoyen</span>';
+            if (score >= 250) badges += '<span class="badge bg-primary me-1">Recycleur</span>';
+            if (score >= 500) badges += '<span class="badge bg-warning text-dark me-1">Expert</span>';
+            if (score >= 1000) badges += '<span class="badge bg-danger me-1">Legende</span>';
             document.getElementById('badge').innerHTML = badges;
         }
     });

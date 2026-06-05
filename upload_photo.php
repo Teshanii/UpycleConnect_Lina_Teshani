@@ -1,24 +1,21 @@
 <?php
-// Ce fichier reçoit la photo et la sauvegarde dans le dossier uploads/
+ini_set('upload_max_filesize', '100M');
+ini_set('post_max_size', '100M');
+ini_set('memory_limit', '128M');
 
 if (isset($_FILES['photo']) && $_FILES['photo']['error'] === 0) {
-    
-    // On crée le dossier uploads s'il existe pas
     if (!is_dir('uploads')) {
         mkdir('uploads', 0777, true);
     }
-
-    // On génère un nom unique pour éviter les doublons
     $nom = time() . '_' . basename($_FILES['photo']['name']);
     $destination = 'uploads/' . $nom;
-
-    // On déplace la photo du dossier temporaire vers uploads/
     if (move_uploaded_file($_FILES['photo']['tmp_name'], $destination)) {
         echo json_encode(['chemin' => $destination]);
     } else {
-        echo json_encode(['chemin' => '']);
+        echo json_encode(['chemin' => '', 'error' => 'Erreur lors du déplacement du fichier']);
     }
 } else {
-    echo json_encode(['chemin' => '']);
+    $erreur = isset($_FILES['photo']) ? $_FILES['photo']['error'] : 'Aucun fichier';
+    echo json_encode(['chemin' => '', 'error' => 'Code erreur: ' . $erreur]);
 }
 ?>

@@ -25,6 +25,13 @@ if (!isset($_SESSION['user_id'])) {
 <div class="container mt-4">
     <a href="dashboard.php" style="color:var(--primary-green);">← Retour</a>
     <h4 class="mt-3" style="color:var(--primary-green);"> Mes annonces</h4>
+
+    <!-- Loader — visible pendant que les données chargent -->
+    <div id="loader" class="text-center mt-4">
+        <div class="spinner-border" style="color:var(--primary-green);"></div>
+        <p class="text-muted mt-2">Chargement de vos annonces...</p>
+    </div>
+
     <div id="liste"></div>
 </div>
 
@@ -32,22 +39,42 @@ if (!isset($_SESSION['user_id'])) {
 fetch('http://localhost:8080/api/annonces?id_user=<?php echo $_SESSION['user_id']; ?>')
     .then(function(res) { return res.json(); })
     .then(function(data) {
+
+        // Les données sont arrivées — on cache le loader
+        document.getElementById('loader').style.display = 'none';
+
         var html = '';
+
         if (data && data.length > 0) {
             data.forEach(function(a) {
-                var validation = a.statut_validation === 1
-                    ? '<span class="badge bg-success">Publiée</span>'
-                    : '<span class="badge bg-warning text-dark">En attente</span>';
 
+                // Badge statut validation
+                var validation;
+                if (a.statut_validation === 1) {
+                    validation = '<span class="badge bg-success"> Publiée</span>';
+                } else if (a.statut_validation === 2) {
+                validation = '<span class="badge bg-danger"> Refusée</span>';
+                if (a.motif_refus) {
+                    validation += '<p class="text-danger small mt-1">Motif : ' + a.motif_refus + '</p>';
+                }
+                } else {
+                    validation = '<span class="badge bg-warning text-dark"> En attente de validation</span>';
+                }
+
+                // Badge type don ou vente
                 var type = a.type_offre === 'don'
                     ? '<span class="badge bg-info text-dark">Don gratuit</span>'
                     : '<span class="badge bg-secondary">Vente — ' + a.prix + '€</span>';
 
-                var statutAnnonce = a.statut_annonce === 'vendu'
-                    ? '<span class="badge bg-danger">Vendu</span>'
-                    : a.statut_annonce === 'recupere'
-                    ? '<span class="badge bg-primary">Récupéré</span>'
-                    : '<span class="badge bg-light text-dark border">Disponible</span>';
+                // Badge statut de l'annonce
+                var statutAnnonce;
+                if (a.statut_annonce === 'vendu') {
+                    statutAnnonce = '<span class="badge bg-danger">Vendu</span>';
+                } else if (a.statut_annonce === 'recupere') {
+                    statutAnnonce = '<span class="badge bg-primary">Récupéré</span>';
+                } else {
+                    statutAnnonce = '<span class="badge bg-light text-dark border">Disponible</span>';
+                }
 
                 html += '<div class="card mb-3 p-3">' +
                     '<div class="d-flex justify-content-between align-items-start">' +
@@ -66,9 +93,15 @@ fetch('http://localhost:8080/api/annonces?id_user=<?php echo $_SESSION['user_id'
                     '</div>';
             });
         } else {
-            html = '<p class="text-muted">Vous n\'avez pas encore d\'annonces.</p>';
+            html = '<p class="text-muted mt-3">Vous n\'avez pas encore d\'annonces.</p>';
         }
+
         document.getElementById('liste').innerHTML = html;
+    })
+    .catch(function() {
+        // Si le fetch échoue — on cache le loader et on affiche une erreur
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('liste').innerHTML = '<div class="alert alert-danger">Impossible de charger vos annonces. Réessayez plus tard.</div>';
     });
 
 function supprimer(id) {

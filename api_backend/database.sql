@@ -10,11 +10,15 @@ CREATE TABLE utilisateurs (
     nom VARCHAR(100) NOT NULL,
     prenom VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
-    mot_de_passe VARCHAR(255) NOT NULL, -- Sera haché avec bcrypt en Go
+    mot_de_passe VARCHAR(255) NOT NULL,
     date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP,
-    score_upcycling INT DEFAULT 0, -- Pour les particuliers
-    onesignal_player_id VARCHAR(255), -- ID technique pour les notifications push
+    score_upcycling INT DEFAULT 0,
+    onesignal_player_id VARCHAR(255),
     est_actif TINYINT DEFAULT 1,
+    est_verifie TINYINT DEFAULT 1,
+    token_verification VARCHAR(64) NULL,
+    reset_token VARCHAR(64) NULL,
+    reset_token_expiry DATETIME NULL,
     id_role INT NOT NULL,
     FOREIGN KEY (id_role) REFERENCES roles(id_role)
 ) ENGINE=InnoDB;
@@ -31,12 +35,12 @@ CREATE TABLE categories (
     code_ref_cat VARCHAR(50) NOT NULL UNIQUE 
 ) ENGINE=InnoDB;
 
-CREATE TABLE traductions_categories (
-    id_cat INT NOT NULL,
+CREATE TABLE traductions (
+    id_traduction INT AUTO_INCREMENT PRIMARY KEY,
+    cle VARCHAR(100) NOT NULL,
     id_langue INT NOT NULL,
-    libelle_traduit VARCHAR(100) NOT NULL,
-    PRIMARY KEY (id_cat, id_langue),
-    FOREIGN KEY (id_cat) REFERENCES categories(id_cat) ON DELETE CASCADE,
+    texte TEXT NOT NULL,
+    UNIQUE KEY (cle, id_langue),
     FOREIGN KEY (id_langue) REFERENCES langues(id_langue) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
@@ -61,6 +65,7 @@ CREATE TABLE annonces (
     type_annonce VARCHAR(10) DEFAULT 'don',
     prix DECIMAL(10,2) DEFAULT 0.00,
     statut_annonce VARCHAR(20) DEFAULT 'disponible',
+    motif_refus VARCHAR(255),
     photo VARCHAR(255),
     FOREIGN KEY (id_user_auteur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
@@ -71,18 +76,45 @@ CREATE TABLE box (
     capacite_max INT NOT NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE casiers (
+    id_casier INT AUTO_INCREMENT PRIMARY KEY,
+    numero VARCHAR(10) NOT NULL,
+    statut VARCHAR(20) DEFAULT 'libre', -- libre / occupe
+    id_box INT NOT NULL,
+    FOREIGN KEY (id_box) REFERENCES box(id_box) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE demandes_depot (
     id_demande INT AUTO_INCREMENT PRIMARY KEY,
     statut_check VARCHAR(50) DEFAULT 'en_attente',
-    code_ouverture VARCHAR(10), 
+    code_ouverture VARCHAR(10),
     code_barre_scan VARCHAR(100),
+    code_artisan VARCHAR(10),
+    motif_refus VARCHAR(255),
+    id_casier INT,
     date_demande DATETIME DEFAULT CURRENT_TIMESTAMP,
     id_user INT NOT NULL,
     id_objet INT NOT NULL,
     id_box INT NOT NULL,
+    id_artisan INT NULL,
+    id_annonce INT NULL,
     FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user),
     FOREIGN KEY (id_objet) REFERENCES objets(id_objet),
-    FOREIGN KEY (id_box) REFERENCES box(id_box)
+    FOREIGN KEY (id_box) REFERENCES box(id_box),
+    FOREIGN KEY (id_casier) REFERENCES casiers(id_casier),
+    FOREIGN KEY (id_annonce) REFERENCES annonces(id_annonce)
+) ENGINE=InnoDB;
+
+CREATE TABLE prestations (
+    id_prestation INT AUTO_INCREMENT PRIMARY KEY,
+    nom_prestation VARCHAR(150) NOT NULL,
+    prix DECIMAL(10,2) NOT NULL,
+    description TEXT,
+    photo VARCHAR(255),
+    id_createur INT,
+    statut_validation TINYINT DEFAULT 0,
+    motif_refus VARCHAR(255),
+    FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
 -- 4. POLE COMMUNAUTE & PROJETS
@@ -108,14 +140,16 @@ CREATE TABLE etapes_projet (
 
 CREATE TABLE evenements (
     id_event INT AUTO_INCREMENT PRIMARY KEY,
+    titre VARCHAR(150),
     type_event VARCHAR(50), 
+    date_debut DATETIME,
     prix_actuel DECIMAL(10,2) NOT NULL,
     places_max INT NOT NULL,
     statut_validation TINYINT DEFAULT 0,
+    motif_refus VARCHAR(255),
     id_animateur INT NOT NULL,
     FOREIGN KEY (id_animateur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
-
 -- 5. POLE FINANCE
 CREATE TABLE types_abonnements (
     id_type_abo INT AUTO_INCREMENT PRIMARY KEY,
@@ -130,7 +164,18 @@ CREATE TABLE transactions (
     statut_paiement VARCHAR(50),
     date_transac DATETIME DEFAULT CURRENT_TIMESTAMP,
     id_user INT,
+    type VARCHAR(50) DEFAULT 'atelier',
     FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+CREATE TABLE message_forums (
+    id_message INT AUTO_INCREMENT PRIMARY KEY,
+    contenu TEXT NOT NULL,
+    id_user_auteur INT NOT NULL,
+    date_message DATETIME DEFAULT CURRENT_TIMESTAMP,
+    est_modere TINYINT DEFAULT 0,
+    id_message_parent INT NULL,
+    FOREIGN KEY (id_user_auteur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
 -- 6. NOTIFICATIONS 
@@ -171,5 +216,3 @@ CREATE TABLE inscriptions (
 INSERT INTO roles (libelle_role) VALUES ('Admin'), ('Salarie'), ('Professionnel et Artisan'), ('Particulier');
 INSERT INTO langues (code_iso, nom_langue) VALUES ('fr', 'Français'), ('en', 'English');
 INSERT INTO types_abonnements (nom_offre, prix_mensuel_actuel) VALUES ('Gratuit', 0.00), ('Premium Artisan', 29.99);
-INSERT INTO evenements (titre, date_debut, prix_actuel, places_max, statut_validation, id_animateur) 
-VALUES ('Atelier Palette', '2026-04-10 14:00:00', 15.00, 10, 1, 2);

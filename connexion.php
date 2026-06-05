@@ -78,6 +78,10 @@ if (isset($_SESSION['user_id'])) {
                     </div>
 
                     <button type="submit" class="btn btn-primary-upcycle w-100 py-2">SE CONNECTER</button>
+
+                    <div class="text-center mt-2">
+                        <a href="forgot_password.php" class="text-muted small">Mot de passe oublié ?</a>
+                    </div>
                 </form>
 
                 <p class="text-center mt-4">

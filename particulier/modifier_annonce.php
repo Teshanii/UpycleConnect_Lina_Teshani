@@ -40,11 +40,7 @@ $id = $_GET['id'] ?? 0;
             <div class="mb-3">
                 <label class="form-label">Catégorie</label>
                 <select class="form-select" id="categorie">
-                    <option value="bois">Bois</option>
-                    <option value="textile">Textile</option>
-                    <option value="metal">Métal</option>
-                    <option value="electronique">Électronique</option>
-                    <option value="autre">Autre</option>
+                    
                 </select>
             </div>
 
@@ -77,15 +73,25 @@ $id = $_GET['id'] ?? 0;
 <script>
 var id = <?php echo $id; ?>;
 
-// Charger les données existantes de l'annonce
-fetch('http://localhost:8080/api/annonces?id_user=<?php echo $_SESSION['user_id']; ?>')
+// D'abord les catégories, puis les données de l'annonce
+fetch('http://localhost:8080/api/categories')
+    .then(function(res) { return res.json(); })
+    .then(function(cats) {
+        var select = document.getElementById('categorie');
+        select.innerHTML = '';
+        cats.forEach(function(c) {
+            select.innerHTML += '<option value="' + c.nom + '">' + c.nom + '</option>';
+        });
+        // Une fois les catégories chargées on charge l'annonce
+        return fetch('http://localhost:8080/api/annonces?id_user=<?php echo $_SESSION['user_id']; ?>');
+    })
     .then(function(res) { return res.json(); })
     .then(function(data) {
         var annonce = data.find(function(a) { return a.id === id; });
         if (annonce) {
             document.getElementById('titre').value = annonce.titre;
             document.getElementById('description').value = annonce.description || '';
-            document.getElementById('categorie').value = annonce.categorie || 'autre';
+            document.getElementById('categorie').value = annonce.categorie || '';
             document.getElementById('prix').value = annonce.prix || 0;
             if (annonce.type_offre === 'don') {
                 document.getElementById('don').checked = true;
@@ -97,8 +103,6 @@ fetch('http://localhost:8080/api/annonces?id_user=<?php echo $_SESSION['user_id'
 
 function modifier() {
     var photoFile = document.getElementById('photo').files[0];
-
-    // Si une nouvelle photo est choisie, on l'upload d'abord
     if (photoFile) {
         var formData = new FormData();
         formData.append('photo', photoFile);

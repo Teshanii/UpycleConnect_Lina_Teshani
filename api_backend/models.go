@@ -32,23 +32,30 @@ type Langue struct {
 	Nom  string `json:"nom"`
 }
 
-// --- MÉTIER : PRESTATIONS & ÉVÉNEMENTS ---
 type Prestations struct {
-	Id   int     `json:"id"`
-	Nom  string  `json:"nom"`
-	Prix float64 `json:"prix"`
-	Desc string  `json:"desc"` // Description du service
+    Id               int     `json:"id"`
+    Nom              string  `json:"nom"`
+    Prix             float64 `json:"prix"`
+    Desc             string  `json:"desc"`
+    Photo            string  `json:"photo"`
+    IdCreateur       int     `json:"id_createur"`
+    Createur         string  `json:"createur"`
+    StatutValidation int     `json:"statut_validation"`
+    MotifRefus       string  `json:"motif_refus"`
 }
+
 
 type Evenements struct {
 	Id               int     `json:"id"`
 	Titre            string  `json:"titre"`
 	Date             string  `json:"date"`
-	Prix             float64 `json:"prix"` // Entre 20€ et 100€
+	Prix             float64 `json:"prix"`
 	Place            int     `json:"place"`
 	IdAnim           int     `json:"id_anim"`
 	Anim             string  `json:"anim"`
-	StatutValidation int     `json:"statut_validation"` // 0=Attente, 1=Validé
+	StatutValidation int     `json:"statut_validation"`
+	NbInscrits       int     `json:"nb_inscrits"`
+	MotifRefus       string  `json:"motif_refus"`
 }
 
 // --- LOGISTIQUE : BOX & ANNONCES ---
@@ -69,25 +76,28 @@ type Annonce struct {
 	IdUser           int     `json:"id_user"`
 	Prix             float64 `json:"prix"`
 	StatutAnnonce    string  `json:"statut_annonce"`
+	MotifRefus       string  `json:"motif_refus"`
 	Photo            string  `json:"photo"`
 }
 
-// --- COMMUNAUTÉ ---
+
 type ForumMessage struct {
-	Id        int    `json:"id"`
-	Contenu   string `json:"contenu"`
-	Auteur    string `json:"auteur"`
-	Date      string `json:"date"` // Pour le suivi chronologique
-	EstModere int    `json:"est_modere"`
+    Id              int    `json:"id"`
+    Contenu         string `json:"contenu"`
+    Auteur          string `json:"auteur"`
+    IdUser          int    `json:"id_user"`
+    IdMessageParent int    `json:"id_message_parent"`
+    Date            string `json:"date"`
+    EstModere       int    `json:"est_modere"`
 }
 
-// --- FINANCES (STRIPE) ---
 type Transaction struct {
 	Id        int     `json:"id"`
+	IdUser    int     `json:"id_user"`
 	Montant   float64 `json:"montant"`
 	RefStripe string  `json:"ref_stripe"`
-	Statut    string  `json:"statut"` // succeeded, pending...
-	Type      string  `json:"type"`   // "abonnement", "formation", "commission"
+	Statut    string  `json:"statut"`
+	Type      string  `json:"type"`
 	Date      string  `json:"date"`
 }
 
@@ -97,17 +107,46 @@ type TypeAbonnement struct {
 	Prix float64 `json:"prix"`
 }
 
-// --- DEMANDES DE BOX ---
 type DemandeBox struct {
-	Id            int    `json:"id"`
-	IdUser        int    `json:"id_user"`
-	IdObjet       int    `json:"id_objet"`
-	IdBox         int    `json:"id_box"`
-	Description   string `json:"description"`
-	Statut        string `json:"statut"`
-	CodeOuverture string `json:"code_ouverture"`
-	CodeBarre     string `json:"code_barre_scan"`
-	Date          string `json:"date"`
+    Id            int    `json:"id"`
+    IdUser        int    `json:"id_user"`
+    IdObjet       int    `json:"id_objet"`
+    IdBox         int    `json:"id_box"`
+    IdCasier      int    `json:"id_casier"`
+    IdArtisan     int    `json:"id_artisan"`
+    IdAnnonce     int    `json:"id_annonce"`
+    Description   string `json:"description"`
+    Statut        string `json:"statut"`
+    CodeOuverture string `json:"code_ouverture"`
+    CodeBarre     string `json:"code_barre_scan"`
+    CodeArtisan   string `json:"code_artisan"`
+    MotifRefus    string `json:"motif_refus"`
+    Date          string `json:"date"`
+    NomUser       string `json:"nom_user"`
+    AdresseBox    string `json:"adresse_box"`
+    NumeroCasier  string `json:"numero_casier"`
+    TitreAnnonce  string `json:"titre_annonce"`
+}
+
+type ObjetCatalogue struct {
+    IdDemande      int     `json:"id_demande"`
+    Titre          string  `json:"titre"`
+    Description    string  `json:"description"`
+    Categorie      string  `json:"categorie"`
+    TypeOffre      string  `json:"type_offre"`
+    Prix           float64 `json:"prix"`
+    Photo          string  `json:"photo"`
+    NomParticulier string  `json:"nom_particulier"`
+    AdresseBox     string  `json:"adresse_box"`
+    NumeroCasier   string  `json:"numero_casier"`
+}
+
+// --- CASIERS ---
+type Casier struct {
+    Id     int    `json:"id"`
+    Numero string `json:"numero"`
+    Statut string `json:"statut"`
+    IdBox  int    `json:"id_box"`
 }
 
 // --- INSCRIPTIONS ---
@@ -121,9 +160,36 @@ type Inscription struct {
 }
 
 type ArticleConseil struct {
-	Id      int    `json:"id"`
-	Titre   string `json:"titre"`
-	Contenu string `json:"contenu"`
-	Type    string `json:"type"`
-	Date    string `json:"date"`
+	Id       int    `json:"id"`
+	Titre    string `json:"titre"`
+	Contenu  string `json:"contenu"`
+	Type     string `json:"type"`
+	Date     string `json:"date"`
+	Auteur   string `json:"auteur"`
+	IdAuteur int    `json:"id_auteur"`
+}
+
+type Traduction struct {
+    Id       int    `json:"id"`
+    Cle      string `json:"cle"`
+    IdLangue int    `json:"id_langue"`
+    Texte    string `json:"texte"`
+}
+
+type Projet struct {
+	Id            int    `json:"id"`
+	Titre         string `json:"titre"`
+	Description   string `json:"description"`
+	EstSponsorise int    `json:"est_sponsorise"`
+	IdCreateur    int    `json:"id_createur"`
+	Createur      string `json:"createur"`
+}
+
+type Etape struct {
+	Id          int    `json:"id"`
+	Titre       string `json:"titre"`
+	Description string `json:"description"`
+	Image       string `json:"image"`
+	Ordre       int    `json:"ordre"`
+	IdProjet    int    `json:"id_projet"`
 }

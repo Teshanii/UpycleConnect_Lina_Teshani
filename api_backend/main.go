@@ -26,8 +26,22 @@ func main() {
 	mux.HandleFunc("/api/box", handleBox)
 	mux.HandleFunc("/api/box/{id}", handleBox)
 	mux.HandleFunc("/api/demandes_box", handleDemandesBox)
+	mux.HandleFunc("/api/demandes_box/{id}", handleDemandesBox)
+	mux.HandleFunc("/api/catalogue-artisan", handleCatalogueArtisan)
+	mux.HandleFunc("/api/recuperation", handleRecuperation)
+	mux.HandleFunc("/api/confirmer-recup", handleConfirmerRecup)
+
+	mux.HandleFunc("/api/casiers", handleCasiers)
+	mux.HandleFunc("/api/casiers/{id}", handleCasiers)
+
+	mux.HandleFunc("/api/projets", handleProjets)
+	mux.HandleFunc("/api/projets/{id}", handleProjets)
+
+	mux.HandleFunc("/api/etapes", handleEtapes)
+	mux.HandleFunc("/api/etapes/{id}", handleEtapes)
 
 	mux.HandleFunc("/api/conseils", handleConseils)
+	mux.HandleFunc("/api/conseils/{id}", handleConseils)
 
 	mux.HandleFunc("/api/messages", handleMessages)
 	mux.HandleFunc("/api/messages/{id}", handleMessages)
@@ -38,11 +52,15 @@ func main() {
 
 	mux.HandleFunc("/api/inscriptions", handleInscriptions)
 	mux.HandleFunc("/api/inscriptions/{id}", handleInscriptions)
+	mux.HandleFunc("/api/inscrits-evenement/{id}", handleInscritsEvenement)
 
 	mux.HandleFunc("/api/transactions", handleTransactions)
 	mux.HandleFunc("/api/abonnements", handleAbonnements)
+	mux.HandleFunc("/api/transactions/{id}", handleTransactions)
 
 	mux.HandleFunc("/api/langues", handleLangues)
+	mux.HandleFunc("/api/traductions", handleTraductions)
+	mux.HandleFunc("/api/langues/{id}", handleLangues)
 
 	mux.HandleFunc("PUT /api/evenements/valider/{id}", handleValidation)
 

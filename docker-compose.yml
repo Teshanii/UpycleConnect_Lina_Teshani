@@ -34,7 +34,9 @@ services:
 
   # PHP Apache qui sert les pages PHP du front
   web:
-    image: php:8.2-apache
+    build:
+      context: .
+      dockerfile: dockerfile.php
     container_name: upcycle_web
     ports:
       - "80:80"
