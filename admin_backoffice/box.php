@@ -372,7 +372,7 @@ include 'includes/header.php';
             });
         }
 
-        document.getElementById('f-casier').onsubmit = async (e) => {
+       document.getElementById('f-casier').onsubmit = async (e) => {
             e.preventDefault();
             const res = await fetch(API_CASIERS, {
                 method: 'POST',
@@ -382,7 +382,14 @@ include 'includes/header.php';
                     id_box: parseInt(document.getElementById('id-box-casier').value)
                 })
             });
-            if (res.ok) { e.target.reset(); chargerCasiers(); }
+            if (res.ok) {
+                e.target.reset();
+                chargerCasiers();
+            } else {
+                // On affiche l'erreur renvoyée par l'API (box pleine ou numéro déjà pris)
+                const err = await res.json();
+                alert(err.error || 'Erreur lors de l\'ajout du casier.');
+            }
         };
 
         async function supprimerCasier(id) {

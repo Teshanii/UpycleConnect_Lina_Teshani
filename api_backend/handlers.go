@@ -152,22 +152,23 @@
 
 			switch r.Method {
 			case "GET":
-				// L'artisan/salarié voit ses propres prestations, l'admin et particulier voient tout
-				idCreateur := r.URL.Query().Get("id_createur")
-				var lignes *sql.Rows
-				if idCreateur != "" {
-					lignes, _ = bd.Query("SELECT p.id_prestation, p.nom_prestation, p.prix, COALESCE(p.description,''), COALESCE(p.photo,''), COALESCE(p.id_createur,0), COALESCE(u.nom,''), p.statut_validation, COALESCE(p.motif_refus,'') FROM prestations p LEFT JOIN utilisateurs u ON p.id_createur = u.id_user WHERE p.id_createur = ?", idCreateur)
-				} else {
-					lignes, _ = bd.Query("SELECT p.id_prestation, p.nom_prestation, p.prix, COALESCE(p.description,''), COALESCE(p.photo,''), COALESCE(p.id_createur,0), COALESCE(u.nom,''), p.statut_validation, COALESCE(p.motif_refus,'') FROM prestations p LEFT JOIN utilisateurs u ON p.id_createur = u.id_user")
-				}
-				var res []Prestations
-				for lignes.Next() {
-					var p Prestations
-					lignes.Scan(&p.Id, &p.Nom, &p.Prix, &p.Desc, &p.Photo, &p.IdCreateur, &p.Createur, &p.StatutValidation, &p.MotifRefus)
-					res = append(res, p)
-				}
-				json.NewEncoder(w).Encode(res)
-
+			// L'artisan/salarié voit ses propres prestations (même vendues), l'admin et particulier voient le catalogue (sans les vendues)
+			idCreateur := r.URL.Query().Get("id_createur")
+			var lignes *sql.Rows
+			if idCreateur != "" {
+				// L'artisan voit toutes ses prestations, y compris celles déjà vendues (pour son historique)
+				lignes, _ = bd.Query("SELECT p.id_prestation, p.nom_prestation, p.prix, COALESCE(p.description,''), COALESCE(p.photo,''), COALESCE(p.id_createur,0), COALESCE(u.nom,''), p.statut_validation, COALESCE(p.motif_refus,''), COALESCE(p.vendu,0) FROM prestations p LEFT JOIN utilisateurs u ON p.id_createur = u.id_user WHERE p.id_createur = ?", idCreateur)
+			} else {
+				// Le catalogue ne montre que les prestations pas encore vendues
+				lignes, _ = bd.Query("SELECT p.id_prestation, p.nom_prestation, p.prix, COALESCE(p.description,''), COALESCE(p.photo,''), COALESCE(p.id_createur,0), COALESCE(u.nom,''), p.statut_validation, COALESCE(p.motif_refus,''), COALESCE(p.vendu,0) FROM prestations p LEFT JOIN utilisateurs u ON p.id_createur = u.id_user WHERE p.vendu = 0")
+			}
+			var res []Prestations
+			for lignes.Next() {
+				var p Prestations
+				lignes.Scan(&p.Id, &p.Nom, &p.Prix, &p.Desc, &p.Photo, &p.IdCreateur, &p.Createur, &p.StatutValidation, &p.MotifRefus, &p.Vendu)
+				res = append(res, p)
+			}
+			json.NewEncoder(w).Encode(res)
 			case "POST":
 				var p Prestations
 				json.NewDecoder(r.Body).Decode(&p)
@@ -399,9 +400,9 @@
 			switch r.Method {
 			case "GET":
 				lignes, _ := bd.Query(`SELECT m.id_message, m.contenu, u.prenom, m.id_user_auteur, 
-                    COALESCE(m.id_message_parent, 0), m.date_message, m.est_modere 
-                    FROM message_forums m JOIN utilisateurs u ON m.id_user_auteur = u.id_user 
-                    ORDER BY m.date_message ASC`)
+					COALESCE(m.id_message_parent, 0), m.date_message, m.est_modere 
+					FROM message_forums m JOIN utilisateurs u ON m.id_user_auteur = u.id_user 
+					ORDER BY m.date_message ASC`)
 				var res []ForumMessage
 				for lignes.Next() {
 					var m ForumMessage
@@ -620,6 +621,27 @@
 		case "POST":
 			var c Casier
 			json.NewDecoder(r.Body).Decode(&c)
+
+			// 1. On vérifie que la box n'est pas déjà pleine (nombre de casiers < capacité max)
+			var nbCasiers, capaciteMax int
+			bd.QueryRow("SELECT COUNT(*) FROM casiers WHERE id_box = ?", c.IdBox).Scan(&nbCasiers)
+			bd.QueryRow("SELECT capacite_max FROM box WHERE id_box = ?", c.IdBox).Scan(&capaciteMax)
+			if nbCasiers >= capaciteMax {
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Cette box est pleine (capacité maximale atteinte)."})
+				return
+			}
+
+			// 2. On vérifie qu'un casier avec ce numéro n'existe pas déjà dans cette box
+			var existe int
+			bd.QueryRow("SELECT COUNT(*) FROM casiers WHERE id_box = ? AND numero = ?", c.IdBox, c.Numero).Scan(&existe)
+			if existe > 0 {
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Un casier avec ce numéro existe déjà dans cette box."})
+				return
+			}
+
+			// Tout est bon, on crée le casier
 			bd.Exec("INSERT INTO casiers (numero, id_box) VALUES (?,?)", c.Numero, c.IdBox)
 			w.WriteHeader(http.StatusCreated)
 		case "DELETE":
@@ -906,4 +928,269 @@ func handleEtapes(w http.ResponseWriter, r *http.Request) {
 		bd.Exec("DELETE FROM etapes_projet WHERE id_etape=?", id)
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+// --- GESTION DE L'ABONNEMENT ARTISAN (Freemium / Premium) ---
+func handleAbonnement(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	switch r.Method {
+	case "GET":
+		idUser := r.URL.Query().Get("id_user")
+		var abo string
+		var dateFin sql.NullString
+		var annule, recompenseReclamee int
+		bd.QueryRow(`SELECT COALESCE(abonnement,'gratuit'), date_fin_abonnement, COALESCE(abonnement_annule,0), COALESCE(recompense_reclamee,0) 
+			FROM utilisateurs WHERE id_user = ?`, idUser).Scan(&abo, &dateFin, &annule, &recompenseReclamee)
+
+		// Faux cron : si Premium mais date de fin dépassée → on repasse en gratuit
+		if abo == "premium" && dateFin.Valid {
+			fin, err := time.Parse("2006-01-02 15:04:05", dateFin.String)
+			if err == nil && time.Now().After(fin) {
+				bd.Exec("UPDATE utilisateurs SET abonnement = 'gratuit', abonnement_annule = 0, date_fin_abonnement = NULL WHERE id_user = ?", idUser)
+				abo = "gratuit"
+				dateFin.Valid = false
+				annule = 0
+			}
+		}
+
+		dateFinStr := ""
+		if dateFin.Valid {
+			dateFinStr = dateFin.String
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"abonnement":          abo,
+			"date_fin":            dateFinStr,
+			"abonnement_annule":   annule,
+			"recompense_reclamee": recompenseReclamee,
+		})
+
+	
+
+	case "PUT":
+		var u User
+		json.NewDecoder(r.Body).Decode(&u)
+
+		if u.Abonnement == "annuler" {
+			// Annulation : on coupe le renouvellement mais on garde l'accès jusqu'à la date de fin
+			bd.Exec("UPDATE utilisateurs SET abonnement_annule = 1 WHERE id_user = ?", u.Id)
+		} else {
+			// Paiement Premium : on active et on met la date de fin à +1 mois
+			finAbo := time.Now().AddDate(0, 1, 0).Format("2006-01-02 15:04:05")
+			bd.Exec("UPDATE utilisateurs SET abonnement = 'premium', date_fin_abonnement = ?, abonnement_annule = 0 WHERE id_user = ?", finAbo, u.Id)
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// --- ACHAT D'UN OBJET EN VENTE PAR L'ARTISAN (avec paiement + commission) ---
+func handleAcheterObjet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	var d DemandeBox
+	json.NewDecoder(r.Body).Decode(&d)
+
+	// On vérifie que l'objet est encore dispo (pas déjà réservé par un autre artisan)
+	var idArtisanActuel int
+	var idParticulier int
+	var prix float64
+	bd.QueryRow(`SELECT COALESCE(dd.id_artisan, 0), dd.id_user, COALESCE(a.prix, 0)
+		FROM demandes_depot dd
+		JOIN annonces a ON dd.id_annonce = a.id_annonce
+		WHERE dd.id_demande = ?`, d.Id).Scan(&idArtisanActuel, &idParticulier, &prix)
+
+	if idArtisanActuel != 0 {
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Cet objet a déjà été réservé par un autre artisan."})
+		return
+	}
+
+	// On génère le code d'ouverture pour l'artisan
+	codeArtisan := genererCode(6)
+
+	// On réserve l'objet pour cet artisan
+	bd.Exec("UPDATE demandes_depot SET id_artisan = ?, code_artisan = ? WHERE id_demande = ?", d.IdArtisan, codeArtisan, d.Id)
+
+	// On calcule la commission (7%) et la part du particulier (93%)
+	commission := prix * 0.07
+	partParticulier := prix - commission
+
+	// On crédite le portefeuille du particulier
+	bd.Exec("UPDATE utilisateurs SET solde = solde + ? WHERE id_user = ?", partParticulier, idParticulier)
+	// On enregistre le mouvement dans le portefeuille du particulier
+	bd.Exec("INSERT INTO mouvements_portefeuille (id_user, montant, type, description) VALUES (?, ?, 'vente_objet', 'Vente de votre objet (commission déduite)')", idParticulier, partParticulier)
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":      "Objet acheté et réservé.",
+		"code_artisan": codeArtisan,
+	})
+}
+
+// --- GESTION DU PORTEFEUILLE (particulier + artisan) ---
+func handlePortefeuille(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	switch r.Method {
+	case "GET":
+		// On renvoie le solde + l'historique des mouvements d'un user
+		idUser := r.URL.Query().Get("id_user")
+
+		var solde float64
+		bd.QueryRow("SELECT COALESCE(solde,0) FROM utilisateurs WHERE id_user = ?", idUser).Scan(&solde)
+
+		lignes, _ := bd.Query("SELECT id_mouvement, id_user, montant, type, COALESCE(description,''), date_mouvement FROM mouvements_portefeuille WHERE id_user = ? ORDER BY date_mouvement DESC", idUser)
+		var mouvements []Mouvement
+		for lignes.Next() {
+			var m Mouvement
+			lignes.Scan(&m.Id, &m.IdUser, &m.Montant, &m.Type, &m.Description, &m.Date)
+			mouvements = append(mouvements, m)
+		}
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"solde":      solde,
+			"mouvements": mouvements,
+		})
+
+	case "POST":
+		// Demande de retrait : on vérifie que le solde est suffisant, puis on débite
+		var m Mouvement
+		json.NewDecoder(r.Body).Decode(&m)
+
+		var solde float64
+		bd.QueryRow("SELECT COALESCE(solde,0) FROM utilisateurs WHERE id_user = ?", m.IdUser).Scan(&solde)
+
+		// On ne peut pas retirer plus que le solde, ni un montant négatif ou nul
+		if m.Montant <= 0 || m.Montant > solde {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Montant de retrait invalide ou solde insuffisant."})
+			return
+		}
+
+		// On débite le solde
+		bd.Exec("UPDATE utilisateurs SET solde = solde - ? WHERE id_user = ?", m.Montant, m.IdUser)
+		// On enregistre le mouvement (montant négatif car c'est une sortie)
+		bd.Exec("INSERT INTO mouvements_portefeuille (id_user, montant, type, description) VALUES (?, ?, 'retrait', 'Retrait vers votre compte bancaire')", m.IdUser, -m.Montant)
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Retrait effectué."})
+	}
+}
+
+// --- CRÉDIT DE L'ARTISAN APRÈS VENTE D'UNE PRESTATION ---
+func handleVentePrestation(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	// On reçoit l'id de la prestation vendue et le montant payé
+	var data struct {
+		IdPrestation int     `json:"id_prestation"`
+		Montant      float64 `json:"montant"`
+	}
+	json.NewDecoder(r.Body).Decode(&data)
+
+	// On trouve l'artisan qui a créé cette prestation
+	var idArtisan int
+	bd.QueryRow("SELECT id_createur FROM prestations WHERE id_prestation = ?", data.IdPrestation).Scan(&idArtisan)
+
+	// On calcule la part de l'artisan (93%) - la commission (7%) reste à la plateforme
+	partArtisan := data.Montant - (data.Montant * 0.07)
+
+	// On crédite le portefeuille de l'artisan + on trace le mouvement
+	bd.Exec("UPDATE utilisateurs SET solde = solde + ? WHERE id_user = ?", partArtisan, idArtisan)
+	bd.Exec("INSERT INTO mouvements_portefeuille (id_user, montant, type, description) VALUES (?, ?, 'vente_prestation', 'Vente de votre prestation (commission déduite)')", idArtisan, partArtisan)
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Artisan crédité."})
+}
+
+	// --- STATISTIQUES AVANCÉES POUR L'ARTISAN (Premium) ---
+func handleStatsArtisan(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	idArtisan := r.URL.Query().Get("id_artisan")
+
+	// 1. Nombre d'objets récupérés par cet artisan
+	var nbRecups int
+	bd.QueryRow("SELECT COUNT(*) FROM demandes_depot WHERE id_artisan = ?", idArtisan).Scan(&nbRecups)
+
+	// 2. Nombre de prestations vendues par cet artisan
+	var nbVentes int
+	bd.QueryRow("SELECT COUNT(*) FROM prestations WHERE id_createur = ? AND vendu = 1", idArtisan).Scan(&nbVentes)
+
+	// 3. Chiffre d'affaires de l'artisan (somme de ses mouvements de vente)
+	var chiffreAffaires float64
+	bd.QueryRow("SELECT COALESCE(SUM(montant),0) FROM mouvements_portefeuille WHERE id_user = ? AND montant > 0", idArtisan).Scan(&chiffreAffaires)
+
+
+	// 5. Répartition par catégorie (pour le camembert)
+	lignesCat, _ := bd.Query("SELECT c.code_ref_cat, COUNT(*) FROM demandes_depot d JOIN objets o ON d.id_objet = o.id_objet JOIN categories c ON o.id_cat = c.id_cat WHERE d.id_artisan = ? GROUP BY c.code_ref_cat", idArtisan)
+	var categories []map[string]interface{}
+	for lignesCat.Next() {
+		var nom string
+		var nb int
+		lignesCat.Scan(&nom, &nb)
+		categories = append(categories, map[string]interface{}{"nom": nom, "nb": nb})
+	}
+
+	// 6. Récupérations par mois (pour la courbe)
+	lignesMois, _ := bd.Query("SELECT DATE_FORMAT(date_demande, '%Y-%m') AS mois, COUNT(*) FROM demandes_depot WHERE id_artisan = ? GROUP BY mois ORDER BY mois", idArtisan)
+	var parMois []map[string]interface{}
+	for lignesMois.Next() {
+		var mois string
+		var nb int
+		lignesMois.Scan(&mois, &nb)
+		parMois = append(parMois, map[string]interface{}{"mois": mois, "nb": nb})
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{
+			"nb_recups":        nbRecups,
+			"nb_ventes":        nbVentes,
+			"chiffre_affaires": chiffreAffaires,
+			"categories":       categories,
+			"par_mois":         parMois,
+		})
+}
+
+/// --- RÉCOMPENSE : tous les 100 points = 1 mois de Premium (artisan) ---
+func handleRecompense(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	var data struct {
+		IdUser int `json:"id_user"`
+	}
+	json.NewDecoder(r.Body).Decode(&data)
+
+	// On récupère le score et le nb de récompenses déjà prises
+	var score, dejaPrises int
+	bd.QueryRow("SELECT score_upcycling, COALESCE(recompense_reclamee,0) FROM utilisateurs WHERE id_user = ?", data.IdUser).Scan(&score, &dejaPrises)
+
+	// Une récompense par tranche de 100 points
+	meritees := score / 100
+
+	// S'il a déjà tout réclamé → rien à donner
+	if dejaPrises >= meritees {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Aucune récompense disponible. Cumulez encore des points !"})
+		return
+	}
+
+	// On ajoute 1 mois en une seule requête (on part de la date de fin si future, sinon de maintenant)
+	bd.Exec(`UPDATE utilisateurs 
+		SET abonnement = 'premium', 
+		    abonnement_annule = 0,
+		    recompense_reclamee = recompense_reclamee + 1,
+		    date_fin_abonnement = DATE_ADD(GREATEST(COALESCE(date_fin_abonnement, NOW()), NOW()), INTERVAL 1 MONTH)
+		WHERE id_user = ?`, data.IdUser)
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Félicitations ! 1 mois de Premium ajouté à votre compte."})
 }

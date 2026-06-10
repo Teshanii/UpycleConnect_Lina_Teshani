@@ -112,7 +112,7 @@ fetch('http://localhost:8080/api/transactions?id_user=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(data) {
         var div = document.getElementById('mes-paiements');
-        
+
         if (!data || data.length === 0) {
             div.innerHTML = '<p class="text-muted small">Aucun paiement effectué.</p>';
             return;
@@ -126,26 +126,48 @@ fetch('http://localhost:8080/api/transactions?id_user=' + userId)
                 ? '<span class="badge bg-warning text-dark">Remboursé</span>'
                 : '<span class="badge bg-secondary">' + t.statut + '</span>';
 
-            // Bouton remboursement seulement si payé
-            var btnRemboursement = t.statut === 'succeeded'
-                ? '<button class="btn btn-outline-warning btn-sm ms-1" onclick="demanderRemboursement(\'' + t.ref_stripe + '\', ' + t.id + ')">Remboursement</button>'
-                : '';
+            // On traduit le type en libellé lisible
+            var libelleType;
+            if (t.type === 'atelier') {
+                libelleType = 'Atelier';
+            } else if (t.type === 'prestation') {
+                libelleType = 'Prestation';
+            } else if (t.type === 'objet') {
+                libelleType = 'Objet acheté';
+            } else if (t.type === 'abonnement') {
+                libelleType = 'Abonnement Premium';
+            } else {
+                libelleType = 'Paiement';
+            }
+
+            // On n'autorise le remboursement que pour les paiements faits à la plateforme
+            // (abonnement Premium et ateliers). Les objets/prestations ne sont pas remboursables
+            // en ligne car un vendeur a déjà été crédité.
+            var actionRemboursement = '';
+            if (t.statut === 'succeeded') {
+                if (t.type === 'abonnement' || t.type === 'atelier') {
+                    actionRemboursement = '<button class="btn btn-outline-warning btn-sm ms-1" onclick="demanderRemboursement(\'' + t.ref_stripe + '\', ' + t.id + ')">Remboursement</button>';
+                } else {
+                    actionRemboursement = '<span class="text-muted small ms-2">Non remboursable en ligne</span>';
+                }
+            }
 
             html += '<div class="card mb-2 p-2">' +
                 '<div class="d-flex justify-content-between align-items-center">' +
                 '<div>' +
+                '<span class="badge bg-light text-dark border mb-1">' + libelleType + '</span><br>' +
                 '<strong>' + t.montant.toFixed(2) + ' €</strong> ' + badge + '<br>' +
                 '<span class="text-muted small">' + (t.date ? t.date.split('T')[0] : '') + ' — Réf: ' + t.ref_stripe + '</span>' +
                 '</div>' +
                 '<div>' +
-                '<a href="facture.php?ref=' + t.ref_stripe + '&montant=' + t.montant + '&id_event=0" target="_blank" class="btn btn-outline-success btn-sm"> Facture</a>' +
-                btnRemboursement +
+                '<a href="facture.php?ref=' + t.ref_stripe + '&montant=' + t.montant + '&id_event=0" target="_blank" class="btn btn-outline-success btn-sm">📄 Facture</a>' +
+                actionRemboursement +
                 '</div>' +
                 '</div>' +
                 '</div>';
         });
 
-        div.innerHTML = html;
+        div.innerHTML = html;;
     })
     .catch(function() {
         document.getElementById('mes-paiements').innerHTML = '<p class="text-muted small">Impossible de charger les paiements.</p>';
@@ -153,7 +175,7 @@ fetch('http://localhost:8080/api/transactions?id_user=' + userId)
 
 // Demander un remboursement
 function demanderRemboursement(ref, idTransaction) {
-    if (confirm('Demander un remboursement pour ce paiement ?')) {
+    if (confirm('Demander un remboursement pour ce paiement ? L\'argent sera recrédité sur votre carte bancaire.')) {
         fetch('remboursement.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -162,7 +184,7 @@ function demanderRemboursement(ref, idTransaction) {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.ok) {
-                alert('Demande de remboursement envoyée ! L\'admin va traiter votre demande.');
+                alert('Remboursement effectué ! L\'argent sera recrédité sur votre carte sous quelques jours.');
                 location.reload();
             } else {
                 alert(data.error || 'Erreur lors de la demande.');

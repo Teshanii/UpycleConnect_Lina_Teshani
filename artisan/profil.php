@@ -1,6 +1,6 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
     header('Location: ../connexion.php');
     exit;
 }
@@ -71,6 +71,14 @@ if (!isset($_SESSION['user_id'])) {
 
             <hr class="mt-4">
 
+            <!-- Mon abonnement -->
+            <h5 style="color:var(--primary-green);">Mon abonnement</h5>
+            <div id="bloc-abonnement">
+                <div class="text-center"><div class="spinner-border spinner-border-sm" style="color:var(--primary-green);"></div></div>
+            </div>
+
+            <hr class="mt-4">
+
             <!-- Mes paiements -->
             <h5 style="color:var(--primary-green);">Mes paiements</h5>
             <div id="mes-paiements">
@@ -88,10 +96,7 @@ if (!isset($_SESSION['user_id'])) {
 
 <script>
 var userId = <?php echo $_SESSION['user_id']; ?>;
-var userNom = "<?php echo $_SESSION['user_nom']; ?>";
-var userPrenom = "<?php echo $_SESSION['user_prenom']; ?>";
-var userEmail = "<?php echo $_SESSION['user_email'] ?? ''; ?>";
-var userRoleId = <?php echo $_SESSION['user_role'] ?? 4; ?>;
+var userRoleId = <?php echo $_SESSION['user_role'] ?? 3; ?>;
 var userData = null;
 
 // Charger les infos du profil
@@ -107,12 +112,65 @@ fetch('http://localhost:8080/api/users')
         }
     });
 
+// Charger l'abonnement
+function chargerAbonnement() {
+    fetch('http://localhost:8080/api/abonnement?id_user=' + userId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var div = document.getElementById('bloc-abonnement');
+
+            if (data.abonnement !== 'premium') {
+                // Gratuit : on propose de passer Premium
+                div.innerHTML = '<div class="p-3 rounded" style="background-color:#f0f7f0;">' +
+                    '<p class="mb-2">Vous êtes en offre <strong>Gratuite</strong>.</p>' +
+                    '<a href="abonnement.php" class="btn btn-primary-upcycle btn-sm">Passer Premium</a>' +
+                    '</div>';
+                return;
+            }
+
+            // Premium : on affiche la date de fin
+            var dateFin = data.date_fin ? data.date_fin.split('T')[0].split(' ')[0] : '';
+
+            if (data.abonnement_annule == 1) {
+                // Déjà annulé : Premium jusqu'à la date, pas de renouvellement
+                div.innerHTML = '<div class="alert alert-warning mb-0">' +
+                    '<strong>Premium jusqu\'au ' + dateFin + '</strong><br>' +
+                    '<small>Votre abonnement ne sera pas renouvelé. Vous repasserez en Gratuit après cette date.</small>' +
+                    '</div>';
+            } else {
+                // Premium actif : on propose d'annuler
+                div.innerHTML = '<div class="alert alert-success mb-2">' +
+                    '<strong>Premium actif</strong> jusqu\'au ' + dateFin +
+                    '</div>' +
+                    '<button class="btn btn-outline-danger btn-sm w-100" onclick="annulerAbonnement()">Annuler mon abonnement</button>';
+            }
+        });
+}
+chargerAbonnement();
+
+// Annuler l'abonnement (coupe le renouvellement, garde l'accès jusqu'à la date de fin)
+function annulerAbonnement() {
+    if (!confirm("Annuler votre abonnement Premium ? Vous garderez l'accès jusqu'à la fin de la période déjà payée, sans renouvellement.")) return;
+
+    fetch('http://localhost:8080/api/abonnement', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId, abonnement: 'annuler' })
+    }).then(function(res) {
+        if (res.ok) {
+            chargerAbonnement(); // on recharge le bloc pour montrer le nouvel état
+        } else {
+            alert("Erreur lors de l'annulation.");
+        }
+    });
+}
+
 // Charger les transactions du user
 fetch('http://localhost:8080/api/transactions?id_user=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(data) {
         var div = document.getElementById('mes-paiements');
-        
+
         if (!data || data.length === 0) {
             div.innerHTML = '<p class="text-muted small">Aucun paiement effectué.</p>';
             return;
@@ -126,20 +184,40 @@ fetch('http://localhost:8080/api/transactions?id_user=' + userId)
                 ? '<span class="badge bg-warning text-dark">Remboursé</span>'
                 : '<span class="badge bg-secondary">' + t.statut + '</span>';
 
-            // Bouton remboursement seulement si payé
-            var btnRemboursement = t.statut === 'succeeded'
-                ? '<button class="btn btn-outline-warning btn-sm ms-1" onclick="demanderRemboursement(\'' + t.ref_stripe + '\', ' + t.id + ')">Remboursement</button>'
-                : '';
+            // On traduit le type en libellé lisible
+            var libelleType;
+            if (t.type === 'atelier') {
+                libelleType = 'Atelier';
+            } else if (t.type === 'objet') {
+                libelleType = 'Objet acheté';
+            } else if (t.type === 'abonnement') {
+                libelleType = 'Abonnement Premium';
+            } else if (t.type === 'prestation') {
+                libelleType = 'Prestation';
+            } else {
+                libelleType = 'Paiement';
+            }
+
+            // Remboursement autorisé seulement pour les paiements à la plateforme (abonnement, atelier)
+            var actionRemboursement = '';
+            if (t.statut === 'succeeded') {
+                if (t.type === 'abonnement' || t.type === 'atelier') {
+                    actionRemboursement = '<button class="btn btn-outline-warning btn-sm ms-1" onclick="demanderRemboursement(\'' + t.ref_stripe + '\', ' + t.id + ')">Remboursement</button>';
+                } else {
+                    actionRemboursement = '<span class="text-muted small ms-2">Non remboursable en ligne</span>';
+                }
+            }
 
             html += '<div class="card mb-2 p-2">' +
                 '<div class="d-flex justify-content-between align-items-center">' +
                 '<div>' +
+                '<span class="badge bg-light text-dark border mb-1">' + libelleType + '</span><br>' +
                 '<strong>' + t.montant.toFixed(2) + ' €</strong> ' + badge + '<br>' +
                 '<span class="text-muted small">' + (t.date ? t.date.split('T')[0] : '') + ' — Réf: ' + t.ref_stripe + '</span>' +
                 '</div>' +
                 '<div>' +
-                '<a href="facture.php?ref=' + t.ref_stripe + '&montant=' + t.montant + '&id_event=0" target="_blank" class="btn btn-outline-success btn-sm">📄 Facture</a>' +
-                btnRemboursement +
+                '<a href="../particulier/facture.php?ref=' + t.ref_stripe + '&montant=' + t.montant + '&libelle=Achat+UpcycleConnect" target="_blank" class="btn btn-outline-success btn-sm">📄 Facture</a>' +
+                actionRemboursement +
                 '</div>' +
                 '</div>' +
                 '</div>';
@@ -151,10 +229,9 @@ fetch('http://localhost:8080/api/transactions?id_user=' + userId)
         document.getElementById('mes-paiements').innerHTML = '<p class="text-muted small">Impossible de charger les paiements.</p>';
     });
 
-// Demander un remboursement
 function demanderRemboursement(ref, idTransaction) {
-    if (confirm('Demander un remboursement pour ce paiement ?')) {
-        fetch('remboursement.php', {
+    if (confirm('Demander un remboursement pour ce paiement ? L\'argent sera recrédité sur votre carte bancaire.')) {
+        fetch('../particulier/remboursement.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ref: ref, id_transaction: idTransaction })
@@ -162,7 +239,7 @@ function demanderRemboursement(ref, idTransaction) {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.ok) {
-                alert('Demande de remboursement envoyée ! L\'admin va traiter votre demande.');
+                alert('Remboursement effectué ! L\'argent sera recrédité sur votre carte sous quelques jours.');
                 location.reload();
             } else {
                 alert(data.error || 'Erreur lors de la demande.');
@@ -238,7 +315,7 @@ function changerMdp() {
 
 function supprimerCompte() {
     if (confirm("Supprimer votre compte ? Cette action est irréversible.")) {
-        if (confirm("Êtes-vous vraiment sûr ? Toutes vos annonces seront supprimées.")) {
+        if (confirm("Êtes-vous vraiment sûr ? Toutes vos données seront supprimées.")) {
             fetch('http://localhost:8080/api/users/' + userId, { method: 'DELETE' })
                 .then(function(res) {
                     if (res.ok) {
@@ -252,7 +329,7 @@ function supprimerCompte() {
 }
 
 function relancerTuto() {
-    document.cookie = "tuto_vu=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+    document.cookie = "tuto_vu_artisan=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
     window.location.href = 'dashboard.php';
 }
 </script>

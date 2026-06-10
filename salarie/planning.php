@@ -121,8 +121,7 @@ fetch('http://localhost:8080/api/evenements')
         afficher(mesAteliers);
         calculerStats(mesAteliers);
         initialiserCalendrier();
-    });
-
+    })
     .catch(function() {
         document.getElementById('loader').style.display = 'none';
         document.getElementById('ateliers').innerHTML =

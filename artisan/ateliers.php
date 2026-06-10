@@ -150,8 +150,8 @@ function afficherEvenements(liste) {
         } else if (e.place === 0) {
             bouton = '<button class="btn btn-danger btn-sm" disabled>Complet</button>';
         } else if (e.prix > 0) {
-            // Atelier payant — pour l'instant le paiement est en cours d'intégration côté artisan
-            bouton = '<button class="btn btn-warning btn-sm" onclick="paiementBientot()">Payer ' + e.prix + '€</button>';
+            // Atelier payant — paiement par Stripe
+            bouton = '<button class="btn btn-warning btn-sm" onclick=\'payerAtelier(' + e.id + ', ' + e.prix + ', "' + e.titre.replace(/"/g, '') + '")\'>Payer ' + e.prix + '€</button>';
         } else {
             bouton = '<button class="btn btn-primary-upcycle btn-sm" onclick="sinscrire(' + e.id + ')">S\'inscrire</button>';
         }
@@ -172,9 +172,25 @@ function afficherEvenements(liste) {
     document.getElementById('evenements').innerHTML = html;
 }
 
-// Message temporaire en attendant l'intégration Stripe côté artisan
-function paiementBientot() {
-    afficherMsg('Le paiement des ateliers pour les artisans sera bientôt disponible.', 'info');
+// Lancer le paiement Stripe pour un atelier payant
+function payerAtelier(idEvent, prix, titre) {
+    fetch('stripe_atelier.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            id_event: idEvent,
+            prix: prix * 100, // en centimes pour Stripe
+            titre: titre
+        })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.url) {
+            window.location.href = data.url; // redirection vers Stripe
+        } else {
+            afficherMsg('Erreur lors du paiement.', 'danger');
+        }
+    });
 }
 
 function filtrer() {
@@ -259,7 +275,7 @@ function sinscrireDepuisModal() {
     var event = tousLesEvenements.find(function(e) { return e.id === idEventModal; });
     modalCtrl.hide();
     if (event && event.prix > 0) {
-        paiementBientot();
+        payerAtelier(event.id, event.prix, event.titre);
     } else {
         sinscrire(idEventModal);
     }

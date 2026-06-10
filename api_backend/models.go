@@ -11,8 +11,12 @@ type User struct {
 	Role           string `json:"role"`
 	EstActif       int    `json:"est_actif"`
 	EstVerifie     int    `json:"est_verifie"`
-	ScoreUpcycling int    `json:"score_upcycling"` // Suivi impact citoyen
-	OneSignalId    string `json:"onesignal_id"`    // Pour les notifs push
+	ScoreUpcycling int    `json:"score_upcycling"`
+	OneSignalId    string `json:"onesignal_player_id"`
+	Abonnement     string `json:"abonnement"`
+	DateFinAbo       string `json:"date_fin_abonnement"`
+	AbonnementAnnule int    `json:"abonnement_annule"`
+	Solde            float64 `json:"solde"`
 }
 
 type Role struct {
@@ -42,6 +46,7 @@ type Prestations struct {
     Createur         string  `json:"createur"`
     StatutValidation int     `json:"statut_validation"`
     MotifRefus       string  `json:"motif_refus"`
+	Vendu            int     `json:"vendu"`
 }
 
 
@@ -49,8 +54,8 @@ type Evenements struct {
 	Id               int     `json:"id"`
 	Titre            string  `json:"titre"`
 	Type             string  `json:"type"`
-    Lieu             string  `json:"lieu"`
-    Description      string  `json:"description"`
+	Lieu             string  `json:"lieu"`
+	Description      string  `json:"description"`
 	Date             string  `json:"date"`
 	Prix             float64 `json:"prix"`
 	Place            int     `json:"place"`
@@ -101,7 +106,17 @@ type Transaction struct {
 	RefStripe string  `json:"ref_stripe"`
 	Statut    string  `json:"statut"`
 	Type      string  `json:"type"`
-	Date      string  `json:"date"`
+	Commission float64 `json:"commission"`
+	Date       string  `json:"date"`
+}
+
+type Mouvement struct {
+	Id          int     `json:"id"`
+	IdUser      int     `json:"id_user"`
+	Montant     float64 `json:"montant"`
+	Type        string  `json:"type"`
+	Description string  `json:"description"`
+	Date        string  `json:"date"`
 }
 
 type TypeAbonnement struct {

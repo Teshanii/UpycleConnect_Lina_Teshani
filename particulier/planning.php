@@ -163,8 +163,8 @@ function afficherEvenements(liste) {
             '<div class="d-flex justify-content-between align-items-start">' +
             '<div>' +
             '<strong>' + e.titre + '</strong>' + badgeNouveau + badgeType + '<br>' +
-            '<span class="text-muted small">Date : ' + (e.date  'Non precisee') + '</span><br>' +
-            '<span class="text-muted small">Animateur : ' + (e.anim  'Non precise') + '</span><br>' +
+            '<span class="text-muted small">Date : ' + (e.date || 'Non precisee') + '</span><br>' +
+            '<span class="text-muted small">Animateur : ' + (e.anim || 'Non precise') + '</span><br>' +
             ligneLieu +
             '<div class="mt-1">' + badgePrix + ' ' + badgePlaces + '</div>' +
             ligneDesc +

@@ -1,4 +1,5 @@
 
+-- 1. POLE SECURITE & ACTEURS
 CREATE TABLE roles (
     id_role INT AUTO_INCREMENT PRIMARY KEY,
     libelle_role VARCHAR(50) NOT NULL UNIQUE
@@ -12,6 +13,10 @@ CREATE TABLE utilisateurs (
     mot_de_passe VARCHAR(255) NOT NULL,
     date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP,
     score_upcycling INT DEFAULT 0,
+    abonnement VARCHAR(20) DEFAULT 'gratuit',
+    date_fin_abonnement DATETIME NULL,
+    abonnement_annule TINYINT DEFAULT 0,
+    solde DECIMAL(10,2) DEFAULT 0,
     onesignal_player_id VARCHAR(255),
     est_actif TINYINT DEFAULT 1,
     est_verifie TINYINT DEFAULT 1,
@@ -19,10 +24,11 @@ CREATE TABLE utilisateurs (
     reset_token VARCHAR(64) NULL,
     reset_token_expiry DATETIME NULL,
     id_role INT NOT NULL,
+    recompense_reclamee TINYINT DEFAULT 0,
     FOREIGN KEY (id_role) REFERENCES roles(id_role)
 ) ENGINE=InnoDB;
 
-
+-- 2. POLE INTERNATIONALISATION
 CREATE TABLE langues (
     id_langue INT AUTO_INCREMENT PRIMARY KEY,
     code_iso VARCHAR(5) NOT NULL UNIQUE, 
@@ -43,7 +49,7 @@ CREATE TABLE traductions (
     FOREIGN KEY (id_langue) REFERENCES langues(id_langue) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-
+-- 3. POLE LOGISTIQUE (OBJETS & DEPOTS)
 CREATE TABLE objets (
     id_objet INT AUTO_INCREMENT PRIMARY KEY,
     description TEXT,
@@ -113,6 +119,7 @@ CREATE TABLE prestations (
     id_createur INT,
     statut_validation TINYINT DEFAULT 0,
     motif_refus VARCHAR(255),
+    vendu TINYINT DEFAULT 0,
     FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
@@ -126,7 +133,7 @@ CREATE TABLE projets (
     FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
-
+-- Ajout des étapes pour corriger le MCD
 CREATE TABLE etapes_projet (
     id_etape INT AUTO_INCREMENT PRIMARY KEY,
     titre_etape VARCHAR(150),
@@ -140,7 +147,9 @@ CREATE TABLE etapes_projet (
 CREATE TABLE evenements (
     id_event INT AUTO_INCREMENT PRIMARY KEY,
     titre VARCHAR(150),
-    type_event VARCHAR(50), 
+    type_event VARCHAR(50),
+    lieu VARCHAR(150),
+    description TEXT,
     date_debut DATETIME,
     prix_actuel DECIMAL(10,2) NOT NULL,
     places_max INT NOT NULL,
@@ -149,7 +158,7 @@ CREATE TABLE evenements (
     id_animateur INT NOT NULL,
     FOREIGN KEY (id_animateur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
-
+-- 5. POLE FINANCE
 CREATE TABLE types_abonnements (
     id_type_abo INT AUTO_INCREMENT PRIMARY KEY,
     nom_offre VARCHAR(100) NOT NULL,
@@ -164,7 +173,17 @@ CREATE TABLE transactions (
     date_transac DATETIME DEFAULT CURRENT_TIMESTAMP,
     id_user INT,
     type VARCHAR(50) DEFAULT 'atelier',
+    commission DECIMAL(10,2) DEFAULT 0,
     FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+CREATE TABLE mouvements_portefeuille (
+    id_mouvement INT AUTO_INCREMENT PRIMARY KEY,
+    id_user INT NOT NULL,
+    montant DECIMAL(10,2) NOT NULL,
+    type VARCHAR(30) NOT NULL,
+    description VARCHAR(255),
+    date_mouvement DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 CREATE TABLE message_forums (
@@ -177,7 +196,7 @@ CREATE TABLE message_forums (
     FOREIGN KEY (id_user_auteur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
-
+-- 6. NOTIFICATIONS 
 CREATE TABLE notifications (
     id_notif INT AUTO_INCREMENT PRIMARY KEY,
     titre VARCHAR(150),
@@ -211,17 +230,7 @@ CREATE TABLE inscriptions (
     date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
-
+-- INSERTIONS INITIALES
 INSERT INTO roles (libelle_role) VALUES ('Admin'), ('Salarie'), ('Professionnel et Artisan'), ('Particulier');
 INSERT INTO langues (code_iso, nom_langue) VALUES ('fr', 'Français'), ('en', 'English');
 INSERT INTO types_abonnements (nom_offre, prix_mensuel_actuel) VALUES ('Gratuit', 0.00), ('Premium Artisan', 29.99);
-
-ALTER TABLE evenements ADD COLUMN lieu VARCHAR(150) AFTER type_event;
-ALTER TABLE evenements ADD COLUMN description TEXT AFTER lieu;
-
-
-INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, id_role, est_actif, est_verifie) VALUES
-('Fernando', 'Admin',       'teshanifernandotf@gmail.com', '$2b$10$5rfEM95SYcepdxuOH3oifOVTT2YMs.p02szW6ZoALuAezIzcV/3p6', 1, 1, 1),
-('Fernando', 'Salarie',     'teshanifernando18@gmail.com', '$2b$10$5rfEM95SYcepdxuOH3oifOVTT2YMs.p02szW6ZoALuAezIzcV/3p6', 2, 1, 1),
-('Fernando', 'Artisan',     'teshani.fernando@epita.fr',  '$2b$10$5rfEM95SYcepdxuOH3oifOVTT2YMs.p02szW6ZoALuAezIzcV/3p6', 3, 1, 1),
-('Fernando', 'Particulier', 'tfernando6@myges.fr',        '$2b$10$5rfEM95SYcepdxuOH3oifOVTT2YMs.p02szW6ZoALuAezIzcV/3p6', 4, 1, 1);

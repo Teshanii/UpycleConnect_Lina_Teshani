@@ -76,9 +76,8 @@ function afficherMessage(m, estReponse) {
         ? '<button class="btn btn-link btn-sm text-danger p-0" onclick="supprimer(' + m.id + ')">Supprimer</button>'
         : '';
 
-    var btnRepondre = !estReponse
-        ? '<button class="btn btn-link btn-sm p-0 me-2" style="color:var(--primary-green);" onclick="toggleReponse(' + m.id + ')">Répondre</button>'
-        : '';
+    var idThread = estReponse ? m.id_message_parent : m.id;
+    var btnRepondre = '<button class="btn btn-link btn-sm p-0 me-2" style="color:var(--primary-green);" onclick="toggleReponse(' + idThread + ')">Répondre</button>';
 
     var styleCard = estReponse
         ? 'card mb-2 p-2 ms-5 border-start border-3 border-success'

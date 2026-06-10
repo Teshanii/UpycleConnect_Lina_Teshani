@@ -38,7 +38,7 @@ if (!isset($_SESSION['user_id'])) {
                 <select class="form-select" id="id_annonce">
                     <option value="">Chargement...</option>
                 </select>
-                <small class="text-muted">Seules vos annonces validées par l'admin apparaissent ici.</small>
+                <small class="text-muted">Seules vos annonces validées et pas encore déposées apparaissent ici.</small>
             </div>
 
             <div class="mb-3">
@@ -63,23 +63,43 @@ if (!isset($_SESSION['user_id'])) {
 <script>
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
-// Charger les annonces validées de l'utilisateur
-fetch('http://localhost:8080/api/annonces?id_user=' + userId)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        var sel = document.getElementById('id_annonce');
-        sel.innerHTML = '';
-        // On garde seulement les annonces validées (statut_validation = 1)
-        var validees = data ? data.filter(function(a) { return a.statut_validation === 1; }) : [];
-        if (validees.length === 0) {
-            sel.innerHTML = '<option value="">Aucune annonce validée. Publiez-en une d\'abord.</option>';
-            return;
-        }
-        sel.innerHTML = '<option value="">-- Sélectionner une annonce --</option>';
-        validees.forEach(function(a) {
-            sel.innerHTML += '<option value="' + a.id + '">' + a.titre + '</option>';
+// Charger les annonces validées de l'utilisateur, en excluant celles déjà en cours de dépôt
+function chargerAnnonces() {
+    // On récupère d'abord les demandes du user pour savoir quelles annonces sont déjà utilisées
+    fetch('http://localhost:8080/api/demandes_box')
+        .then(function(r) { return r.json(); })
+        .then(function(demandes) {
+            // On liste les id_annonce déjà engagées dans une demande active (pas refusée)
+            var annoncesUtilisees = [];
+            (demandes || []).forEach(function(d) {
+                if (d.id_user === userId && d.statut !== 'refuse' && d.id_annonce) {
+                    annoncesUtilisees.push(d.id_annonce);
+                }
+            });
+
+            // Puis on charge les annonces validées du user
+            fetch('http://localhost:8080/api/annonces?id_user=' + userId)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var sel = document.getElementById('id_annonce');
+                    sel.innerHTML = '';
+                    // On garde les annonces validées ET pas déjà utilisées dans une demande active
+                    var dispo = data ? data.filter(function(a) {
+                        return a.statut_validation === 1 && annoncesUtilisees.indexOf(a.id) === -1;
+                    }) : [];
+
+                    if (dispo.length === 0) {
+                        sel.innerHTML = '<option value="">Aucune annonce disponible. Publiez-en une ou attendez la validation.</option>';
+                        return;
+                    }
+                    sel.innerHTML = '<option value="">-- Sélectionner une annonce --</option>';
+                    dispo.forEach(function(a) {
+                        sel.innerHTML += '<option value="' + a.id + '">' + a.titre + '</option>';
+                    });
+                });
         });
-    });
+}
+chargerAnnonces();
 
 // Charger les box disponibles
 fetch('http://localhost:8080/api/box')
@@ -124,6 +144,7 @@ function envoyer() {
             document.getElementById('id_annonce').value = '';
             document.getElementById('id_box').value = '';
             chargerDemandes();
+            chargerAnnonces(); // on recharge pour retirer l'annonce qu'on vient d'utiliser
         } else {
             document.getElementById('msg').innerHTML = '<div class="alert alert-danger">Erreur lors de l\'envoi.</div>';
         }

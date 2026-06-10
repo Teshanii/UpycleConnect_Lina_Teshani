@@ -95,47 +95,48 @@ if (isset($_SESSION['user_id'])) {
         document.getElementById("form-login").onsubmit = async (e) => {
             e.preventDefault();
             const msgErreur = document.getElementById("api-error");
+            const btn = e.target.querySelector("button[type=submit]");
             msgErreur.classList.add("d-none");
-            
+
+            // On désactive le bouton pour éviter le double-clic
+            btn.disabled = true;
+            btn.innerText = "Connexion...";
+
             const payload = {
                 email: document.getElementById("email").value,
                 mdp: document.getElementById("mdp").value
             };
 
             try {
-                // 1. Appel à l'API Go pour la validation technique
-                const response = await fetch("http://localhost:8080/api/login", {
+                // On envoie email + mdp à init_session.php.
+                // C'est LUI qui appelle l'API Go côté serveur pour vérifier.
+                const sessionRes = await fetch("init_session.php", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
 
-                const data = await response.json();
+                const data = await sessionRes.json();
 
-                if (response.ok) {
-                    // 2. Initialisation de la session PHP si le compte est OK et vérifié
-                    const sessionRes = await fetch("init_session.php", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(data)
-                    });
-
-                    if (sessionRes.ok) {
-                        // Redirection selon le rôle (1 = Admin, etc.)
-                        if (data.id_role === 1) { 
-                            window.location.href = "admin_backoffice/index.php"; 
-                        } else {
-                            window.location.href = "index.php"; 
-                        }
+                if (sessionRes.ok) {
+                    // Redirection selon le rôle renvoyé par le serveur
+                    if (data.id_role === 1) {
+                        window.location.href = "admin_backoffice/index.php";
+                    } else {
+                        window.location.href = "index.php";
                     }
                 } else {
-                    // Si l'API renvoie une erreur (ex: 403 pour compte non vérifié), on l'affiche
+                    // Erreur renvoyée par Go (mdp faux, compte non activé...)
                     msgErreur.innerText = data.error || "Identifiants invalides.";
                     msgErreur.classList.remove("d-none");
+                    btn.disabled = false;
+                    btn.innerText = "SE CONNECTER";
                 }
             } catch (error) {
                 msgErreur.innerText = "Le serveur de gestion est actuellement injoignable.";
                 msgErreur.classList.remove("d-none");
+                btn.disabled = false;
+                btn.innerText = "SE CONNECTER";
             }
         };
     </script>

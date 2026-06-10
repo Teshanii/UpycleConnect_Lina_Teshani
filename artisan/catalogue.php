@@ -63,14 +63,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Vous allez réserver cet objet. Un code d'ouverture vous sera fourni pour aller le récupérer à la box.</p>
+                <p id="modal-texte">Vous allez réserver cet objet. Un code d'ouverture vous sera fourni pour aller le récupérer à la box.</p>
                 <p class="text-muted small"><strong>Objet :</strong> <span id="modal-titre"></span></p>
                 <p class="text-muted small"><strong>Box :</strong> <span id="modal-box"></span> — Casier <span id="modal-casier"></span></p>
                 <div id="modal-msg"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-success" onclick="confirmerReservation()">Confirmer la réservation</button>
+                <button type="button" class="btn btn-success" id="modal-btn-confirm" onclick="confirmerReservation()">Confirmer la réservation</button>
             </div>
         </div>
     </div>
@@ -161,7 +161,9 @@ function afficher(liste) {
             '<p class="card-text small">' + (o.description || '') + '</p>' +
             '<p class="card-text small text-muted">Déposé par ' + o.nom_particulier + '</p>' +
             '<p class="card-text small">Box : ' + o.adresse_box + ' — Casier ' + o.numero_casier + '</p>' +
-            '<button class="btn btn-primary-upcycle btn-sm w-100" onclick=\'ouvrirRecup(' + JSON.stringify(o) + ')\'>Réserver cet objet</button>' +
+            (o.type_offre === 'don'
+                ? '<button class="btn btn-primary-upcycle btn-sm w-100" onclick=\'ouvrirRecup(' + JSON.stringify(o) + ')\'>Réserver (gratuit)</button>'
+                : '<button class="btn btn-warning btn-sm w-100" onclick=\'ouvrirRecup(' + JSON.stringify(o) + ')\'>Acheter ' + o.prix.toFixed(2) + ' €</button>') +
             '</div>' +
             '</div>' +
             '</div>';
@@ -192,10 +194,45 @@ function ouvrirRecup(o) {
     document.getElementById('modal-box').innerText = o.adresse_box;
     document.getElementById('modal-casier').innerText = o.numero_casier;
     document.getElementById('modal-msg').innerHTML = '';
+
+    // On adapte le texte et le bouton selon don ou vente
+    var texteModal = document.getElementById('modal-texte');
+    var btnConfirm = document.getElementById('modal-btn-confirm');
+    if (o.type_offre === 'don') {
+        texteModal.innerText = "Vous allez réserver cet objet gratuitement. Un code d'ouverture vous sera fourni pour aller le récupérer à la box.";
+        btnConfirm.innerText = 'Confirmer la réservation';
+    } else {
+        texteModal.innerText = "Vous allez acheter cet objet. Après le paiement, un code d'ouverture vous sera fourni pour aller le récupérer à la box.";
+        btnConfirm.innerText = 'Payer ' + o.prix.toFixed(2) + ' €';
+    }
+
     modalRecup.show();
 }
 
 function confirmerReservation() {
+    // Si c'est une VENTE → on passe par le paiement Stripe
+    if (objetEnCours.type_offre !== 'don') {
+        fetch('stripe_objet.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id_demande: objetEnCours.id_demande,
+                prix: Math.round(objetEnCours.prix * 100), // en centimes
+                titre: objetEnCours.titre
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.url) {
+                window.location.href = data.url; // redirection vers Stripe
+            } else {
+                document.getElementById('modal-msg').innerHTML = '<div class="alert alert-danger py-1">Erreur lors du paiement.</div>';
+            }
+        });
+        return;
+    }
+
+    // Si c'est un DON → réservation directe (comme avant)
     fetch('http://localhost:8080/api/recuperation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -215,7 +252,6 @@ function confirmerReservation() {
             modalRecup.hide();
             document.getElementById('code-recu').innerText = data.code_artisan;
             modalCode.show();
-            // Quand l'artisan ferme le modal du code, on recharge le catalogue
             document.getElementById('modalCode').addEventListener('hidden.bs.modal', function() {
                 location.reload();
             }, { once: true });
