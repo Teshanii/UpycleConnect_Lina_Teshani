@@ -202,7 +202,8 @@
 			switch r.Method {
 			case "GET":
 				lignes, _ := bd.Query(`
-				SELECT e.id_event, e.titre, e.date_debut, e.prix_actuel, e.places_max, 
+				SELECT e.id_event, e.titre, COALESCE(e.type_event,''), COALESCE(e.lieu,''), COALESCE(e.description,''),
+				e.date_debut, e.prix_actuel, e.places_max,
 				e.statut_validation, u.nom, e.id_animateur,
 				COUNT(i.id_inscription) as nb_inscrits, e.motif_refus
 				FROM evenements e 
@@ -213,7 +214,7 @@
 				var res []Evenements
 				for lignes.Next() {
 					var e Evenements
-					lignes.Scan(&e.Id, &e.Titre, &e.Date, &e.Prix, &e.Place, &e.StatutValidation, &e.Anim, &e.IdAnim, &e.NbInscrits, &e.MotifRefus)
+					lignes.Scan(&e.Id, &e.Titre, &e.Type, &e.Lieu, &e.Description, &e.Date, &e.Prix, &e.Place, &e.StatutValidation, &e.Anim, &e.IdAnim, &e.NbInscrits, &e.MotifRefus)
 					res = append(res, e)
 				}
 				json.NewEncoder(w).Encode(res)
@@ -223,19 +224,20 @@
 				if e.MotifRefus != "" {
 					bd.Exec("UPDATE evenements SET statut_validation = 2, motif_refus = ? WHERE id_event = ?", e.MotifRefus, id)
 				} else {
-					bd.Exec("UPDATE evenements SET titre=?, date_debut=?, prix_actuel=?, places_max=?, id_animateur=? WHERE id_event=?", e.Titre, e.Date, e.Prix, e.Place, e.IdAnim, id)
-				}
+                bd.Exec("UPDATE evenements SET titre=?, type_event=?, lieu=?, description=?, date_debut=?, prix_actuel=?, places_max=?, id_animateur=? WHERE id_event=?",
+                    e.Titre, e.Type, e.Lieu, e.Description, e.Date, e.Prix, e.Place, e.IdAnim, id)
+            	}
 				w.WriteHeader(http.StatusOK)
 			case "DELETE":
 				bd.Exec("DELETE FROM evenements WHERE id_event=?", id)
 				w.WriteHeader(http.StatusOK)
 
 			case "POST":
-				var e Evenements
-				json.NewDecoder(r.Body).Decode(&e)
-				bd.Exec("INSERT INTO evenements (titre, date_debut, prix_actuel, places_max, id_animateur) VALUES (?,?,?,?,?)",
-					e.Titre, e.Date, e.Prix, e.Place, e.IdAnim)
-				w.WriteHeader(http.StatusCreated)
+            var e Evenements
+            json.NewDecoder(r.Body).Decode(&e)
+            bd.Exec("INSERT INTO evenements (titre, type_event, lieu, description, date_debut, prix_actuel, places_max, id_animateur) VALUES (?,?,?,?,?,?,?,?)",
+                e.Titre, e.Type, e.Lieu, e.Description, e.Date, e.Prix, e.Place, e.IdAnim)
+            w.WriteHeader(http.StatusCreated)
 			}
 
 		}
@@ -396,10 +398,10 @@
 			w.Header().Set("Content-Type", "application/json")
 			switch r.Method {
 			case "GET":
-				lignes, _ := bd.Query(`SELECT m.id_message, m.contenu, u.nom, m.id_user_auteur, 
-					COALESCE(m.id_message_parent, 0), m.date_message, m.est_modere 
-					FROM message_forums m JOIN utilisateurs u ON m.id_user_auteur = u.id_user 
-					ORDER BY m.date_message ASC`)
+				lignes, _ := bd.Query(`SELECT m.id_message, m.contenu, u.prenom, m.id_user_auteur, 
+                    COALESCE(m.id_message_parent, 0), m.date_message, m.est_modere 
+                    FROM message_forums m JOIN utilisateurs u ON m.id_user_auteur = u.id_user 
+                    ORDER BY m.date_message ASC`)
 				var res []ForumMessage
 				for lignes.Next() {
 					var m ForumMessage

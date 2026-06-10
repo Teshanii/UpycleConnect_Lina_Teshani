@@ -48,7 +48,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
             <textarea id="contenu" class="form-control" rows="5" placeholder="Écrivez votre article ici..."></textarea>
         </div>
         <div id="msg"></div>
-        <button class="btn btn-primary-upcycle btn-sm" onclick="sauvegarder()">Publier</button>
+        <button id="btn-pub" class="btn btn-primary-upcycle btn-sm" onclick="sauvegarder()">Publier</button>
         <button class="btn btn-link btn-sm text-muted" onclick="resetForm()">Annuler</button>
     </div>
 
@@ -60,6 +60,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
 <script>
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
+function focusForm() {
+    document.getElementById('titre').focus();
+    window.scrollTo(0, 0);
+}
+
 // Charger mes articles (filtre par auteur)
 function charger() {
     fetch('http://localhost:8080/api/conseils?id_auteur=' + userId)
@@ -68,7 +73,10 @@ function charger() {
             var div = document.getElementById('articles');
 
             if (!data || data.length === 0) {
-                div.innerHTML = '<p class="text-muted">Vous n\'avez pas encore publié d\'article.</p>';
+                div.innerHTML = '<div class="text-center text-muted py-4">' +
+                    '<p>Aucun article publié pour le moment.</p>' +
+                    '<button class="btn btn-primary-upcycle btn-sm" onclick="focusForm()">Rédiger mon premier article</button>' +
+                    '</div>';
                 return;
             }
 
@@ -85,7 +93,7 @@ function charger() {
                     '<div class="d-flex justify-content-between align-items-start">' +
                     '<div>' +
                     '<strong>' + a.titre + '</strong> ' + badge + '<br>' +
-                    '<span class="text-muted small">' + (a.date ? a.date.split('T')[0] : '') + '</span><br>' +
+                    '<span class="text-muted small">' + formaterDate(a.date) + '</span><br>' +
                     '<span class="small">' + (a.contenu.length > 150 ? a.contenu.substring(0, 150) + '...' : a.contenu) + '</span>' +
                     '</div>' +
                     '<div>' +
@@ -100,7 +108,6 @@ function charger() {
         });
 }
 
-// Publier ou modifier
 function sauvegarder() {
     var id = document.getElementById('edit-id').value;
     var titre = document.getElementById('titre').value.trim();
@@ -115,19 +122,32 @@ function sauvegarder() {
     var url = id ? 'http://localhost:8080/api/conseils/' + id : 'http://localhost:8080/api/conseils';
     var methode = id ? 'PUT' : 'POST';
 
+    var btn = document.getElementById('btn-pub');
+    btn.disabled = true;
+    btn.innerText = 'Publication...';
+
     fetch(url, {
         method: methode,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ titre: titre, type: type, contenu: contenu, id_auteur: userId })
     }).then(function(res) {
+        btn.disabled = false;
+        btn.innerText = 'Publier';
         if (res.ok) {
             document.getElementById('msg').innerHTML = '<div class="alert alert-success">Article publié !</div>';
             resetForm();
             charger();
             setTimeout(function() { document.getElementById('msg').innerHTML = ''; }, 2000);
+        } else {
+            document.getElementById('msg').innerHTML = '<div class="alert alert-danger">Une erreur est survenue, réessayez.</div>';
         }
+    }).catch(function() {
+        btn.disabled = false;
+        btn.innerText = 'Publier';
+        document.getElementById('msg').innerHTML = '<div class="alert alert-danger">Connexion impossible, réessayez.</div>';
     });
 }
+
 
 // Remplir le formulaire pour modifier
 function modifier(a) {

@@ -102,10 +102,9 @@ function afficherMessage(m, estReponse) {
 
     var btnSupprimer = '<button class="btn btn-outline-danger btn-sm" onclick="supprimer(' + m.id + ')">Supprimer</button>';
 
-    // Bouton "Répondre" seulement sur les messages principaux
-    var btnRepondre = !estReponse
-        ? '<button class="btn btn-link btn-sm p-0 me-2" style="color:var(--primary-green);" onclick="toggleReponse(' + m.id + ')">Répondre</button>'
-        : '';
+    
+    var idThread = estReponse ? m.id_message_parent : m.id;
+    var btnRepondre = '<button class="btn btn-link btn-sm p-0 me-2" style="color:var(--primary-green);" onclick="toggleReponse(' + idThread + ')">Répondre</button>';
 
     // Badge si masqué
     var badgeMasque = estMasque ? '<span class="badge bg-danger ms-2">Masqué</span>' : '';

@@ -155,13 +155,19 @@ function afficherEvenements(liste) {
             bouton = '<button class="btn btn-primary-upcycle btn-sm" onclick="sinscrire(' + e.id + ')">S\'inscrire</button>';
         }
 
+        var badgeType = e.type ? '<span class="badge bg-secondary ms-1">' + e.type + '</span>' : '';
+        var ligneLieu = e.lieu ? '<span class="text-muted small">Lieu : ' + e.lieu + '</span><br>' : '';
+        var ligneDesc = e.description ? '<p class="small mt-1 mb-0">' + e.description + '</p>' : '';
+
         html += '<div class="card mb-2 p-3">' +
             '<div class="d-flex justify-content-between align-items-start">' +
             '<div>' +
-            '<strong>' + e.titre + '</strong>' + badgeNouveau + '<br>' +
-            '<span class="text-muted small">Date : ' + (e.date || 'Non precisee') + '</span><br>' +
-            '<span class="text-muted small">Animateur : ' + (e.anim || 'Non precise') + '</span><br>' +
+            '<strong>' + e.titre + '</strong>' + badgeNouveau + badgeType + '<br>' +
+            '<span class="text-muted small">Date : ' + (e.date  'Non precisee') + '</span><br>' +
+            '<span class="text-muted small">Animateur : ' + (e.anim  'Non precise') + '</span><br>' +
+            ligneLieu +
             '<div class="mt-1">' + badgePrix + ' ' + badgePlaces + '</div>' +
+            ligneDesc +
             '</div>' +
             '<div>' + bouton + '</div>' +
             '</div>' +

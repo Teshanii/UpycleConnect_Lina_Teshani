@@ -1,5 +1,4 @@
 
--- 1. POLE SECURITE & ACTEURS
 CREATE TABLE roles (
     id_role INT AUTO_INCREMENT PRIMARY KEY,
     libelle_role VARCHAR(50) NOT NULL UNIQUE
@@ -23,7 +22,7 @@ CREATE TABLE utilisateurs (
     FOREIGN KEY (id_role) REFERENCES roles(id_role)
 ) ENGINE=InnoDB;
 
--- 2. POLE INTERNATIONALISATION
+
 CREATE TABLE langues (
     id_langue INT AUTO_INCREMENT PRIMARY KEY,
     code_iso VARCHAR(5) NOT NULL UNIQUE, 
@@ -44,7 +43,7 @@ CREATE TABLE traductions (
     FOREIGN KEY (id_langue) REFERENCES langues(id_langue) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- 3. POLE LOGISTIQUE (OBJETS & DEPOTS)
+
 CREATE TABLE objets (
     id_objet INT AUTO_INCREMENT PRIMARY KEY,
     description TEXT,
@@ -127,7 +126,7 @@ CREATE TABLE projets (
     FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
--- Ajout des étapes pour corriger le MCD
+
 CREATE TABLE etapes_projet (
     id_etape INT AUTO_INCREMENT PRIMARY KEY,
     titre_etape VARCHAR(150),
@@ -150,7 +149,7 @@ CREATE TABLE evenements (
     id_animateur INT NOT NULL,
     FOREIGN KEY (id_animateur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
--- 5. POLE FINANCE
+
 CREATE TABLE types_abonnements (
     id_type_abo INT AUTO_INCREMENT PRIMARY KEY,
     nom_offre VARCHAR(100) NOT NULL,
@@ -178,7 +177,7 @@ CREATE TABLE message_forums (
     FOREIGN KEY (id_user_auteur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
--- 6. NOTIFICATIONS 
+
 CREATE TABLE notifications (
     id_notif INT AUTO_INCREMENT PRIMARY KEY,
     titre VARCHAR(150),
@@ -212,7 +211,17 @@ CREATE TABLE inscriptions (
     date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- INSERTIONS INITIALES
+
 INSERT INTO roles (libelle_role) VALUES ('Admin'), ('Salarie'), ('Professionnel et Artisan'), ('Particulier');
 INSERT INTO langues (code_iso, nom_langue) VALUES ('fr', 'Français'), ('en', 'English');
 INSERT INTO types_abonnements (nom_offre, prix_mensuel_actuel) VALUES ('Gratuit', 0.00), ('Premium Artisan', 29.99);
+
+ALTER TABLE evenements ADD COLUMN lieu VARCHAR(150) AFTER type_event;
+ALTER TABLE evenements ADD COLUMN description TEXT AFTER lieu;
+
+
+INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, id_role, est_actif, est_verifie) VALUES
+('Fernando', 'Admin',       'teshanifernandotf@gmail.com', '$2b$10$5rfEM95SYcepdxuOH3oifOVTT2YMs.p02szW6ZoALuAezIzcV/3p6', 1, 1, 1),
+('Fernando', 'Salarie',     'teshanifernando18@gmail.com', '$2b$10$5rfEM95SYcepdxuOH3oifOVTT2YMs.p02szW6ZoALuAezIzcV/3p6', 2, 1, 1),
+('Fernando', 'Artisan',     'teshani.fernando@epita.fr',  '$2b$10$5rfEM95SYcepdxuOH3oifOVTT2YMs.p02szW6ZoALuAezIzcV/3p6', 3, 1, 1),
+('Fernando', 'Particulier', 'tfernando6@myges.fr',        '$2b$10$5rfEM95SYcepdxuOH3oifOVTT2YMs.p02szW6ZoALuAezIzcV/3p6', 4, 1, 1);
