@@ -13,6 +13,10 @@ CREATE TABLE utilisateurs (
     mot_de_passe VARCHAR(255) NOT NULL,
     date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP,
     score_upcycling INT DEFAULT 0,
+    abonnement VARCHAR(20) DEFAULT 'gratuit',
+    date_fin_abonnement DATETIME NULL,
+    abonnement_annule TINYINT DEFAULT 0,
+    solde DECIMAL(10,2) DEFAULT 0,
     onesignal_player_id VARCHAR(255),
     est_actif TINYINT DEFAULT 1,
     est_verifie TINYINT DEFAULT 1,
@@ -20,6 +24,7 @@ CREATE TABLE utilisateurs (
     reset_token VARCHAR(64) NULL,
     reset_token_expiry DATETIME NULL,
     id_role INT NOT NULL,
+    recompense_reclamee TINYINT DEFAULT 0,
     FOREIGN KEY (id_role) REFERENCES roles(id_role)
 ) ENGINE=InnoDB;
 
@@ -114,6 +119,7 @@ CREATE TABLE prestations (
     id_createur INT,
     statut_validation TINYINT DEFAULT 0,
     motif_refus VARCHAR(255),
+    vendu TINYINT DEFAULT 0,
     FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
@@ -165,7 +171,17 @@ CREATE TABLE transactions (
     date_transac DATETIME DEFAULT CURRENT_TIMESTAMP,
     id_user INT,
     type VARCHAR(50) DEFAULT 'atelier',
+    commission DECIMAL(10,2) DEFAULT 0,
     FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+CREATE TABLE mouvements_portefeuille (
+    id_mouvement INT AUTO_INCREMENT PRIMARY KEY,
+    id_user INT NOT NULL,
+    montant DECIMAL(10,2) NOT NULL,
+    type VARCHAR(30) NOT NULL,
+    description VARCHAR(255),
+    date_mouvement DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 CREATE TABLE message_forums (

@@ -16,6 +16,9 @@ $ok = false;
 $nom_prestation = '';
 
 if ($session->payment_status === 'paid') {
+    $montant = $session->amount_total / 100;
+    $commission = round($montant * 0.07, 2); // 7% pour UpcycleConnect
+
     $pdo = new PDO('mysql:host=database;dbname=upcycle_connect', 'root', 'root');
 
     // Récupérer le nom de la prestation
@@ -23,9 +26,21 @@ if ($session->payment_status === 'paid') {
     $stmt->execute([$id_prestation]);
     $nom_prestation = $stmt->fetchColumn() ?: 'Prestation';
 
-    // Sauvegarder la transaction avec type "prestation"
-    $pdo->prepare("INSERT INTO transactions (montant, reference_stripe, statut_paiement, id_user, type) VALUES (?, ?, 'succeeded', ?, 'prestation')")
-        ->execute([$session->amount_total / 100, $session->payment_intent, $user_id]);
+    // On marque la prestation comme vendue pour qu'elle disparaisse du catalogue
+    $pdo->prepare("UPDATE prestations SET vendu = 1 WHERE id_prestation = ?")->execute([$id_prestation]);
+
+    // Sauvegarder la transaction (avec commission) - c'est le particulier qui paie
+    $pdo->prepare("INSERT INTO transactions (montant, reference_stripe, statut_paiement, id_user, type, commission) VALUES (?, ?, 'succeeded', ?, 'prestation', ?)")
+        ->execute([$montant, $session->payment_intent, $user_id, $commission]);
+
+    // Créditer l'artisan vendeur via l'API Go (93% pour lui, 7% commission)
+    $ch = curl_init('http://api:8080/api/vente-prestation');
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['id_prestation' => $id_prestation, 'montant' => $montant]));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_exec($ch);
+    curl_close($ch);
 
     $ok = true;
 }
@@ -48,14 +63,14 @@ if ($session->payment_status === 'paid') {
 <div class="container mt-5 text-center">
     <?php if ($ok): ?>
         <div class="alert alert-success">
-            <h4> Paiement confirmé !</h4>
+            <h4>Paiement confirmé !</h4>
             <p>Votre commande pour <strong><?= htmlspecialchars($nom_prestation) ?></strong> a bien été enregistrée.</p>
         </div>
-        <a href="facture.php?ref=<?= $session->payment_intent ?>&montant=<?= $session->amount_total / 100 ?>&id_event=0" 
-           class="btn btn-outline-success mt-2" target="_blank"> Télécharger la facture</a>
+        <a href="facture.php?ref=<?= $session->payment_intent ?>&montant=<?= $session->amount_total / 100 ?>&libelle=<?= urlencode($nom_prestation) ?>"
+           class="btn btn-outline-success mt-2" target="_blank">Télécharger la facture</a>
     <?php else: ?>
         <div class="alert alert-danger">
-            <h4> Paiement non confirmé.</h4>
+            <h4>Paiement non confirmé.</h4>
         </div>
     <?php endif; ?>
     <br>

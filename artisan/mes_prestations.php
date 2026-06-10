@@ -90,6 +90,11 @@ function charger() {
                     badge = '<span class="badge bg-warning text-dark">En attente</span>';
                 }
 
+                // Badge vendu si la prestation a été achetée
+                var badgeVendu = p.vendu === 1
+                    ? '<span class="badge bg-dark">Vendue</span>'
+                    : '';
+
                 // Photo ou placeholder
                 var photo = p.photo
                     ? '<img src="http://localhost/' + p.photo + '" class="card-img-top" style="height:180px; object-fit:cover;">'
@@ -106,15 +111,20 @@ function charger() {
                     motif = '<p class="text-danger small mt-1">Motif : ' + p.motif_refus + '</p>';
                 }
 
+                // On n'affiche le bouton supprimer que si la prestation n'est pas vendue
+                var boutonSupprimer = p.vendu === 1
+                    ? '<p class="text-muted small mt-2 mb-0 text-center">Prestation vendue</p>'
+                    : '<button class="btn btn-sm btn-outline-danger w-100 mt-2" onclick="supprimer(' + p.id + ')">Supprimer</button>';
+
                 html += '<div class="col-md-4">' +
                     '<div class="card h-100">' +
                     photo +
                     '<div class="card-body">' +
                     '<h6 class="card-title">' + p.nom + '</h6>' +
-                    '<div class="mb-2">' + badgePrix + ' ' + badge + '</div>' +
+                    '<div class="mb-2">' + badgePrix + ' ' + badge + ' ' + badgeVendu + '</div>' +
                     '<p class="card-text small text-muted">' + (p.desc || '') + '</p>' +
                     motif +
-                    '<button class="btn btn-sm btn-outline-danger w-100 mt-2" onclick="supprimer(' + p.id + ')">Supprimer</button>' +
+                    boutonSupprimer +
                     '</div>' +
                     '</div>' +
                     '</div>';

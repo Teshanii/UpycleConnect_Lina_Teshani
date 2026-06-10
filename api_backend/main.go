@@ -30,6 +30,7 @@ func main() {
 	mux.HandleFunc("/api/catalogue-artisan", handleCatalogueArtisan)
 	mux.HandleFunc("/api/recuperation", handleRecuperation)
 	mux.HandleFunc("/api/confirmer-recup", handleConfirmerRecup)
+	mux.HandleFunc("/api/acheter-objet", handleAcheterObjet)
 
 	mux.HandleFunc("/api/casiers", handleCasiers)
 	mux.HandleFunc("/api/casiers/{id}", handleCasiers)
@@ -57,6 +58,14 @@ func main() {
 	mux.HandleFunc("/api/transactions", handleTransactions)
 	mux.HandleFunc("/api/abonnements", handleAbonnements)
 	mux.HandleFunc("/api/transactions/{id}", handleTransactions)
+	mux.HandleFunc("/api/abonnement", handleAbonnement)
+
+	mux.HandleFunc("/api/stats-artisan", handleStatsArtisan)
+
+	mux.HandleFunc("/api/recompense", handleRecompense)
+
+	mux.HandleFunc("/api/portefeuille", handlePortefeuille)
+	mux.HandleFunc("/api/vente-prestation", handleVentePrestation)
 
 	mux.HandleFunc("/api/langues", handleLangues)
 	mux.HandleFunc("/api/traductions", handleTraductions)
