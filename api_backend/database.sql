@@ -147,7 +147,9 @@ CREATE TABLE etapes_projet (
 CREATE TABLE evenements (
     id_event INT AUTO_INCREMENT PRIMARY KEY,
     titre VARCHAR(150),
-    type_event VARCHAR(50), 
+    type_event VARCHAR(50),
+    lieu VARCHAR(150),
+    description TEXT,
     date_debut DATETIME,
     prix_actuel DECIMAL(10,2) NOT NULL,
     places_max INT NOT NULL,

@@ -53,6 +53,9 @@ type Prestations struct {
 type Evenements struct {
 	Id               int     `json:"id"`
 	Titre            string  `json:"titre"`
+	Type             string  `json:"type"`
+	Lieu             string  `json:"lieu"`
+	Description      string  `json:"description"`
 	Date             string  `json:"date"`
 	Prix             float64 `json:"prix"`
 	Place            int     `json:"place"`

@@ -94,10 +94,17 @@ var vueCalendrier = false;
 var calendar;
 var modalCtrl = new bootstrap.Modal(document.getElementById('modalInscrits'));
 
-// Nettoyer l'affichage d'une date (enlever le T et le Z)
-function formaterDate(date) {
-    if (!date) return 'Non précisée';
-    return date.replace('T', ' à ').replace('Z', '').substring(0, 19);
+
+function formaterDate(d) {
+    if (!d) return 'Non précisée';
+    var partie = d.replace('T', ' ').replace('Z', '');
+    var bloc = partie.split(' ');
+    var dateP = bloc[0].split('-');
+    var heureP = bloc[1] ? bloc[1].split(':') : ['00', '00'];
+    var mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    var jour = parseInt(dateP[2], 10);
+    var nomMois = mois[parseInt(dateP[1], 10) - 1];
+    return jour + ' ' + nomMois + ' ' + dateP[0] + ' à ' + heureP[0] + 'h' + heureP[1];
 }
 
 // Charger mes ateliers validés
@@ -109,17 +116,27 @@ fetch('http://localhost:8080/api/evenements')
         mesAteliers = (data || []).filter(function(e) {
             return e.id_anim === userId && e.statut_validation === 1;
         });
+        
 
         afficher(mesAteliers);
         calculerStats(mesAteliers);
         initialiserCalendrier();
+    })
+    .catch(function() {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('ateliers').innerHTML =
+            '<div class="alert alert-danger">Impossible de charger vos ateliers. Vérifiez que le serveur est démarré, puis réessayez.</div>';
     });
 
 function afficher(liste) {
     var div = document.getElementById('ateliers');
 
     if (!liste || liste.length === 0) {
-        div.innerHTML = '<p class="text-muted">Aucun atelier validé pour le moment.</p>';
+        div.innerHTML = '<div class="text-center text-muted py-4">' +
+            '<p>Aucun atelier validé pour le moment.<br>' +
+            '<span class="small">Vos ateliers apparaissent ici une fois validés par un administrateur.</span></p>' +
+            '<a href="mes_ateliers.php" class="btn btn-primary-upcycle btn-sm">Créer un atelier</a>' +
+            '</div>';
         return;
     }
 
@@ -241,10 +258,32 @@ function voirInscrits(idEvent, titre) {
                     '<span class="text-muted small">' + u.mail + '</span>' +
                     '</li>';
             });
+            
             html += '</ul>';
+            html += '<button class="btn btn-primary-upcycle btn-sm mt-3 w-100" onclick="envoyerRappel(' + idEvent + ')">Envoyer un rappel par email aux inscrits</button>';
             document.getElementById('modal-inscrits').innerHTML = html;
+
         });
 }
+
+// Envoyer un email de rappel à tous les inscrits de l'atelier
+function envoyerRappel(idEvent) {
+    var message = prompt("Message à envoyer aux inscrits :", "Rappel : votre atelier approche, pensez à venir !");
+    if (!message) return;
+
+    fetch('rappel_inscrits.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: idEvent, message: message })
+    }).then(function(res) {
+        if (res.ok) alert("Rappel envoyé aux inscrits !");
+        else alert("Une erreur est survenue, réessayez.");
+    }).catch(function() {
+        alert("Connexion impossible, réessayez.");
+    });
+}
+
+
 </script>
 
 </body>
