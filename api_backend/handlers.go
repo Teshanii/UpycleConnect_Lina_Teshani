@@ -261,6 +261,7 @@ func handleEvenements(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusOK)
 	case "DELETE":
+		bd.Exec("DELETE FROM inscriptions WHERE id_event=?", id)
 		bd.Exec("DELETE FROM evenements WHERE id_event=?", id)
 		w.WriteHeader(http.StatusOK)
 
