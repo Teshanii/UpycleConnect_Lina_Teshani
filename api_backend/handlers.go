@@ -37,7 +37,7 @@
 				// On récupère tous les utilisateurs avec leur rôle (jointure avec la table roles)
 				// On ajoute aussi est_verifie pour savoir si le compte est activé par mail
 				lignes, err := bd.Query(`
-					SELECT u.id_user, u.nom, u.prenom, u.email, u.est_actif, r.libelle_role, u.id_role, u.score_upcycling, COALESCE(u.onesignal_player_id, ''), u.est_verifie
+					SELECT u.id_user, u.nom, u.prenom, u.email, u.est_actif, r.libelle_role, u.id_role, u.score_upcycling, COALESCE(u.onesignal_player_id, ''), u.est_verifie, COALESCE(u.solde,0)
 					FROM utilisateurs u 
 					JOIN roles r ON u.id_role = r.id_role`)
 				if err != nil {
@@ -48,7 +48,7 @@
 				for lignes.Next() {
 					var u User
 					// On scanne tous les champs y compris est_verifie
-					lignes.Scan(&u.Id, &u.Nom, &u.Pre, &u.Mail, &u.EstActif, &u.Role, &u.IdRole, &u.ScoreUpcycling, &u.OneSignalId, &u.EstVerifie)
+					lignes.Scan(&u.Id, &u.Nom, &u.Pre, &u.Mail, &u.EstActif, &u.Role, &u.IdRole, &u.ScoreUpcycling, &u.OneSignalId, &u.EstVerifie, &u.Solde)
 					res = append(res, u)
 				}
 				json.NewEncoder(w).Encode(res)
@@ -78,10 +78,40 @@
 					}
 					w.WriteHeader(http.StatusOK)
 				} else {
-					// Supprimer toutes les données liées avant de supprimer l'utilisateur
+					// On supprime toutes les données liées AVANT de supprimer l'utilisateur
+					// (sinon les clés étrangères empêchent la suppression)
+					// L'ordre est important : on supprime les "enfants" avant les "parents"
+
+					// 1. On libère les casiers occupés par ses demandes de dépôt
+					//    (les objets physiques seront retirés par les salariés sur le terrain)
+					bd.Exec("UPDATE casiers SET statut = 'libre' WHERE id_casier IN (SELECT id_casier FROM demandes_depot WHERE id_user = ? AND id_casier IS NOT NULL)", id)
+
+					// 2. On supprime les étapes des projets de l'artisan, puis les projets
+					bd.Exec("DELETE FROM etapes_projet WHERE id_projet IN (SELECT id_projet FROM projets WHERE id_createur = ?)", id)
+					bd.Exec("DELETE FROM projets WHERE id_createur = ?", id)
+
+					// 3. On supprime ses prestations (créations en vente)
+					bd.Exec("DELETE FROM prestations WHERE id_createur = ?", id)
+
+					// 4. On supprime ses mouvements de portefeuille et transactions
+					bd.Exec("DELETE FROM mouvements_portefeuille WHERE id_user = ?", id)
+					bd.Exec("DELETE FROM transactions WHERE id_user = ?", id)
+
+					// 5. On supprime ses inscriptions aux ateliers
 					bd.Exec("DELETE FROM inscriptions WHERE id_user = ?", id)
+
+					// 6. On supprime ses annonces
 					bd.Exec("DELETE FROM annonces WHERE id_user_auteur = ?", id)
+
+					// 7. On supprime ses messages de forum (et les réponses à ses messages)
+					bd.Exec("DELETE FROM message_forums WHERE id_user_auteur = ?", id)
+
+					// 8. On supprime ses demandes de dépôt (celles qu'il a créées en tant que particulier,
+					//    et celles qu'il a réservées en tant qu'artisan)
 					bd.Exec("DELETE FROM demandes_depot WHERE id_user = ?", id)
+					bd.Exec("UPDATE demandes_depot SET id_artisan = NULL, code_artisan = NULL WHERE id_artisan = ?", id)
+
+					// 9. Enfin, on supprime l'utilisateur lui-même
 					_, err := bd.Exec("DELETE FROM utilisateurs WHERE id_user = ?", id)
 					if err != nil {
 						w.WriteHeader(http.StatusConflict)
@@ -357,14 +387,14 @@
 				idUser := r.URL.Query().Get("id_user")
 				var lignes *sql.Rows
 				if idUser != "" {
-					lignes, _ = bd.Query("SELECT id_transac, COALESCE(id_user,0), montant, COALESCE(reference_stripe,''), statut_paiement, COALESCE(type,''), date_transac FROM transactions WHERE id_user = ?", idUser)
+					lignes, _ = bd.Query("SELECT id_transac, COALESCE(id_user,0), montant, COALESCE(reference_stripe,''), statut_paiement, COALESCE(type,''), COALESCE(commission,0), date_transac FROM transactions WHERE id_user = ?", idUser)
 				} else {
-					lignes, _ = bd.Query("SELECT id_transac, COALESCE(id_user,0), montant, COALESCE(reference_stripe,''), statut_paiement, COALESCE(type,''), date_transac FROM transactions")
+					lignes, _ = bd.Query("SELECT id_transac, COALESCE(id_user,0), montant, COALESCE(reference_stripe,''), statut_paiement, COALESCE(type,''), COALESCE(commission,0), date_transac FROM transactions")
 				}
 				var res []Transaction
 				for lignes.Next() {
 					var t Transaction
-					lignes.Scan(&t.Id, &t.IdUser, &t.Montant, &t.RefStripe, &t.Statut, &t.Type, &t.Date)
+					lignes.Scan(&t.Id, &t.IdUser, &t.Montant, &t.RefStripe, &t.Statut, &t.Type, &t.Commission, &t.Date)
 					res = append(res, t)
 				}
 				json.NewEncoder(w).Encode(res)
