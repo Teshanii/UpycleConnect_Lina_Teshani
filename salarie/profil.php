@@ -70,10 +70,10 @@ var userRoleId = <?php echo $_SESSION['user_role']; ?>;
 var userData = null;
 
 // Charger les infos du profil
-fetch('http://localhost:8080/api/users')
+fetch('http://localhost:8080/api/profil/' + userId)
     .then(function(r) { return r.json(); })
     .then(function(data) {
-        userData = data.find(function(u) { return u.id === userId; });
+        userData = data;
         if (userData) {
             document.getElementById('nom').value = userData.nom;
             document.getElementById('prenom').value = userData.pre;
@@ -82,17 +82,13 @@ fetch('http://localhost:8080/api/users')
     });
 
 function sauvegarder() {
-    fetch('http://localhost:8080/api/users/' + userId, {
+    fetch('http://localhost:8080/api/profil/' + userId, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             nom: document.getElementById('nom').value,
             pre: document.getElementById('prenom').value,
-            mail: document.getElementById('email').value,
-            id_role: userRoleId,
-            est_actif: 1,
-            score_upcycling: userData ? userData.score_upcycling : 0,
-            est_verifie: userData ? userData.est_verifie : 1
+            mail: document.getElementById('email').value
         })
     }).then(function(res) {
         if (res.ok) {
@@ -121,17 +117,13 @@ function changerMdp() {
         return;
     }
 
-    fetch('http://localhost:8080/api/users/' + userId, {
+    fetch('http://localhost:8080/api/profil/' + userId, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             nom: document.getElementById('nom').value,
             pre: document.getElementById('prenom').value,
             mail: document.getElementById('email').value,
-            id_role: userRoleId,
-            est_actif: 1,
-            score_upcycling: userData ? userData.score_upcycling : 0,
-            est_verifie: userData ? userData.est_verifie : 1,
             mdp: nouveau
         })
     }).then(function(res) {

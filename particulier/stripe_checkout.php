@@ -2,8 +2,8 @@
 session_start();
 if (!isset($_SESSION['user_id'])) { http_response_code(401); exit; }
 
-require_once '../vendor/autoload.php';
-require_once '../config.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../config.php';
 
 \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
 

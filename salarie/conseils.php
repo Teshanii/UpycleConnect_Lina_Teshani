@@ -60,6 +60,26 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
 <script>
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
+// Échappe le HTML pour éviter les injections de code (XSS)
+function echapper(t) {
+    if (t === null || t === undefined) return '';
+    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Formate une date SQL en français (ex: 5 mars 2026 à 14h30)
+function formaterDate(d) {
+    if (!d) return 'Non précisée';
+    var partie = d.replace('T', ' ').replace('Z', '');
+    var bloc = partie.split(' ');
+    var dateP = bloc[0].split('-');
+    var heureP = bloc[1] ? bloc[1].split(':') : ['00', '00'];
+    var mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    var jour = parseInt(dateP[2], 10);
+    var nomMois = mois[parseInt(dateP[1], 10) - 1];
+    return jour + ' ' + nomMois + ' ' + dateP[0] + ' à ' + heureP[0] + 'h' + heureP[1];
+}
+
+
 function focusForm() {
     document.getElementById('titre').focus();
     window.scrollTo(0, 0);
@@ -92,9 +112,9 @@ function charger() {
                 html += '<div class="card mb-2 p-3">' +
                     '<div class="d-flex justify-content-between align-items-start">' +
                     '<div>' +
-                    '<strong>' + a.titre + '</strong> ' + badge + '<br>' +
+                    '<strong>' + echapper(a.titre) + '</strong> ' + badge + '<br>' +
                     '<span class="text-muted small">' + formaterDate(a.date) + '</span><br>' +
-                    '<span class="small">' + (a.contenu.length > 150 ? a.contenu.substring(0, 150) + '...' : a.contenu) + '</span>' +
+                    '<span class="small">' + echapper(a.contenu.length > 150 ? a.contenu.substring(0, 150) + '...' : a.contenu) + '</span>' +
                     '</div>' +
                     '<div>' +
                     '<button class="btn btn-warning btn-sm me-1" onclick=\'modifier(' + JSON.stringify(a) + ')\'>Modifier</button>' +

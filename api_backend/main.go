@@ -11,6 +11,7 @@ func main() {
 
 	mux.HandleFunc("/api/users", handleUsers)
 	mux.HandleFunc("/api/users/{id}", handleUsers)
+	mux.HandleFunc("/api/profil/{id}", handleProfil) 
 
 	mux.HandleFunc("/api/roles", handleRoles)
 
@@ -75,6 +76,8 @@ func main() {
 
 	mux.HandleFunc("POST /api/register", handleRegister)
 	mux.HandleFunc("POST /api/login", handleLogin)
+
+
 
 	mux.HandleFunc("PUT /api/verify/{token}", handleVerify)
 

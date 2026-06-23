@@ -1222,3 +1222,34 @@ func handleRecompense(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Félicitations ! 1 mois de Premium ajouté à votre compte."})
 }
+
+func handleProfil(w http.ResponseWriter, r *http.Request) {
+    id := r.PathValue("id")
+    w.Header().Set("Content-Type", "application/json")
+
+    switch r.Method {
+    case "GET":
+        // On renvoie UN SEUL utilisateur (pas toute la liste) -> évite la fuite de données
+        var u User
+        err := bd.QueryRow(`SELECT id_user, nom, prenom, email, id_role, score_upcycling, est_verifie
+            FROM utilisateurs WHERE id_user = ?`, id).Scan(&u.Id, &u.Nom, &u.Pre, &u.Mail, &u.IdRole, &u.ScoreUpcycling, &u.EstVerifie)
+        if err != nil {
+            w.WriteHeader(http.StatusNotFound)
+            return
+        }
+        json.NewEncoder(w).Encode(u)
+
+    case "PUT":
+        var u User
+        json.NewDecoder(r.Body).Decode(&u)
+        if u.Mdp != "" {
+            hash, _ := bcrypt.GenerateFromPassword([]byte(u.Mdp), bcrypt.DefaultCost)
+            bd.Exec(`UPDATE utilisateurs SET nom=?, prenom=?, email=?, mot_de_passe=? WHERE id_user=?`,
+                u.Nom, u.Pre, u.Mail, string(hash), id)
+        } else {
+            bd.Exec(`UPDATE utilisateurs SET nom=?, prenom=?, email=? WHERE id_user=?`,
+                u.Nom, u.Pre, u.Mail, id)
+        }
+        w.WriteHeader(http.StatusOK)
+    }
+}

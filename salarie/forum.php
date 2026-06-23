@@ -51,6 +51,13 @@ var userId = <?php echo $_SESSION['user_id']; ?>;
 var tousMessages = [];
 var filtreActuel = 'visible';
 
+// Échappe le HTML pour éviter les injections de code (XSS)
+function echapper(t) {
+    if (t === null || t === undefined) return '';
+    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+
 // Charger tous les messages (le salarié voit aussi les masqués)
 function charger() {
     fetch('http://localhost:8080/api/messages')
@@ -117,9 +124,9 @@ function afficherMessage(m, estReponse) {
     var html = '<div class="' + styleCard + '">' +
         '<div class="d-flex justify-content-between align-items-start">' +
         '<div>' +
-        '<strong style="color:var(--primary-green);">' + m.auteur + '</strong>' + badgeMasque +
+        '<strong style="color:var(--primary-green);">' + echapper(m.auteur) + '</strong>' + badgeMasque +
         '<span class="text-muted small ms-2">' + (m.date ? m.date.replace('T', ' ').substring(0, 16) : '') + '</span><br>' +
-        '<span>' + m.contenu + '</span>' +
+        '<span>' + echapper(m.contenu) + '</span>' +
         '</div>' +
         '<div>' + btnRepondre + btnModere + btnSupprimer + '</div>' +
         '</div>';
@@ -165,7 +172,7 @@ function poster(idParent) {
             if (idParent === 0) document.getElementById('contenu').value = '';
             charger();
         }
-    });
+    }).catch(function() { alert('Connexion impossible, réessayez.'); });
 }
 
 // Modérer : masquer (1) ou réactiver (0)
@@ -176,7 +183,7 @@ function changerStatut(id, nouvelEtat) {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ est_modere: nouvelEtat })
-        }).then(function(res) { if (res.ok) charger(); });
+        }).then(function(res) { if (res.ok) charger(); }).catch(function() { alert('Connexion impossible, réessayez.'); });
     }
 }
 
@@ -184,7 +191,8 @@ function changerStatut(id, nouvelEtat) {
 function supprimer(id) {
     if (confirm('Supprimer définitivement ce message (et ses réponses) ?')) {
         fetch('http://localhost:8080/api/messages/' + id, { method: 'DELETE' })
-            .then(function(res) { if (res.ok) charger(); });
+            .then(function(res) { if (res.ok) charger(); })
+            .catch(function() { alert('Connexion impossible, réessayez.'); });
     }
 }
 
