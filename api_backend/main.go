@@ -38,6 +38,11 @@ func main() {
 	mux.HandleFunc("/api/projets", handleProjets)
 	mux.HandleFunc("/api/projets/{id}", handleProjets)
 
+	mux.HandleFunc("/api/sponsoriser/{id}", handleSponsoriser)
+	
+	mux.HandleFunc("/api/participants", handleParticipants)
+	mux.HandleFunc("/api/participants/{id}", handleParticipants)
+
 	mux.HandleFunc("/api/etapes", handleEtapes)
 	mux.HandleFunc("/api/etapes/{id}", handleEtapes)
 

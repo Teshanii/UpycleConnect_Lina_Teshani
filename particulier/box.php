@@ -1,6 +1,6 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 4) {
     header('Location: ../connexion.php');
     exit;
 }
@@ -18,42 +18,46 @@ if (!isset($_SESSION['user_id'])) {
 <nav class="navbar" style="background-color: var(--primary-green);">
     <div class="container">
         <a class="navbar-brand text-white fw-bold" href="dashboard.php">UpcycleConnect</a>
-        <a href="../connexion.php?logout=1" class="btn btn-outline-light btn-sm">Déconnexion</a>
+        <div class="d-flex align-items-center">
+            <?php include 'includes/traductions.php'; ?>
+            <a href="../connexion.php?logout=1" class="btn btn-outline-light btn-sm" data-trad="nav_deconnexion">Déconnexion</a>
+        </div>
     </div>
 </nav>
 
 <div class="container mt-4">
-    <a href="dashboard.php" style="color:var(--primary-green);">← Retour</a>
+    <a href="dashboard.php" style="color:var(--primary-green);" data-trad="btn_retour">← Retour</a>
+    <h4 class="mt-3" style="color:var(--primary-green);" data-trad="box_titre">Déposer un objet dans une box</h4>
+    <p class="text-muted small" data-trad="box_sous_titre">Choisissez un objet à déposer et une box disponible près de chez vous.</p>
 
-    <!-- Formulaire de demande -->
-    <div class="card mx-auto mt-3" style="max-width:550px;">
-        <div class="card-body">
-            <h4 style="color:var(--primary-green);">Demander une box</h4>
-            <p class="text-muted small">Choisissez une de vos annonces validées et une box. Un admin validera et vous enverra un code pour ouvrir le casier.</p>
+    <div id="msg"></div>
 
-            <div id="msg"></div>
+    <div class="card p-3 mb-4">
+        <!-- Choix de l'objet à déposer -->
+        <div class="mb-3">
+            <label class="form-label" data-trad="box_label_objet">Objet à déposer</label>
+            <select id="select-objet" class="form-select">
+                <option value="">Chargement...</option>
+            </select>
+        </div>
 
-            <div class="mb-3">
-                <label class="form-label">Choisir une annonce</label>
-                <select class="form-select" id="id_annonce">
-                    <option value="">Chargement...</option>
-                </select>
-                <small class="text-muted">Seules vos annonces validées et pas encore déposées apparaissent ici.</small>
-            </div>
+        <!-- Filtre par ville -->
+        <div class="mb-3">
+            <label class="form-label" data-trad="box_label_ville">Filtrer les box par ville</label>
+            <select id="filtre-ville" class="form-select" onchange="afficherBox()">
+                <option value="" data-trad="box_toutes_villes">Toutes les villes</option>
+            </select>
+        </div>
 
-            <div class="mb-3">
-                <label class="form-label">Choisir une box</label>
-                <select class="form-select" id="id_box">
-                    <option value="">Chargement...</option>
-                </select>
-            </div>
-
-            <button class="btn btn-primary-upcycle w-100" onclick="envoyer()">ENVOYER LA DEMANDE</button>
+        <!-- Liste des box disponibles -->
+        <label class="form-label" data-trad="box_label_choix">Choisissez une box</label>
+        <div id="liste-box" class="row g-3">
+            <p class="text-muted" data-trad="box_chargement">Chargement des box...</p>
         </div>
     </div>
 
     <!-- Mes demandes en cours -->
-    <h4 class="mt-4" style="color:var(--primary-green);">Mes demandes</h4>
+    <h4 class="mt-4" style="color:var(--primary-green);" data-trad="box_mes_demandes">Mes demandes</h4>
     <div id="loader" class="text-center mt-3">
         <div class="spinner-border" style="color:var(--primary-green);"></div>
     </div>
@@ -62,71 +66,126 @@ if (!isset($_SESSION['user_id'])) {
 
 <script>
 var userId = <?php echo $_SESSION['user_id']; ?>;
+var toutesBox = [];
+var boxChoisie = null;
 
-// Charger les annonces validées de l'utilisateur, en excluant celles déjà en cours de dépôt
-function chargerAnnonces() {
-    // On récupère d'abord les demandes du user pour savoir quelles annonces sont déjà utilisées
+// 1. On charge d'abord les demandes existantes pour savoir quels objets sont déjà engagés
+function chargerObjets() {
     fetch('http://localhost:8080/api/demandes_box')
         .then(function(r) { return r.json(); })
         .then(function(demandes) {
-            // On liste les id_annonce déjà engagées dans une demande active (pas refusée)
-            var annoncesUtilisees = [];
+            // Les annonces déjà engagées dans une demande active (pas refusée, pas récupérée)
+            var annoncesEngagees = [];
             (demandes || []).forEach(function(d) {
-                if (d.id_user === userId && d.statut !== 'refuse' && d.id_annonce) {
-                    annoncesUtilisees.push(d.id_annonce);
+                if (d.id_user === userId && d.statut !== 'refuse' && d.statut !== 'recupere' && d.id_annonce) {
+                    annoncesEngagees.push(d.id_annonce);
                 }
             });
 
-            // Puis on charge les annonces validées du user
+            // Puis on charge les annonces validées du particulier
             fetch('http://localhost:8080/api/annonces?id_user=' + userId)
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    var sel = document.getElementById('id_annonce');
-                    sel.innerHTML = '';
-                    // On garde les annonces validées ET pas déjà utilisées dans une demande active
-                    var dispo = data ? data.filter(function(a) {
-                        return a.statut_validation === 1 && annoncesUtilisees.indexOf(a.id) === -1;
-                    }) : [];
-
-                    if (dispo.length === 0) {
-                        sel.innerHTML = '<option value="">Aucune annonce disponible. Publiez-en une ou attendez la validation.</option>';
+                    var sel = document.getElementById('select-objet');
+                    // On garde les annonces validées ET pas déjà engagées dans une demande
+                    var annonces = (data || []).filter(function(a) {
+                        return a.statut_validation === 1 && annoncesEngagees.indexOf(a.id) === -1;
+                    });
+                    if (annonces.length === 0) {
+                        sel.innerHTML = '<option value="">Aucun objet disponible (déjà en dépôt ou non validé)</option>';
                         return;
                     }
-                    sel.innerHTML = '<option value="">-- Sélectionner une annonce --</option>';
-                    dispo.forEach(function(a) {
-                        sel.innerHTML += '<option value="' + a.id + '">' + a.titre + '</option>';
+                    var html = '<option value="">-- Choisir un objet --</option>';
+                    annonces.forEach(function(a) {
+                        html += '<option value="' + a.id_objet + '" data-annonce="' + a.id + '">' + a.titre + '</option>';
                     });
+                    sel.innerHTML = html;
                 });
         });
 }
-chargerAnnonces();
+chargerObjets();
 
-// Charger les box disponibles
+// 2. On charge les box avec leur nombre de casiers libres
 fetch('http://localhost:8080/api/box')
     .then(function(r) { return r.json(); })
     .then(function(data) {
-        var sel = document.getElementById('id_box');
-        sel.innerHTML = '';
-        if (!data || data.length === 0) {
-            sel.innerHTML = '<option value="">Aucune box disponible</option>';
-            return;
-        }
-        sel.innerHTML = '<option value="">-- Sélectionner une box --</option>';
-        data.forEach(function(b) {
-            sel.innerHTML += '<option value="' + b.id + '">' + b.adresse + '</option>';
-        });
+        toutesBox = data || [];
+        remplirFiltreVille();
+        afficherBox();
     });
 
-function envoyer() {
-    var idAnnonce = document.getElementById('id_annonce').value;
-    var idBox = document.getElementById('id_box').value;
+// On remplit le menu déroulant des villes (sans doublon)
+function remplirFiltreVille() {
+    var villes = [];
+    toutesBox.forEach(function(b) {
+        if (b.ville && villes.indexOf(b.ville) === -1) {
+            villes.push(b.ville);
+        }
+    });
+    var sel = document.getElementById('filtre-ville');
+    villes.forEach(function(v) {
+        sel.innerHTML += '<option value="' + v + '">' + v + '</option>';
+    });
+}
 
-    if (!idAnnonce) {
-        document.getElementById('msg').innerHTML = '<div class="alert alert-danger">Choisissez une annonce.</div>';
+// On affiche les box (filtrées par ville si besoin)
+function afficherBox() {
+    var filtreVille = document.getElementById('filtre-ville').value;
+    var div = document.getElementById('liste-box');
+
+    var box = toutesBox;
+    if (filtreVille) {
+        box = box.filter(function(b) { return b.ville === filtreVille; });
+    }
+
+    if (box.length === 0) {
+        div.innerHTML = '<p class="text-muted">Aucune box dans cette ville.</p>';
         return;
     }
-    if (!idBox) {
-        document.getElementById('msg').innerHTML = '<div class="alert alert-danger">Choisissez une box.</div>';
+
+    var html = '';
+    box.forEach(function(b) {
+        var pleine = b.casiers_libres <= 0;
+
+        // Badge de disponibilité (vert si dispo, rouge si pleine)
+        var badge = pleine
+            ? '<span class="badge bg-danger">Complet</span>'
+            : '<span class="badge bg-success">' + b.casiers_libres + ' casier(s) libre(s)</span>';
+
+        // Carte grisée + bouton désactivé si pleine
+        var style = pleine ? 'opacity:0.5;' : '';
+        var bouton = pleine
+            ? '<button class="btn btn-secondary btn-sm w-100" disabled>Box complète</button>'
+            : '<button class="btn btn-primary-upcycle btn-sm w-100" onclick="choisirBox(' + b.id + ')">Choisir cette box</button>';
+
+        html += '<div class="col-md-4">' +
+            '  <div class="card h-100 p-3" style="' + style + '" id="box-' + b.id + '">' +
+            '    <h6 style="color:var(--primary-green);">' + b.adresse + '</h6>' +
+            '    <p class="text-muted small mb-1"> ' + (b.ville || '') + '</p>' +
+            '    <div class="mb-2">' + badge + '</div>' +
+            bouton +
+            '  </div>' +
+            '</div>';
+    });
+    div.innerHTML = html;
+}
+
+// Quand on choisit une box
+function choisirBox(idBox) {
+    boxChoisie = idBox;
+    envoyerDemande();
+}
+
+// On envoie la demande de dépôt
+function envoyerDemande() {
+    var sel = document.getElementById('select-objet');
+    var idObjet = sel.value;
+    var option = sel.options[sel.selectedIndex];
+    var idAnnonce = option ? option.dataset.annonce : null;
+
+    if (!idObjet) {
+        document.getElementById('msg').innerHTML = '<div class="alert alert-danger">Choisissez d\'abord un objet à déposer.</div>';
+        window.scrollTo(0, 0);
         return;
     }
 
@@ -135,34 +194,36 @@ function envoyer() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             id_user: userId,
-            id_annonce: parseInt(idAnnonce),
-            id_box: parseInt(idBox)
+            id_objet: parseInt(idObjet),
+            id_box: boxChoisie,
+            id_annonce: idAnnonce ? parseInt(idAnnonce) : null
         })
     }).then(function(res) {
         if (res.ok) {
-            document.getElementById('msg').innerHTML = '<div class="alert alert-success">Demande envoyée ! L\'admin va vérifier et vous envoyer un code.</div>';
-            document.getElementById('id_annonce').value = '';
-            document.getElementById('id_box').value = '';
+            document.getElementById('msg').innerHTML = '<div class="alert alert-success">Demande envoyée ! Un administrateur va la valider et vous attribuer un casier avec un code d\'ouverture.</div>';
+            window.scrollTo(0, 0);
             chargerDemandes();
-            chargerAnnonces(); // on recharge pour retirer l'annonce qu'on vient d'utiliser
+            chargerObjets(); // on recharge le select pour retirer l'objet qu'on vient d'engager
+        } else if (res.status === 409) {
+            res.json().then(function(data) {
+                document.getElementById('msg').innerHTML = '<div class="alert alert-warning">' + (data.error || 'Cet objet a déjà une demande en cours.') + '</div>';
+                window.scrollTo(0, 0);
+            });
         } else {
-            document.getElementById('msg').innerHTML = '<div class="alert alert-danger">Erreur lors de l\'envoi.</div>';
+            document.getElementById('msg').innerHTML = '<div class="alert alert-danger">Erreur lors de la demande.</div>';
         }
     });
 }
 
-// Marquer la demande comme "déposée" (le particulier a mis l'objet dans le casier)
+// Marquer la demande comme "déposée"
 function marquerDepose(idDemande) {
     if (!confirm("Confirmez-vous avoir déposé votre objet dans le casier ?")) return;
-
     fetch('http://localhost:8080/api/demandes_box/' + idDemande, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ statut: 'depose' })
     }).then(function(res) {
-        if (res.ok) {
-            chargerDemandes();
-        }
+        if (res.ok) chargerDemandes();
     });
 }
 
@@ -173,11 +234,13 @@ function chargerDemandes() {
         .then(function(data) {
             document.getElementById('loader').style.display = 'none';
             var html = '';
-
-            var mesDemandes = data ? data.filter(function(d) { return d.id_user === userId; }) : [];
+            // On ne montre que les demandes actives (on masque récupérées et refusées)
+            var mesDemandes = data ? data.filter(function(d) {
+                return d.id_user === userId && d.statut !== 'recupere' && d.statut !== 'refuse';
+            }) : [];
 
             if (mesDemandes.length === 0) {
-                document.getElementById('mes-demandes').innerHTML = '<p class="text-muted">Vous n\'avez pas encore de demandes.</p>';
+                document.getElementById('mes-demandes').innerHTML = '<p class="text-muted">Vous n\'avez pas de demande en cours.</p>';
                 return;
             }
 
@@ -187,15 +250,10 @@ function chargerDemandes() {
                     badge = '<span class="badge bg-success">Validée - à déposer</span>';
                 } else if (d.statut === 'depose') {
                     badge = '<span class="badge bg-info text-dark">Objet déposé</span>';
-                } else if (d.statut === 'recupere') {
-                    badge = '<span class="badge bg-primary">Récupéré par un artisan</span>';
-                } else if (d.statut === 'refuse') {
-                    badge = '<span class="badge bg-danger">Refusée</span>';
                 } else {
                     badge = '<span class="badge bg-warning text-dark">En attente</span>';
                 }
 
-                // Afficher le code et le casier si validé ou plus
                 var codeSection = '';
                 if ((d.statut === 'valide' || d.statut === 'depose') && d.code_ouverture) {
                     codeSection = '<div class="alert alert-success mt-2">' +
@@ -206,30 +264,17 @@ function chargerDemandes() {
                         '</div>';
                 }
 
-                // Bouton "J'ai déposé" si statut validé
                 var boutonDepose = '';
                 if (d.statut === 'valide') {
                     boutonDepose = '<button class="btn btn-sm btn-primary-upcycle mt-2" onclick="marquerDepose(' + d.id + ')">J\'ai déposé l\'objet</button>';
                 }
 
-                // Afficher le motif si refusé
-                var motifSection = '';
-                if (d.statut === 'refuse' && d.motif_refus) {
-                    motifSection = '<p class="text-danger small mt-1">Motif : ' + d.motif_refus + '</p>';
-                }
-
                 html += '<div class="card mb-3 p-3">' +
-                    '<div class="d-flex justify-content-between align-items-start">' +
-                    '<div class="w-100">' +
                     '<strong>' + (d.titre_annonce || d.description || 'Objet non précisé') + '</strong><br>' +
                     '<span class="text-muted small">Box : ' + (d.adresse_box || '-') + '</span><br>' +
                     '<span class="text-muted small">Date : ' + (d.date || '-') + '</span><br>' +
                     '<div class="mt-1">' + badge + '</div>' +
-                    motifSection +
-                    codeSection +
-                    boutonDepose +
-                    '</div>' +
-                    '</div>' +
+                    codeSection + boutonDepose +
                     '</div>';
             });
 

@@ -100,7 +100,7 @@ include 'includes/header.php';
                     <td>${p.prix.toFixed(2)} €</td>
                     <td>${badge}</td>
                     <td class="text-center">
-                        <button class="btn btn-info btn-sm text-white" onclick='ouvrir(${JSON.stringify(p)})'>Voir</button>
+                        <button class="btn btn-info btn-sm text-white" onclick="ouvrirParId(${p.id})">Voir</button>
                     </td>
                 </tr>`;
             });
@@ -111,6 +111,11 @@ include 'includes/header.php';
             if (type === 'attente') return afficher(toutesPrestations.filter(p => p.statut_validation === 0));
             if (type === 'valide') return afficher(toutesPrestations.filter(p => p.statut_validation === 1));
             if (type === 'refuse') return afficher(toutesPrestations.filter(p => p.statut_validation === 2));
+        }
+        
+        function ouvrirParId(id) {
+            const p = toutesPrestations.find(x => x.id === id);
+            if (p) ouvrir(p);
         }
 
         function ouvrir(p) {

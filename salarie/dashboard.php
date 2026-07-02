@@ -67,6 +67,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
                 </div>
             </a>
         </div>
+
+        <div class="col-md-4" id="btn-galerie">
+            <a href="../galerie.php" class="text-decoration-none">
+                <div class="card p-3 text-center h-100">
+                    <h5>Galerie communauté</h5>
+                    <p class="text-muted small">Voir les créations des artisans</p>
+                </div>
+            </a>
+        </div>
         <div class="col-md-4">
             <a href="conseils.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">

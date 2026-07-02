@@ -4,7 +4,6 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: ../connexion.php');
     exit;
 }
-// On détermine vers quel dashboard revenir selon le rôle
 $dashboard = ($_SESSION['user_role'] == 3) ? '../artisan/dashboard.php' : 'dashboard.php';
 ?>
 <!DOCTYPE html>
@@ -29,7 +28,6 @@ $dashboard = ($_SESSION['user_role'] == 3) ? '../artisan/dashboard.php' : 'dashb
     <a href="<?= $dashboard ?>" style="color:var(--primary-green);">← Retour</a>
     <h4 class="mt-3" style="color:var(--primary-green);">Mon portefeuille</h4>
 
-    <!-- Solde -->
     <div class="card shadow-sm mb-4" style="max-width:400px;">
         <div class="card-body text-center">
             <span class="text-muted small">Solde disponible</span>
@@ -38,21 +36,22 @@ $dashboard = ($_SESSION['user_role'] == 3) ? '../artisan/dashboard.php' : 'dashb
         </div>
     </div>
 
-    <!-- Petite explication sur la commission -->
     <div class="alert alert-light border small" style="max-width:600px;">
-        <strong>Comment ça marche ?</strong> Quand vous vendez un objet ou une prestation, UpcycleConnect prélève une commission de 7% sur le prix de vente. Le reste est versé sur votre portefeuille. Vous pouvez retirer votre argent à tout moment.
+        <?php if ($_SESSION['user_role'] == 3): ?>
+            Une commission est déduite de chaque vente (7% en gratuit, 3% en Premium).
+        <?php else: ?>
+            Une commission de 7% est déduite de chaque vente.
+        <?php endif; ?>
     </div>
 
     <div id="msg"></div>
 
-    <!-- Historique des mouvements -->
     <h5 style="color:var(--primary-green);">Historique</h5>
     <div id="historique">
         <div class="text-center"><div class="spinner-border" style="color:var(--primary-green);"></div></div>
     </div>
 </div>
 
-<!-- Modal de retrait -->
 <div class="modal fade" id="modalRetrait" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -61,7 +60,7 @@ $dashboard = ($_SESSION['user_role'] == 3) ? '../artisan/dashboard.php' : 'dashb
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p class="small text-muted">Le montant sera viré vers votre compte bancaire. Solde disponible : <strong><span id="solde-modal">0.00</span> €</strong></p>
+                <p class="small text-muted">Solde disponible : <strong><span id="solde-modal">0.00</span> €</strong></p>
                 <label class="form-label">Montant à retirer (€)</label>
                 <input type="number" step="0.01" class="form-control" id="montant-retrait" placeholder="Ex: 20">
                 <div id="modal-msg" class="mt-2"></div>
@@ -97,14 +96,12 @@ function charger() {
 
             var html = '';
             mouvements.forEach(function(m) {
-                // Montant positif = entrée (vert), négatif = sortie (rouge)
                 var couleur = m.montant >= 0 ? 'text-success' : 'text-danger';
                 var signe = m.montant >= 0 ? '+' : '';
 
-                // Pour les ventes, on rappelle que la commission de 7% a été déduite
                 var explication = '';
                 if (m.type === 'vente_objet' || m.type === 'vente_prestation') {
-                    explication = '<br><span class="text-muted small">Commission UpcycleConnect (7%) déduite du prix de vente.</span>';
+                    explication = '<br><span class="text-muted small">Commission déduite du prix de vente.</span>';
                 }
 
                 html += '<div class="card mb-2 p-2">' +
@@ -148,8 +145,8 @@ function confirmerRetrait() {
     }).then(function(res) {
         if (res.ok) {
             modalRetrait.hide();
-            document.getElementById('msg').innerHTML = '<div class="alert alert-success">Retrait effectué ! L\'argent sera viré sur votre compte.</div>';
-            charger(); // on recharge le solde et l'historique
+            document.getElementById('msg').innerHTML = '<div class="alert alert-success">Retrait effectué !</div>';
+            charger();
         } else {
             res.json().then(function(data) {
                 document.getElementById('modal-msg').innerHTML = '<div class="alert alert-danger py-1">' + (data.error || 'Erreur.') + '</div>';

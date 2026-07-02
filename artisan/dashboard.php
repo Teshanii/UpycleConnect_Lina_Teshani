@@ -20,38 +20,41 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
 <nav class="navbar" style="background-color: var(--primary-green);">
     <div class="container">
         <a class="navbar-brand text-white fw-bold" href="dashboard.php">UpcycleConnect</a>
-        <span class="text-white me-3">Artisan : <?php echo $_SESSION['user_prenom']; ?></span>
-        <a href="../connexion.php?logout=1" class="btn btn-outline-light btn-sm">Déconnexion</a>
+        <div class="d-flex align-items-center">
+            <span class="text-white me-3">Artisan : <?php echo $_SESSION['user_prenom']; ?></span>
+            <?php include '../includes/traductions.php'; ?>
+            <a href="../connexion.php?logout=1" class="btn btn-outline-light btn-sm" data-trad="nav_deconnexion">Déconnexion</a>
+        </div>
     </div>
 </nav>
 
 <div class="container mt-4">
-    <h4 style="color:var(--primary-green);">Mon espace artisan</h4>
-    <p class="text-muted">Trouvez de la matière première et valorisez vos créations.</p>
+    <h4 style="color:var(--primary-green);" data-trad="artisan_titre">Mon espace artisan</h4>
+    <p class="text-muted" data-trad="artisan_sous_titre">Trouvez de la matière première et valorisez vos créations.</p>
 
     <!-- KPIs rapides -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
             <div class="card p-3 border-0 shadow-sm" style="border-left: 4px solid var(--primary-green) !important;">
-                <small class="text-muted">Mon score upcycling</small>
+                <small class="text-muted" data-trad="kpi_score">Mon score upcycling</small>
                 <h3 id="kpi-score" class="fw-bold" style="color:var(--primary-green);">0</h3>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card p-3 border-0 shadow-sm" style="border-left: 4px solid #0d6efd !important;">
-                <small class="text-muted">Objets disponibles</small>
+                <small class="text-muted" data-trad="kpi_objets">Objets disponibles</small>
                 <h3 id="kpi-objets" class="fw-bold text-primary">0</h3>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card p-3 border-0 shadow-sm" style="border-left: 4px solid #e76f51 !important;">
-                <small class="text-muted">Mes réservations en cours</small>
+                <small class="text-muted" data-trad="kpi_recups">Mes réservations en cours</small>
                 <h3 id="kpi-recups" class="fw-bold" style="color:#e76f51;">0</h3>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card p-3 border-0 shadow-sm" style="border-left: 4px solid #6f42c1 !important;">
-                <small class="text-muted">Mon abonnement</small>
+                <small class="text-muted" data-trad="kpi_abo">Mon abonnement</small>
                 <h3 id="kpi-abo" class="fw-bold" style="color:#6f42c1;">Gratuit</h3>
             </div>
         </div>
@@ -62,56 +65,65 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
         <div class="col-md-4" id="btn-catalogue">
             <a href="catalogue.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Catalogue</h5>
-                    <p class="text-muted small">Trouver des objets à récupérer</p>
+                    <h5 data-trad="artisan_catalogue">Catalogue</h5>
+                    <p class="text-muted small" data-trad="artisan_catalogue_desc">Trouver des objets à récupérer</p>
                 </div>
             </a>
         </div>
         <div class="col-md-4" id="btn-recups">
             <a href="mes_recuperations.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Mes récupérations</h5>
-                    <p class="text-muted small">Mes objets réservés à aller chercher</p>
+                    <h5 data-trad="artisan_recups">Mes récupérations</h5>
+                    <p class="text-muted small" data-trad="artisan_recups_desc">Mes objets réservés à aller chercher</p>
                 </div>
             </a>
         </div>
         <div class="col-md-4" id="btn-creations">
             <a href="mes_creations.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Mes créations</h5>
-                    <p class="text-muted small">Documenter mes transformations</p>
+                    <h5 data-trad="artisan_creations">Mes créations</h5>
+                    <p class="text-muted small" data-trad="artisan_creations_desc">Documenter mes transformations</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4" id="btn-galerie">
+            <a href="../galerie.php" class="text-decoration-none">
+                <div class="card p-3 text-center h-100">
+                    <h5 data-trad="btn_galerie">Galerie communauté</h5>
+                    <p class="text-muted small" data-trad="artisan_galerie_desc">Voir les créations et participer aux projets</p>
                 </div>
             </a>
         </div>
         <div class="col-md-4" id="btn-prestations">
             <a href="mes_prestations.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Mes prestations</h5>
-                    <p class="text-muted small">Proposer mes services à vendre/donner</p>
+                    <h5 data-trad="artisan_prestations">Mes prestations</h5>
+                    <p class="text-muted small" data-trad="artisan_prestations_desc">Proposer mes services à vendre/donner</p>
                 </div>
             </a>
         </div>
         <div class="col-md-4" id="btn-ateliers">
             <a href="ateliers.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Ateliers</h5>
-                    <p class="text-muted small">S'inscrire aux ateliers et formations</p>
+                    <h5 data-trad="btn_planning">Ateliers</h5>
+                    <p class="text-muted small" data-trad="artisan_ateliers_desc">S'inscrire aux ateliers et formations</p>
                 </div>
             </a>
         </div>
         <div class="col-md-4" id="btn-conseils">
             <a href="conseils.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Conseils</h5>
-                    <p class="text-muted small">Articles et tutoriels de la communauté</p>
+                    <h5 data-trad="btn_conseils">Conseils</h5>
+                    <p class="text-muted small" data-trad="artisan_conseils_desc">Articles et tutoriels de la communauté</p>
                 </div>
             </a>
         </div>
         <div class="col-md-4" id="btn-abonnement">
             <a href="abonnement.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Abonnement</h5>
-                    <p class="text-muted small">Passer Premium</p>
+                    <h5 data-trad="artisan_abonnement">Abonnement</h5>
+                    <p class="text-muted small" data-trad="artisan_abonnement_desc">Passer Premium</p>
                 </div>
             </a>
         </div>
@@ -120,8 +132,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
         <div class="col-md-4" id="btn-score">
             <a href="score.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Mon Score</h5>
-                    <p class="text-muted small">100 pts = 1 mois Premium offert</p>
+                    <h5 data-trad="btn_score">Mon Score</h5>
+                    <p class="text-muted small" data-trad="artisan_score_desc">100 pts = 1 mois Premium offert</p>
                 </div>
             </a>
         </div>
@@ -129,8 +141,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
         <div class="col-md-4" id="btn-portefeuille">
             <a href="../particulier/portefeuille.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Mon portefeuille</h5>
-                    <p class="text-muted small">Mon argent et mes retraits</p>
+                    <h5 data-trad="btn_portefeuille">Mon portefeuille</h5>
+                    <p class="text-muted small" data-trad="artisan_portefeuille_desc">Mon argent et mes retraits</p>
                 </div>
             </a>
         </div>
@@ -138,31 +150,31 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
         <div class="col-md-4" id="btn-forum">
             <a href="forum.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Forum</h5>
-                    <p class="text-muted small">Échanger avec la communauté</p>
+                    <h5 data-trad="btn_forum">Forum</h5>
+                    <p class="text-muted small" data-trad="artisan_forum_desc">Échanger avec la communauté</p>
                 </div>
             </a>
         </div>
         <div class="col-md-4" id="btn-profil">
             <a href="profil.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Mon Profil</h5>
-                    <p class="text-muted small">Modifier mes informations</p>
+                    <h5 data-trad="btn_profil">Mon Profil</h5>
+                    <p class="text-muted small" data-trad="artisan_profil_desc">Modifier mes informations</p>
                 </div>
             </a>
         </div>
     </div>
 
     <!-- Section Statistiques avancées (Premium) -->
-    <h4 class="mt-5" id="btn-stats" style="color:var(--primary-green);">Statistiques avancées</h4>
+    <h4 class="mt-5" id="btn-stats" style="color:var(--primary-green);" data-trad="artisan_stats_titre">Statistiques avancées</h4>
     <div id="zone-stats" class="position-relative">
         <!-- Overlay cadenas si gratuit -->
         <div id="overlay-premium" class="d-none position-absolute w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background:rgba(255,255,255,0.85); z-index:10; top:0; left:0; border-radius:8px;">
             <div class="text-center">
                 <div style="font-size:3rem;">🔒</div>
-                <h5 class="mt-2">Réservé aux membres Premium</h5>
-                <p class="text-muted">Passez Premium pour débloquer vos statistiques détaillées.</p>
-                <a href="abonnement.php" class="btn btn-primary-upcycle">Passer Premium</a>
+                <h5 class="mt-2" data-trad="artisan_premium_titre">Réservé aux membres Premium</h5>
+                <p class="text-muted" data-trad="artisan_premium_desc">Passez Premium pour débloquer vos statistiques détaillées.</p>
+                <a href="abonnement.php" class="btn btn-primary-upcycle" data-trad="artisan_premium_btn">Passer Premium</a>
             </div>
         </div>
 
@@ -170,37 +182,20 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
         <div class="row g-3 mb-3">
             <div class="col-md-3">
                 <div class="card p-3 text-center shadow-sm">
-                    <small class="text-muted">Objets récupérés</small>
+                    <small class="text-muted" data-trad="stat_recups_label">Objets récupérés</small>
                     <h3 class="fw-bold" style="color:var(--primary-green);" id="stat-recups">-</h3>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card p-3 text-center shadow-sm">
-                    <small class="text-muted">Prestations vendues</small>
+                    <small class="text-muted" data-trad="stat_ventes_label">Prestations vendues</small>
                     <h3 class="fw-bold text-primary" id="stat-ventes">-</h3>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card p-3 text-center shadow-sm">
-                    <small class="text-muted">Chiffre d'affaires</small>
+                    <small class="text-muted" data-trad="stat_ca_label">Chiffre d'affaires</small>
                     <h3 class="fw-bold" style="color:#e76f51;" id="stat-ca">-</h3>
-                </div>
-            </div>
-          
-        </div>
-
-        <!-- Graphiques -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-7">
-                <div class="card p-3 shadow-sm">
-                    <h6 class="text-muted">Mes récupérations par mois</h6>
-                    <canvas id="graph-mois"></canvas>
-                </div>
-            </div>
-            <div class="col-md-5">
-                <div class="card p-3 shadow-sm">
-                    <h6 class="text-muted">Répartition par catégorie</h6>
-                    <canvas id="graph-cat"></canvas>
                 </div>
             </div>
         </div>
@@ -245,16 +240,13 @@ fetch('http://localhost:8080/api/abonnement?id_user=' + userId)
     });
 
 // ===== STATISTIQUES AVANCÉES (Premium) =====
-// On vérifie d'abord l'abonnement
 fetch('http://localhost:8080/api/abonnement?id_user=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(abo) {
         if (abo.abonnement !== 'premium') {
-            // Gratuit : on affiche l'overlay cadenas par-dessus les stats
             document.getElementById('overlay-premium').classList.remove('d-none');
-            return; // on ne charge pas les vraies données
+            return;
         }
-        // Premium : on charge les vraies stats
         chargerStats();
     });
 
@@ -262,44 +254,9 @@ function chargerStats() {
     fetch('http://localhost:8080/api/stats-artisan?id_artisan=' + userId)
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            // KPIs
             document.getElementById('stat-recups').innerText = data.nb_recups || 0;
             document.getElementById('stat-ventes').innerText = data.nb_ventes || 0;
             document.getElementById('stat-ca').innerText = (data.chiffre_affaires || 0).toFixed(2) + ' €';
-            
-
-            // Graphique courbe : récups par mois
-            var mois = (data.par_mois || []).map(function(m) { return m.mois; });
-            var nbMois = (data.par_mois || []).map(function(m) { return m.nb; });
-            new Chart(document.getElementById('graph-mois'), {
-                type: 'line',
-                data: {
-                    labels: mois,
-                    datasets: [{
-                        label: 'Récupérations',
-                        data: nbMois,
-                        borderColor: '#2d6a4f',
-                        backgroundColor: 'rgba(45,106,79,0.1)',
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: { plugins: { legend: { display: false } } }
-            });
-
-            // Camembert : répartition par catégorie
-            var cats = (data.categories || []).map(function(c) { return c.nom; });
-            var nbCats = (data.categories || []).map(function(c) { return c.nb; });
-            new Chart(document.getElementById('graph-cat'), {
-                type: 'doughnut',
-                data: {
-                    labels: cats,
-                    datasets: [{
-                        data: nbCats,
-                        backgroundColor: ['#2d6a4f', '#0d6efd', '#e76f51', '#6f42c1', '#f4a261', '#e9c46a', '#999999']
-                    }]
-                }
-            });
         });
 }
 
@@ -455,7 +412,6 @@ tour.addStep({
     ]
 });
 
-// On enregistre le cookie avec une expiration d'1 an pour que le tuto ne réapparaisse pas tout seul
 function marquerTutoVu() {
     var dans1an = new Date();
     dans1an.setFullYear(dans1an.getFullYear() + 1);

@@ -78,6 +78,7 @@ CREATE TABLE annonces (
 CREATE TABLE box (
     id_box INT AUTO_INCREMENT PRIMARY KEY,
     adresse VARCHAR(255) NOT NULL,
+    ville VARCHAR(100),
     capacite_max INT NOT NULL
 ) ENGINE=InnoDB;
 
@@ -123,14 +124,33 @@ CREATE TABLE prestations (
     FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
--- 4. POLE COMMUNAUTE & PROJETS
 CREATE TABLE projets (
     id_projet INT AUTO_INCREMENT PRIMARY KEY,
     titre VARCHAR(150) NOT NULL,
     description_generale TEXT,
-    est_sponsorise TINYINT DEFAULT 0, -- [cite: 473]
+    adresse VARCHAR(255),
+    ville VARCHAR(100),
+    statut VARCHAR(20) DEFAULT 'en_cours',
+    photo_couverture VARCHAR(255),
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_debut DATETIME NULL,
+    date_fin DATETIME NULL,
+    ouvert_participation TINYINT DEFAULT 1,
+    est_sponsorise TINYINT DEFAULT 0,
+    date_fin_sponsoring DATETIME NULL,
     id_createur INT NOT NULL,
     FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+CREATE TABLE participants_projet (
+    id_participation INT AUTO_INCREMENT PRIMARY KEY,
+    id_projet INT NOT NULL,
+    id_user INT NOT NULL,
+    tache VARCHAR(255),
+    statut VARCHAR(20) DEFAULT 'en_attente',
+    date_demande DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_projet) REFERENCES projets(id_projet) ON DELETE CASCADE,
+    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
 -- Ajout des étapes pour corriger le MCD
@@ -158,6 +178,7 @@ CREATE TABLE evenements (
     id_animateur INT NOT NULL,
     FOREIGN KEY (id_animateur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
+
 -- 5. POLE FINANCE
 CREATE TABLE types_abonnements (
     id_type_abo INT AUTO_INCREMENT PRIMARY KEY,

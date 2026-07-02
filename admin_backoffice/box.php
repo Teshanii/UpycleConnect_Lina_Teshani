@@ -61,11 +61,15 @@ include 'includes/header.php';
                 <h5>Ajouter une box</h5>
                 <form id="f-box">
                     <div class="row g-3">
-                        <div class="col-md-8">
+                        <div class="col-md-5">
                             <label class="small text-muted">Adresse</label>
-                            <input type="text" id="adresse" class="form-control" placeholder="Ex: Paris 10ème - Rue La Fayette" required>
+                            <input type="text" id="adresse" class="form-control" placeholder="Ex: 174 rue La Fayette" required>
                         </div>
                         <div class="col-md-4">
+                            <label class="small text-muted">Ville</label>
+                            <input type="text" id="ville" class="form-control" placeholder="Ex: Paris 11" required>
+                        </div>
+                        <div class="col-md-3">
                             <label class="small text-muted">Capacité max</label>
                             <input type="number" id="capacite" class="form-control" value="20" required>
                         </div>
@@ -78,9 +82,10 @@ include 'includes/header.php';
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-dark">
-                            <tr>
+                           <tr>
                                 <th>ID</th>
                                 <th>Adresse</th>
+                                <th>Ville</th>
                                 <th>Capacité</th>
                                 <th class="text-center">Actions</th>
                             </tr>
@@ -309,6 +314,7 @@ include 'includes/header.php';
                 tbody.innerHTML += `<tr>
                     <td>#${b.id}</td>
                     <td><strong>${b.adresse}</strong></td>
+                    <td>${b.ville || '-'}</td>
                     <td>${b.capacite_max} casiers max</td>
                     <td class="text-center">
                         <button class="btn btn-outline-danger btn-sm" onclick="supprimerBox(${b.id})">Supprimer</button>
@@ -325,6 +331,7 @@ include 'includes/header.php';
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     adresse: document.getElementById('adresse').value,
+                    ville: document.getElementById('ville').value,
                     capacite_max: parseInt(document.getElementById('capacite').value)
                 })
             });

@@ -38,6 +38,32 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
             <div class="mb-2">
                 <textarea class="form-control" id="desc-projet" rows="2" placeholder="Description générale du projet"></textarea>
             </div>
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <input type="text" class="form-control" id="adresse-projet" placeholder="Adresse (optionnel)">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <input type="text" class="form-control" id="ville-projet" placeholder="Ville (ex: Paris 11)">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label small text-muted">Date de début</label>
+                    <input type="datetime-local" class="form-control" id="debut-projet" required>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label small text-muted">Date de fin (estimée)</label>
+                    <input type="datetime-local" class="form-control" id="fin-projet" required>
+                </div>
+            </div>
+            <div class="mb-2">
+                <label class="form-label small text-muted">Photo de couverture (optionnel)</label>
+                <input type="file" class="form-control" id="couverture-projet" accept="image/*">
+            </div>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="ouvert-projet" checked>
+                <label class="form-check-label small" for="ouvert-projet">Ouvrir le projet aux participants de la communauté</label>
+            </div>
             <button class="btn btn-primary-upcycle w-100" onclick="creerProjet()">CRÉER LA CRÉATION</button>
         </div>
     </div>
@@ -90,6 +116,8 @@ var userId = <?php echo $_SESSION['user_id']; ?>;
 var projetEnCours = null;
 var modalCtrl = new bootstrap.Modal(document.getElementById('modalEtape'));
 
+
+
 // Charger mes projets
 function chargerProjets() {
     fetch('http://localhost:8080/api/projets?id_createur=' + userId)
@@ -105,26 +133,69 @@ function chargerProjets() {
 
             var html = '';
             data.forEach(function(p) {
+                // Badge de statut
+                var badgeStatut = p.statut === 'termine'
+                    ? '<span class="badge bg-success">Terminé</span>'
+                    : '<span class="badge bg-secondary">En cours</span>';
+
+                // Bouton terminer (seulement si pas déjà terminé)
+                var btnTerminer = p.statut === 'termine'
+                    ? ''
+                    : '<button class="btn btn-sm btn-success mb-3 ms-1" onclick="terminerProjet(' + p.id + ')">Marquer terminé</button>';
+
+                var imgCouverture = p.photo_couverture
+                    ? '<img src="http://localhost/' + p.photo_couverture + '" class="card-img-top" style="width:100%; height:180px; object-fit:cover;">'
+                    : '';
+
                 html += '<div class="card mb-4">' +
+                    imgCouverture +
                     '<div class="card-body">' +
                     '<div class="d-flex justify-content-between align-items-start">' +
                     '<div>' +
-                    '<h5 style="color:var(--primary-green);">' + p.titre + '</h5>' +
+                    '<h5 style="color:var(--primary-green);">' + p.titre + ' ' + badgeStatut + '</h5>' +
                     '<p class="text-muted small">' + p.description + '</p>' +
+                    (p.ville ? '<p class="text-muted small"> ' + p.ville + '</p>' : '') +
+                    ((p.date_debut && p.date_fin) ? '<p class="text-muted small">Du ' + p.date_debut.substring(0,10) + ' au ' + p.date_fin.substring(0,10) + '</p>' : '') +
                     '</div>' +
                     '<button class="btn btn-sm btn-outline-danger" onclick="supprimerProjet(' + p.id + ')">Supprimer</button>' +
                     '</div>' +
                     '<button class="btn btn-sm btn-primary-upcycle mb-3" onclick="ouvrirEtape(' + p.id + ')">+ Ajouter une étape</button>' +
+                    btnTerminer +
+                    '<a href="../projet_detail.php?id=' + p.id + '" target="_blank" class="btn btn-sm btn-outline-secondary mb-3 ms-1">Voir la page publique</a>' +
+                    (p.est_sponsorise == 1
+                        ? '<span class="badge bg-warning text-dark mb-3 ms-1">⭐ Déjà mis en avant</span>'
+                        : '<button class="btn btn-sm btn-warning mb-3 ms-1" onclick="sponsoriser(' + p.id + ')">⭐ Mettre en avant (100€)</button>') +
                     '<div id="etapes-' + p.id + '"></div>' +
+                    '<div id="participants-' + p.id + '" class="mt-3"></div>' +
                     '</div>' +
                     '</div>';
             });
 
             div.innerHTML = html;
 
-            // Charger les étapes de chaque projet
-            data.forEach(function(p) { chargerEtapes(p.id); });
+            // Charger les étapes et les demandes de participation de chaque projet
+            data.forEach(function(p) {
+                chargerEtapes(p.id);
+                chargerParticipants(p.id);
+            });
         });
+}
+// Mettre en avant un projet (paiement Stripe)
+function sponsoriser(idProjet) {
+    if (!confirm("Mettre ce projet en avant pendant 30 jours pour 100€ ?")) return;
+    fetch('stripe_sponsoring.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prix: 10000, id_projet: idProjet }) // 10000 centimes = 100€
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.url) {
+            window.location.href = data.url; // redirection vers Stripe
+        } else {
+            alert("Erreur lors de la création du paiement.");
+        }
+    });
 }
 
 // Charger les étapes d'un projet
@@ -162,29 +233,142 @@ function chargerEtapes(idProjet) {
         });
 }
 
-// Créer un projet
+// Charger les demandes de participation d'un projet
+function chargerParticipants(idProjet) {
+    fetch('http://localhost:8080/api/participants?id_projet=' + idProjet)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var div = document.getElementById('participants-' + idProjet);
+            if (!data || data.length === 0) {
+                div.innerHTML = '';
+                return;
+            }
+
+            var html = '<h6 class="text-muted small mt-2">Demandes de participation :</h6><ul class="list-group">';
+            data.forEach(function(p) {
+                if (p.statut === 'en_attente') {
+                    // Demande en attente → boutons accepter/refuser
+                    html += '<li class="list-group-item d-flex justify-content-between align-items-center">' +
+                        '<span><strong>' + p.nom_user + '</strong>' + (p.tache ? ' — ' + p.tache : '') + '</span>' +
+                        '<span>' +
+                        '<button class="btn btn-sm btn-success me-1" onclick="repondreParticipant(' + p.id + ', \'accepte\', \'' + (p.tache || '') + '\', ' + idProjet + ')">Accepter</button>' +
+                        '<button class="btn btn-sm btn-outline-danger" onclick="repondreParticipant(' + p.id + ', \'refuse\', \'\', ' + idProjet + ')">Refuser</button>' +
+                        '</span>' +
+                        '</li>';
+                } else if (p.statut === 'accepte') {
+                    html += '<li class="list-group-item"><span class="badge bg-success">Accepté</span> <strong>' + p.nom_user + '</strong>' + (p.tache ? ' — ' + p.tache : '') + '</li>';
+                }
+            });
+            html += '</ul>';
+            div.innerHTML = html;
+        });
+}
+
+// Accepter ou refuser une demande de participation
+function repondreParticipant(idParticipation, statut, tache, idProjet) {
+    fetch('http://localhost:8080/api/participants/' + idParticipation, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ statut: statut, tache: tache })
+    }).then(function(res) {
+        if (res.ok) chargerParticipants(idProjet);
+    });
+}
+
+// Créer un projet (avec upload de la photo de couverture)
 function creerProjet() {
     var titre = document.getElementById('titre-projet').value.trim();
     var desc = document.getElementById('desc-projet').value.trim();
+    var adresse = document.getElementById('adresse-projet').value.trim();
+    var ville = document.getElementById('ville-projet').value.trim();
+    var ouvert = document.getElementById('ouvert-projet').checked ? 1 : 0;
+    var debut = document.getElementById('debut-projet').value;
+    var fin = document.getElementById('fin-projet').value;
+    var fichier = document.getElementById('couverture-projet').files[0];
 
     if (!titre) {
         document.getElementById('msg-projet').innerHTML = '<div class="alert alert-danger py-1">Donnez un titre à votre création.</div>';
         return;
     }
+    if (!debut || !fin) {
+        document.getElementById('msg-projet').innerHTML = '<div class="alert alert-danger py-1">Indiquez une date de début et de fin.</div>';
+        return;
+    }
+    if (fin < debut) {
+        document.getElementById('msg-projet').innerHTML = '<div class="alert alert-danger py-1">La date de fin doit être après la date de début.</div>';
+        return;
+    }
 
+    // Si une photo de couverture est choisie, on l'upload d'abord
+    if (fichier) {
+        var formData = new FormData();
+        formData.append('photo', fichier);
+        fetch('../upload_photo.php', { method: 'POST', body: formData })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                envoyerProjet(titre, desc, adresse, ville, ouvert, data.chemin || '', debut, fin);
+            });
+    } else {
+        envoyerProjet(titre, desc, adresse, ville, ouvert, '', debut, fin);
+    }
+}
+
+function envoyerProjet(titre, desc, adresse, ville, ouvert, photoCouverture, debut, fin) {
     fetch('http://localhost:8080/api/projets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titre: titre, description: desc, id_createur: userId })
+        body: JSON.stringify({
+            titre: titre,
+            description: desc,
+            adresse: adresse,
+            ville: ville,
+            ouvert_participation: ouvert,
+            photo_couverture: photoCouverture,
+            id_createur: userId,
+            date_debut: debut.replace('T', ' '), // format MySQL (2026-07-05 14:00)
+            date_fin: fin.replace('T', ' ')
+        })
     }).then(function(res) {
         if (res.ok) {
             document.getElementById('titre-projet').value = '';
             document.getElementById('desc-projet').value = '';
+            document.getElementById('adresse-projet').value = '';
+            document.getElementById('ville-projet').value = '';
+            document.getElementById('debut-projet').value = '';
+            document.getElementById('fin-projet').value = '';
+            document.getElementById('couverture-projet').value = '';
             document.getElementById('msg-projet').innerHTML = '<div class="alert alert-success py-1">Création ajoutée !</div>';
             chargerProjets();
             setTimeout(function() { document.getElementById('msg-projet').innerHTML = ''; }, 2000);
         }
     });
+}
+
+// Marquer un projet comme terminé
+function terminerProjet(id) {
+    if (!confirm("Marquer ce projet comme terminé ?")) return;
+    // On récupère d'abord le projet pour garder ses infos, puis on change juste le statut
+    fetch('http://localhost:8080/api/projets?id_createur=' + userId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var p = data.find(function(x) { return x.id === id; });
+            if (!p) return;
+            fetch('http://localhost:8080/api/projets/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    titre: p.titre,
+                    description: p.description,
+                    adresse: p.adresse,
+                    ville: p.ville,
+                    statut: 'termine',
+                    photo_couverture: p.photo_couverture,
+                    ouvert_participation: p.ouvert_participation
+                })
+            }).then(function(res) {
+                if (res.ok) chargerProjets();
+            });
+        });
 }
 
 // Supprimer un projet
@@ -217,7 +401,6 @@ function enregistrerEtape() {
         return;
     }
 
-    // Si une photo est sélectionnée, on l'upload d'abord
     if (fichier) {
         var formData = new FormData();
         formData.append('photo', fichier);

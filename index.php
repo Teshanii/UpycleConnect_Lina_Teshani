@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Si l'utilisateur est déjà connecté, on l'envoie direct sur son espace
 if (isset($_SESSION['user_id'])) {
     switch ($_SESSION['user_role']) {
         case 1: header('Location: admin_backoffice/index.php'); exit;
@@ -64,31 +63,32 @@ if (isset($_SESSION['user_id'])) {
 <nav class="navbar navbar-expand-lg" style="background-color: var(--primary-green);">
     <div class="container">
         <a class="navbar-brand text-white fw-bold fs-4" href="index.php"><i class="bi bi-recycle"></i> UpcycleConnect</a>
-        <div>
-            <a href="connexion.php" class="btn btn-outline-light btn-sm me-2">Connexion</a>
-            <a href="inscription.php" class="btn btn-light btn-sm" style="color:var(--primary-green); font-weight:600;">Inscription</a>
+        <div class="d-flex align-items-center">
+            <a href="galerie.php" class="btn btn-outline-light btn-sm me-2" data-trad="nav_galerie">Galerie</a>
+            <?php include 'includes/traductions.php'; ?>
+            <a href="connexion.php" class="btn btn-outline-light btn-sm mx-2" data-trad="nav_connexion">Connexion</a>
+            <a href="inscription.php" class="btn btn-light btn-sm" style="color:var(--primary-green); font-weight:600;" data-trad="nav_inscription">Inscription</a>
         </div>
     </div>
 </nav>
 
 <section class="hero">
     <div class="container">
-        <h1>Donnez une seconde vie à vos objets</h1>
-        <p>La plateforme qui connecte les particuliers et les artisans pour transformer les objets oubliés en créations uniques.</p>
-        <a href="inscription.php" class="btn btn-blanc">Je m'inscris gratuitement</a>
-        <a href="#comment" class="btn btn-contour">Comment ça marche</a>
+        <h1 data-trad="hero_titre">Donnez une seconde vie à vos objets</h1>
+        <p data-trad="hero_sous_titre">La plateforme qui connecte les particuliers et les artisans pour transformer les objets oubliés en créations uniques.</p>
+        <a href="inscription.php" class="btn btn-blanc" data-trad="hero_btn_inscription">Je m'inscris gratuitement</a>
+        <a href="#comment" class="btn btn-contour" data-trad="hero_btn_comment">Comment ça marche</a>
     </div>
 </section>
 
 
-<!-- ===== PRESENTATION + PHOTO ===== -->
 <section class="section">
     <div class="container">
         <div class="row align-items-center g-4">
             <div class="col-md-6">
-                <h2 style="color:var(--primary-green); font-weight:800;">L'upcycling, simplement</h2>
-                <p class="text-muted">Transformez les objets destinés à la poubelle en créations uniques. Une palette devient une table, un tissu devient un sac.</p>
-                <a href="inscription.php" class="btn btn-primary-upcycle">Rejoindre</a>
+                <h2 style="color:var(--primary-green); font-weight:800;" data-trad="presentation_titre">L'upcycling, simplement</h2>
+                <p class="text-muted" data-trad="presentation_texte">Transformez les objets destinés à la poubelle en créations uniques. Une palette devient une table, un tissu devient un sac.</p>
+                <a href="inscription.php" class="btn btn-primary-upcycle" data-trad="presentation_btn">Rejoindre</a>
             </div>
             <div class="col-md-6">
                 <div style="height:300px; border-radius:14px; overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,0.08);">
@@ -102,22 +102,22 @@ if (isset($_SESSION['user_id'])) {
 
 <section class="section" id="comment">
     <div class="container">
-        <h2 class="section-titre">Comment ça marche ?</h2>
+        <h2 class="section-titre" data-trad="comment_titre">Comment ça marche ?</h2>
         <div class="row text-center g-4">
             <div class="col-md-4">
                 <div class="etape-num">1</div>
-                <h5>Vous déposez</h5>
-                <p class="text-muted small">Une annonce ou un dépôt en box, avec un code unique.</p>
+                <h5 data-trad="etape1_titre">Vous déposez</h5>
+                <p class="text-muted small" data-trad="etape1_texte">Une annonce ou un dépôt en box, avec un code unique.</p>
             </div>
             <div class="col-md-4">
                 <div class="etape-num">2</div>
-                <h5>Un artisan récupère</h5>
-                <p class="text-muted small">Il repère votre objet dans le catalogue et le récupère.</p>
+                <h5 data-trad="etape2_titre">Un artisan récupère</h5>
+                <p class="text-muted small" data-trad="etape2_texte">Il repère votre objet dans le catalogue et le récupère.</p>
             </div>
             <div class="col-md-4">
                 <div class="etape-num">3</div>
-                <h5>L'objet renaît</h5>
-                <p class="text-muted small">Transformé en création unique. Vous gagnez des points !</p>
+                <h5 data-trad="etape3_titre">L'objet renaît</h5>
+                <p class="text-muted small" data-trad="etape3_texte">Transformé en création unique. Vous gagnez des points !</p>
             </div>
         </div>
     </div>
@@ -125,30 +125,30 @@ if (isset($_SESSION['user_id'])) {
 
 <section class="section stats">
     <div class="container">
-        <h2 class="section-titre">Pour qui ?</h2>
+        <h2 class="section-titre" data-trad="pourqui_titre">Pour qui ?</h2>
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="carte-espace bg-white">
                     <div class="icone"><i class="bi bi-house-heart"></i></div>
-                    <h5 class="mt-2" style="color:var(--primary-green);">Particuliers</h5>
-                    <p class="text-muted small">Donnez ou vendez vos objets, suivez votre Upcycling Score et inscrivez-vous aux ateliers.</p>
-                    <a href="inscription.php" class="btn btn-primary-upcycle btn-sm">Je m'inscris</a>
+                    <h5 class="mt-2" style="color:var(--primary-green);" data-trad="pourqui_particuliers_titre">Particuliers</h5>
+                    <p class="text-muted small" data-trad="pourqui_particuliers_texte">Donnez ou vendez vos objets, suivez votre Upcycling Score et inscrivez-vous aux ateliers.</p>
+                    <a href="inscription.php" class="btn btn-primary-upcycle btn-sm" data-trad="pourqui_btn">Je m'inscris</a>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="carte-espace bg-white">
                     <div class="icone"><i class="bi bi-hammer"></i></div>
-                    <h5 class="mt-2" style="color:var(--primary-green);">Artisans & Pros</h5>
-                    <p class="text-muted small">Trouvez votre matière première, valorisez vos créations et suivez votre impact écolo.</p>
-                    <a href="inscription.php" class="btn btn-primary-upcycle btn-sm">Je m'inscris</a>
+                    <h5 class="mt-2" style="color:var(--primary-green);" data-trad="pourqui_artisans_titre">Artisans & Pros</h5>
+                    <p class="text-muted small" data-trad="pourqui_artisans_texte">Trouvez votre matière première, valorisez vos créations et suivez votre impact écolo.</p>
+                    <a href="inscription.php" class="btn btn-primary-upcycle btn-sm" data-trad="pourqui_btn2">Je m'inscris</a>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="carte-espace bg-white">
                     <div class="icone"><i class="bi bi-people"></i></div>
-                    <h5 class="mt-2" style="color:var(--primary-green);">Nos animateurs</h5>
-                    <p class="text-muted small">Notre équipe organise les ateliers, publie des conseils et anime la communauté.</p>
-                    <span class="badge bg-light text-dark border">Équipe UpcycleConnect</span>
+                    <h5 class="mt-2" style="color:var(--primary-green);" data-trad="pourqui_animateurs_titre">Nos animateurs</h5>
+                    <p class="text-muted small" data-trad="pourqui_animateurs_texte">Notre équipe organise les ateliers, publie des conseils et anime la communauté.</p>
+                    <span class="badge bg-light text-dark border" data-trad="pourqui_badge">Équipe UpcycleConnect</span>
                 </div>
             </div>
         </div>
@@ -157,7 +157,7 @@ if (isset($_SESSION['user_id'])) {
 
 <section class="section">
     <div class="container">
-        <h2 class="section-titre">Nos prochains ateliers</h2>
+        <h2 class="section-titre" data-trad="ateliers_titre">Nos prochains ateliers</h2>
         <div class="row g-4" id="events">
             <p class="text-center text-muted">Chargement...</p>
         </div>
@@ -169,19 +169,19 @@ if (isset($_SESSION['user_id'])) {
         <div class="row text-center g-4">
             <div class="col-md-3 col-6">
                 <div class="stat-num">+10</div>
-                <p class="text-muted small">points par annonce</p>
+                <p class="text-muted small" data-trad="stat_points">points par annonce</p>
             </div>
             <div class="col-md-3 col-6">
                 <div class="stat-num">2</div>
-                <p class="text-muted small">espaces ouverts</p>
+                <p class="text-muted small" data-trad="stat_espaces">espaces ouverts</p>
             </div>
             <div class="col-md-3 col-6">
                 <div class="stat-num">100%</div>
-                <p class="text-muted small">objets revalorisés</p>
+                <p class="text-muted small" data-trad="stat_revalorises">objets revalorisés</p>
             </div>
             <div class="col-md-3 col-6">
                 <div class="stat-num">0€</div>
-                <p class="text-muted small">pour s'inscrire</p>
+                <p class="text-muted small" data-trad="stat_gratuit">pour s'inscrire</p>
             </div>
         </div>
     </div>
@@ -189,18 +189,19 @@ if (isset($_SESSION['user_id'])) {
 
 <section class="hero" style="padding:55px 0;">
     <div class="container">
-        <h1 style="font-size:2rem;">Prêt à commencer ?</h1>
-        <a href="inscription.php" class="btn btn-blanc mt-2">Créer mon compte</a>
+        <h1 style="font-size:2rem;" data-trad="cta_titre">Prêt à commencer ?</h1>
+        <a href="inscription.php" class="btn btn-blanc mt-2" data-trad="cta_btn">Créer mon compte</a>
     </div>
 </section>
 
 <footer>
     <div class="container">
         <h5 class="text-white"><i class="bi bi-recycle"></i> UpcycleConnect</h5>
-        <p class="small mb-2">L'upcycling intelligent — Paris, depuis 2026</p>
+        <p class="small mb-2" data-trad="footer_slogan">L'upcycling intelligent — Paris, depuis 2026</p>
         <p class="small mb-0">
-            <a href="connexion.php" class="text-white text-decoration-none me-3">Connexion</a>
-            <a href="inscription.php" class="text-white text-decoration-none">Inscription</a>
+            <a href="galerie.php" class="text-white text-decoration-none me-3" data-trad="nav_galerie">Galerie</a>
+            <a href="connexion.php" class="text-white text-decoration-none me-3" data-trad="nav_connexion">Connexion</a>
+            <a href="inscription.php" class="text-white text-decoration-none" data-trad="nav_inscription">Inscription</a>
         </p>
     </div>
 </footer>

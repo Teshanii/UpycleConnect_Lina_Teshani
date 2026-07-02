@@ -68,9 +68,11 @@ type Evenements struct {
 
 // --- LOGISTIQUE : BOX & ANNONCES ---
 type Box struct {
-	Id          int    `json:"id"`
-	Adresse     string `json:"adresse"`
-	CapaciteMax int    `json:"capacite_max"`
+	Id            int    `json:"id"`
+	Adresse       string `json:"adresse"`
+	Ville         string `json:"ville"`
+	CapaciteMax   int    `json:"capacite_max"`
+	CasiersLibres int    `json:"casiers_libres"`
 }
 
 type Annonce struct {
@@ -157,6 +159,7 @@ type ObjetCatalogue struct {
     NomParticulier string  `json:"nom_particulier"`
     AdresseBox     string  `json:"adresse_box"`
     NumeroCasier   string  `json:"numero_casier"`
+	Ville 		   string  `json:"ville"`
 }
 
 // --- CASIERS ---
@@ -195,12 +198,19 @@ type Traduction struct {
 }
 
 type Projet struct {
-	Id            int    `json:"id"`
-	Titre         string `json:"titre"`
-	Description   string `json:"description"`
-	EstSponsorise int    `json:"est_sponsorise"`
-	IdCreateur    int    `json:"id_createur"`
-	Createur      string `json:"createur"`
+	Id                  int    `json:"id"`
+	Titre               string `json:"titre"`
+	Description         string `json:"description"`
+	Adresse             string `json:"adresse"`
+	Ville               string `json:"ville"`
+	Statut              string `json:"statut"`
+	PhotoCouverture     string `json:"photo_couverture"`
+	OuvertParticipation int    `json:"ouvert_participation"`
+	EstSponsorise       int    `json:"est_sponsorise"`
+	IdCreateur          int    `json:"id_createur"`
+	Createur            string `json:"createur"`
+	DateDebut 			string `json:"date_debut"`
+	DateFin   			string `json:"date_fin"`
 }
 
 type Etape struct {
@@ -210,4 +220,13 @@ type Etape struct {
 	Image       string `json:"image"`
 	Ordre       int    `json:"ordre"`
 	IdProjet    int    `json:"id_projet"`
+}
+
+type Participant struct {
+	Id       int    `json:"id"`
+	IdProjet int    `json:"id_projet"`
+	IdUser   int    `json:"id_user"`
+	Tache    string `json:"tache"`
+	Statut   string `json:"statut"`
+	NomUser  string `json:"nom_user"` // pour afficher le nom dans le front
 }
