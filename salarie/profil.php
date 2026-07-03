@@ -22,9 +22,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
     </div>
 </nav>
 
-<div class="container mt-4">
-    <a href="dashboard.php" style="color:var(--primary-green);">← Retour</a>
+<?php include __DIR__ . '/menu.php'; ?>
 
+<div class="container mt-4">
     <div class="card mx-auto mt-3" style="max-width:550px;">
         <div class="card-body">
             <h4 style="color:var(--primary-green);">Mon Profil</h4>

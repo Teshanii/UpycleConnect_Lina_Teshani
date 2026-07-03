@@ -22,8 +22,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
     </div>
 </nav>
 
+<?php include __DIR__ . '/menu.php'; ?>
+
 <div class="container mt-4">
-    <a href="dashboard.php" style="color:var(--primary-green);">← Retour</a>
     <h4 class="mt-3" style="color:var(--primary-green);">Mes articles & conseils</h4>
     <p class="text-muted small">Rédigez des tutos et des news pour sensibiliser la communauté à l'upcycling.</p>
 
@@ -48,12 +49,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
             <textarea id="contenu" class="form-control" rows="5" placeholder="Écrivez votre article ici..."></textarea>
         </div>
         <div id="msg"></div>
-        <button id="btn-pub" class="btn btn-primary-upcycle btn-sm" onclick="sauvegarder()">Publier</button>
+        <button id="btn-pub" class="btn btn-primary-upcycle btn-sm" onclick="sauvegarder(1)">Publier</button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="sauvegarder(0)">Enregistrer comme brouillon</button>
         <button class="btn btn-link btn-sm text-muted" onclick="resetForm()">Annuler</button>
     </div>
 
     <!-- Liste de mes articles -->
-    <h5 style="color:var(--primary-green);">Mes articles publiés</h5>
+    <h5 style="color:var(--primary-green);">Mes articles</h5>
     <div id="articles"></div>
 </div>
 
@@ -109,14 +111,22 @@ function charger() {
                     ? '<span class="badge bg-info text-dark">News</span>'
                     : '<span class="badge bg-success">Conseil</span>';
 
+                var badgeStatut = a.statut === 1
+                    ? '<span class="badge bg-success ms-1">Publié</span>'
+                    : '<span class="badge bg-secondary ms-1">Brouillon</span>';
+                var btnPublier = a.statut === 0
+                    ? '<button class="btn btn-success btn-sm me-1" onclick=\'publierArticle(' + JSON.stringify(a) + ')\'>Publier</button>'
+                    : '';
+
                 html += '<div class="card mb-2 p-3">' +
                     '<div class="d-flex justify-content-between align-items-start">' +
                     '<div>' +
-                    '<strong>' + echapper(a.titre) + '</strong> ' + badge + '<br>' +
+                    '<strong>' + echapper(a.titre) + '</strong> ' + badge + badgeStatut + '<br>' +
                     '<span class="text-muted small">' + formaterDate(a.date) + '</span><br>' +
                     '<span class="small">' + echapper(a.contenu.length > 150 ? a.contenu.substring(0, 150) + '...' : a.contenu) + '</span>' +
                     '</div>' +
                     '<div>' +
+                    btnPublier +
                     '<button class="btn btn-warning btn-sm me-1" onclick=\'modifier(' + JSON.stringify(a) + ')\'>Modifier</button>' +
                     '<button class="btn btn-outline-danger btn-sm" onclick="supprimer(' + a.id + ')">Supprimer</button>' +
                     '</div>' +
@@ -128,7 +138,7 @@ function charger() {
         });
 }
 
-function sauvegarder() {
+function sauvegarder(statut) {
     var id = document.getElementById('edit-id').value;
     var titre = document.getElementById('titre').value.trim();
     var type = document.getElementById('type').value;
@@ -149,12 +159,12 @@ function sauvegarder() {
     fetch(url, {
         method: methode,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titre: titre, type: type, contenu: contenu, id_auteur: userId })
+        body: JSON.stringify({ titre: titre, type: type, contenu: contenu, id_auteur: userId, statut: statut })
     }).then(function(res) {
         btn.disabled = false;
         btn.innerText = 'Publier';
         if (res.ok) {
-            document.getElementById('msg').innerHTML = '<div class="alert alert-success">Article publié !</div>';
+            document.getElementById('msg').innerHTML = '<div class="alert alert-success">' + (statut === 1 ? 'Article publié !' : 'Brouillon enregistré.') + '</div>';
             resetForm();
             charger();
             setTimeout(function() { document.getElementById('msg').innerHTML = ''; }, 2000);
@@ -184,6 +194,15 @@ function supprimer(id) {
         fetch('http://localhost:8080/api/conseils/' + id, { method: 'DELETE' })
             .then(function(res) { if (res.ok) charger(); });
     }
+}
+
+// A7 : publier un brouillon en un clic
+function publierArticle(a) {
+    fetch('http://localhost:8080/api/conseils/' + a.id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titre: a.titre, type: a.type, contenu: a.contenu, statut: 1 })
+    }).then(function(res) { if (res.ok) charger(); }).catch(function() { alert('Connexion impossible, réessayez.'); });
 }
 
 function resetForm() {

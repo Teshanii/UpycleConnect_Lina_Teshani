@@ -23,8 +23,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
     </div>
 </nav>
 
+<?php include __DIR__ . '/menu.php'; ?>
+
 <div class="container mt-4">
-    <a href="dashboard.php" style="color:var(--primary-green);">← Retour</a>
     <h4 class="mt-3" style="color:var(--primary-green);">Mon planning</h4>
     <p class="text-muted small">Vos ateliers et la liste des inscrits.</p>
 
@@ -150,8 +151,9 @@ function afficher(liste) {
             ? '<span class="badge bg-secondary ms-1">Passé</span>'
             : '<span class="badge bg-success ms-1">À venir</span>';
 
-        // Taux de remplissage : inscrits / capacité totale
-        var capaciteTotale = e.place + e.nb_inscrits;
+        // places_max est FIXE : capacité = e.place, restantes = capacité - inscrits
+        var capaciteTotale = e.place;
+        var restantes = e.place - e.nb_inscrits;
         var tauxRemplissage = capaciteTotale > 0 ? Math.round((e.nb_inscrits / capaciteTotale) * 100) : 0;
 
         html += '<div class="card mb-2 p-3">' +
@@ -161,7 +163,7 @@ function afficher(liste) {
             '<span class="text-muted small">Date : ' + formaterDate(e.date) + '</span><br>' +
             '<div class="mt-1">' +
             '<span class="badge bg-info text-dark">' + e.nb_inscrits + ' inscrit(s)</span> ' +
-            '<span class="badge bg-light text-dark border">' + e.place + ' places restantes</span> ' +
+            '<span class="badge bg-light text-dark border">' + restantes + ' places restantes</span> ' +
             '<span class="badge bg-light text-dark border">' + tauxRemplissage + '% rempli</span>' +
             '</div>' +
             '<div class="progress mt-2" style="height:6px; width:250px;">' +
@@ -188,7 +190,7 @@ function calculerStats(liste) {
 
     liste.forEach(function(e) {
         totalInscrits += e.nb_inscrits;
-        var capacite = e.place + e.nb_inscrits;
+        var capacite = e.place;
         if (capacite > 0) {
             totalTaux += (e.nb_inscrits / capacite) * 100;
         }
@@ -210,10 +212,12 @@ function switcherVue() {
 
 function initialiserCalendrier() {
     var eventsCalendrier = mesAteliers.map(function(e) {
+        var estPasse = new Date(e.date) < new Date();
         return {
             title: e.titre,
             start: e.date,
-            color: '#2d6a4f',
+            end: e.date_fin || null,                    // A4 : heure de fin si renseignee
+            color: estPasse ? '#6c757d' : '#2d6a4f',    // B7 : gris si passe, vert si a venir
             extendedProps: { event: e }
         };
     });
@@ -221,12 +225,12 @@ function initialiserCalendrier() {
     calendar = new FullCalendar.Calendar(document.getElementById('calendrier'), {
         initialView: 'dayGridMonth',
         locale: 'fr',
-        buttonText: { today: "Aujourd'hui", month: 'Mois', list: 'Liste' },
+        buttonText: { today: "Aujourd'hui", month: 'Mois', week: 'Semaine', day: 'Jour', list: 'Liste' },
         noEventsContent: 'Aucun atelier à afficher',
-       headerToolbar: {
+        headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth'
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
         events: eventsCalendrier,
         // Au clic sur un atelier du calendrier, on ouvre la liste des inscrits

@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 
 -- 1. POLE SECURITE & ACTEURS
 CREATE TABLE roles (
@@ -78,6 +79,7 @@ CREATE TABLE annonces (
 CREATE TABLE box (
     id_box INT AUTO_INCREMENT PRIMARY KEY,
     adresse VARCHAR(255) NOT NULL,
+    ville VARCHAR(100),
     capacite_max INT NOT NULL
 ) ENGINE=InnoDB;
 
@@ -123,14 +125,33 @@ CREATE TABLE prestations (
     FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
--- 4. POLE COMMUNAUTE & PROJETS
 CREATE TABLE projets (
     id_projet INT AUTO_INCREMENT PRIMARY KEY,
     titre VARCHAR(150) NOT NULL,
     description_generale TEXT,
-    est_sponsorise TINYINT DEFAULT 0, -- [cite: 473]
+    adresse VARCHAR(255),
+    ville VARCHAR(100),
+    statut VARCHAR(20) DEFAULT 'en_cours',
+    photo_couverture VARCHAR(255),
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_debut DATETIME NULL,
+    date_fin DATETIME NULL,
+    ouvert_participation TINYINT DEFAULT 1,
+    est_sponsorise TINYINT DEFAULT 0,
+    date_fin_sponsoring DATETIME NULL,
     id_createur INT NOT NULL,
     FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+CREATE TABLE participants_projet (
+    id_participation INT AUTO_INCREMENT PRIMARY KEY,
+    id_projet INT NOT NULL,
+    id_user INT NOT NULL,
+    tache VARCHAR(255),
+    statut VARCHAR(20) DEFAULT 'en_attente',
+    date_demande DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_projet) REFERENCES projets(id_projet) ON DELETE CASCADE,
+    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
 -- Ajout des étapes pour corriger le MCD
@@ -151,6 +172,7 @@ CREATE TABLE evenements (
     lieu VARCHAR(150),
     description TEXT,
     date_debut DATETIME,
+    date_fin DATETIME,
     prix_actuel DECIMAL(10,2) NOT NULL,
     places_max INT NOT NULL,
     statut_validation TINYINT DEFAULT 0,
@@ -158,6 +180,7 @@ CREATE TABLE evenements (
     id_animateur INT NOT NULL,
     FOREIGN KEY (id_animateur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
+
 -- 5. POLE FINANCE
 CREATE TABLE types_abonnements (
     id_type_abo INT AUTO_INCREMENT PRIMARY KEY,
@@ -168,12 +191,13 @@ CREATE TABLE types_abonnements (
 CREATE TABLE transactions (
     id_transac INT AUTO_INCREMENT PRIMARY KEY,
     montant DECIMAL(10, 2) NOT NULL,
-    reference_stripe VARCHAR(255), -- [cite: 277]
+    reference_stripe VARCHAR(255),
     statut_paiement VARCHAR(50),
     date_transac DATETIME DEFAULT CURRENT_TIMESTAMP,
     id_user INT,
     type VARCHAR(50) DEFAULT 'atelier',
     commission DECIMAL(10,2) DEFAULT 0,
+    id_event INT NULL,
     FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
@@ -192,6 +216,9 @@ CREATE TABLE message_forums (
     id_user_auteur INT NOT NULL,
     date_message DATETIME DEFAULT CURRENT_TIMESTAMP,
     est_modere TINYINT DEFAULT 0,
+    categorie VARCHAR(50) DEFAULT 'Général',
+    epingle TINYINT DEFAULT 0,
+    titre VARCHAR(255),
     id_message_parent INT NULL,
     FOREIGN KEY (id_user_auteur) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
@@ -220,17 +247,32 @@ CREATE TABLE article_conseil (
     contenu TEXT NOT NULL,
     type VARCHAR(50),
     id_auteur INT NOT NULL,
+    statut_validation TINYINT DEFAULT 1,
     date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE documents (
+    id_document INT AUTO_INCREMENT PRIMARY KEY,
+    id_user INT NOT NULL,
+    type VARCHAR(50),
+    nom_fichier VARCHAR(255) NOT NULL,
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user)
 ) ENGINE=InnoDB;
 
 CREATE TABLE inscriptions (
     id_inscription INT AUTO_INCREMENT PRIMARY KEY,
     id_user INT NOT NULL,
     id_event INT NOT NULL,
-    date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
+    date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP,
+    present TINYINT DEFAULT 0
 ) ENGINE=InnoDB;
 
 -- INSERTIONS INITIALES
 INSERT INTO roles (libelle_role) VALUES ('Admin'), ('Salarie'), ('Professionnel et Artisan'), ('Particulier');
 INSERT INTO langues (code_iso, nom_langue) VALUES ('fr', 'Français'), ('en', 'English');
 INSERT INTO types_abonnements (nom_offre, prix_mensuel_actuel) VALUES ('Gratuit', 0.00), ('Premium Artisan', 29.99);
+
+INSERT INTO `utilisateurs` (`id_user`, `nom`, `prenom`, `email`, `mot_de_passe`, `date_inscription`, `score_upcycling`, `abonnement`, `date_fin_abonnement`, `abonnement_annule`, `solde`, `onesignal_player_id`, `est_actif`, `est_verifie`, `token_verification`, `reset_token`, `reset_token_expiry`, `id_role`, `recompense_reclamee`) VALUES (1,'Fernando','Teshani','t.fernando@myskolae.fr','$2a$10$bOv16dQsnhjpBGzuXRFxo./DAqnRr6n29.4VZsM2lU/afiXuQl4Oa','2026-07-02 12:40:51',0,'gratuit',NULL,0,0.00,NULL,1,1,NULL,NULL,NULL,2,0);
+INSERT INTO `utilisateurs` (`id_user`, `nom`, `prenom`, `email`, `mot_de_passe`, `date_inscription`, `score_upcycling`, `abonnement`, `date_fin_abonnement`, `abonnement_annule`, `solde`, `onesignal_player_id`, `est_actif`, `est_verifie`, `token_verification`, `reset_token`, `reset_token_expiry`, `id_role`, `recompense_reclamee`) VALUES (2,'Admin','Teshani','teshanifernandotf@gmail.com','$2a$10$PstdXoQPif2pvdxkyY2UH.C6F0J.d7533b1WC2iaM4MO108FADTry','2026-07-02 12:47:21',0,'gratuit',NULL,0,0.00,NULL,1,1,NULL,NULL,NULL,1,0);
+INSERT INTO `utilisateurs` (`id_user`, `nom`, `prenom`, `email`, `mot_de_passe`, `date_inscription`, `score_upcycling`, `abonnement`, `date_fin_abonnement`, `abonnement_annule`, `solde`, `onesignal_player_id`, `est_actif`, `est_verifie`, `token_verification`, `reset_token`, `reset_token_expiry`, `id_role`, `recompense_reclamee`) VALUES (3,'Particulier','Teshani','teshanifernando@outlook.com','$2a$10$qHw1LiherzotE1UGD/VE4elP13Sx7GQCuS.Okf0WPH5KYYaajskRi','2026-07-02 12:52:30',0,'gratuit',NULL,0,0.00,NULL,1,1,NULL,NULL,NULL,4,0)

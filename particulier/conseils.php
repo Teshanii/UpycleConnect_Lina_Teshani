@@ -35,7 +35,7 @@ if (!isset($_SESSION['user_id'])) {
         <div class="col-md-3">
             <select id="filtre-type" class="form-select" onchange="filtrer()">
                 <option value="">Tous les types</option>
-                <option value="tuto">Tuto</option>
+                <option value="tuto">Tutoriel</option>
                 <option value="news">News</option>
                 <option value="conseil">Conseil</option>
             </select>
@@ -99,7 +99,7 @@ function afficher(liste) {
         // Badge type
         var badgeType;
         if (a.type === 'tuto') {
-            badgeType = '<span class="badge bg-success">Tuto</span>';
+            badgeType = '<span class="badge bg-success">Tutoriel</span>';
         } else if (a.type === 'news') {
             badgeType = '<span class="badge bg-primary">News</span>';
         } else {

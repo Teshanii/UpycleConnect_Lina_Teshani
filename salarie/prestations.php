@@ -22,8 +22,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
     </div>
 </nav>
 
+<?php include __DIR__ . '/menu.php'; ?>
+
 <div class="container mt-4">
-    <a href="dashboard.php" style="color:var(--primary-green);">← Retour</a>
     <h4 class="mt-3" style="color:var(--primary-green);">Validation des prestations</h4>
     <p class="text-muted small">Validez ou refusez les prestations proposées par les artisans.</p>
 

@@ -19,20 +19,23 @@ if (!isset($_SESSION['user_id'])) {
 <nav class="navbar" style="background-color: var(--primary-green);">
     <div class="container">
         <a class="navbar-brand text-white fw-bold" href="dashboard.php">UpcycleConnect</a>
-        <span class="text-white me-3">Particulier : <?php echo $_SESSION['user_prenom']; ?></span>
-        <a href="../connexion.php?logout=1" class="btn btn-outline-light btn-sm">Déconnexion</a>
+        <div class="d-flex align-items-center">
+            <span class="text-white me-3">Particulier : <?php echo $_SESSION['user_prenom']; ?></span>
+            <?php include 'includes/traductions.php'; ?>
+            <a href="../connexion.php?logout=1" class="btn btn-outline-light btn-sm">Déconnexion</a>
+        </div>
     </div>
 </nav>
 
 <div class="container mt-4">
-    <h4 style="color:var(--primary-green);">Mon tableau de bord</h4>
-    <p class="text-muted">Que voulez-vous faire ?</p>
+    <h4 style="color:var(--primary-green);" data-trad="dashboard_titre">Mon tableau de bord</h4>
+    <p class="text-muted" data-trad="dashboard_action">Que voulez-vous faire ?</p>
 
     <div class="row g-3">
         <div class="col-md-4" id="btn-annonce">
             <a href="annonce.php" class="text-decoration-none">
                 <div class="card p-3 text-center">
-                    <h5>Déposer une annonce</h5>
+                    <h5 data-trad="btn_annonce">Déposer une annonce</h5>
                     <p class="text-muted small">Donnez ou vendez un objet</p>
                 </div>
             </a>
@@ -40,7 +43,7 @@ if (!isset($_SESSION['user_id'])) {
         <div class="col-md-4" id="btn-mes-annonces">
             <a href="mes_annonces.php" class="text-decoration-none text-dark">
                 <div class="card p-3 text-center">
-                    <h5>Mes annonces</h5>
+                    <h5 data-trad="btn_mes_annonces">Mes annonces</h5>
                     <p class="text-muted small">Suivez vos annonces publiées</p>
                 </div>
             </a>
@@ -48,7 +51,7 @@ if (!isset($_SESSION['user_id'])) {
         <div class="col-md-4" id="btn-box">
             <a href="box.php" class="text-decoration-none">
                 <div class="card p-3 text-center">
-                    <h5>Demander une box</h5>
+                    <h5 data-trad="btn_box">Demander une box</h5>
                     <p class="text-muted small">Déposez dans un conteneur</p>
                 </div>
             </a>
@@ -56,7 +59,7 @@ if (!isset($_SESSION['user_id'])) {
         <div class="col-md-4" id="btn-score">
             <a href="score.php" class="text-decoration-none">
                 <div class="card p-3 text-center">
-                    <h5>Mon Score</h5>
+                    <h5 data-trad="btn_score">Mon Score</h5>
                     <p class="text-muted small">Votre impact écologique</p>
                 </div>
             </a>
@@ -64,7 +67,7 @@ if (!isset($_SESSION['user_id'])) {
         <div class="col-md-4" id="btn-planning">
             <a href="planning.php" class="text-decoration-none">
                 <div class="card p-3 text-center">
-                    <h5>Mon Planning</h5>
+                    <h5 data-trad="btn_planning">Mon Planning</h5>
                     <p class="text-muted small">Vos ateliers et formations</p>
                 </div>
             </a>
@@ -72,7 +75,7 @@ if (!isset($_SESSION['user_id'])) {
         <div class="col-md-4" id="btn-conseils">
             <a href="conseils.php" class="text-decoration-none">
                 <div class="card p-3 text-center">
-                    <h5>Conseils</h5>
+                    <h5 data-trad="btn_conseils">Conseils</h5>
                     <p class="text-muted small">Tutos recyclage</p>
                 </div>
             </a>
@@ -80,16 +83,34 @@ if (!isset($_SESSION['user_id'])) {
         <div class="col-md-4" id="btn-prestations">
             <a href="prestations.php" class="text-decoration-none">
                 <div class="card p-3 text-center">
-                    <h5>Prestations</h5>
+                    <h5 data-trad="btn_prestations">Prestations</h5>
                     <p class="text-muted small">Services proposés par nos artisans</p>
                 </div>
             </a>
         </div>
+
+        <div class="col-md-4" id="btn-galerie">
+            <a href="../galerie.php" class="text-decoration-none">
+                <div class="card p-3 text-center h-100">
+                    <h5 data-trad="btn_galerie">Galerie communauté</h5>
+                    <p class="text-muted small">Découvrir les créations et participer aux projets</p>
+                </div>
+            </a>
+        </div>  
         <div class="col-md-4" id="btn-forum">
             <a href="forum.php" class="text-decoration-none">
                 <div class="card p-3 text-center">
-                    <h5>Forum</h5>
+                    <h5 data-trad="btn_forum">Forum</h5>
                     <p class="text-muted small">Échanger avec la communauté</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4" id="btn-notifications">
+            <a href="notifications.php" class="text-decoration-none">
+                <div class="card p-3 text-center h-100">
+                    <h5 data-trad="btn_notifications">Mes notifications</h5>
+                    <p class="text-muted small">Mes alertes et infos</p>
                 </div>
             </a>
         </div>
@@ -97,8 +118,17 @@ if (!isset($_SESSION['user_id'])) {
         <div class="col-md-4" id="btn-portefeuille">
             <a href="portefeuille.php" class="text-decoration-none">
                 <div class="card p-3 text-center h-100">
-                    <h5>Mon portefeuille</h5>
+                    <h5 data-trad="btn_portefeuille">Mon portefeuille</h5>
                     <p class="text-muted small">Mon argent et mes retraits</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4" id="btn-documents">
+            <a href="mes_documents.php" class="text-decoration-none">
+                <div class="card p-3 text-center h-100">
+                    <h5 data-trad="btn_documents">Mes documents</h5>
+                    <p class="text-muted small">Mes factures et attestations</p>
                 </div>
             </a>
         </div>
@@ -106,7 +136,7 @@ if (!isset($_SESSION['user_id'])) {
         <div class="col-md-4" id="btn-profil">
             <a href="profil.php" class="text-decoration-none">
                 <div class="card p-3 text-center">
-                    <h5>Mon Profil</h5>
+                    <h5 data-trad="btn_profil">Mon Profil</h5>
                     <p class="text-muted small">Modifier mes informations</p>
                 </div>
             </a>

@@ -11,6 +11,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
     <meta charset="UTF-8">
     <title>Mes récupérations | UpcycleConnect</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <link rel="stylesheet" href="../style.css">
 </head>
 <body>
@@ -25,7 +26,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
 <div class="container mt-4">
     <a href="dashboard.php" style="color:var(--primary-green);">← Retour</a>
     <h4 class="mt-3" style="color:var(--primary-green);">Mes récupérations</h4>
-    <p class="text-muted small">Voici les objets que vous avez réservés. Allez à la box, ouvrez le casier avec votre code, puis scannez le code-barres sur l'objet pour finaliser.</p>
+    <p class="text-muted small">Voici les objets que vous avez réservés. Allez à la box, ouvrez le casier avec votre code d'ouverture, puis scannez le code-barres de l'objet ci-dessous pour finaliser.</p>
 
     <div id="loader" class="text-center mt-3">
         <div class="spinner-border" style="color:var(--primary-green);"></div>
@@ -33,7 +34,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
 
     <div id="msg"></div>
 
-    <!-- Section : récupérations en cours -->
+    <!-- Section : recuperations en cours -->
     <h5 class="mt-4" style="color:var(--primary-green);">En cours</h5>
     <div id="en-cours"></div>
 
@@ -54,19 +55,25 @@ function charger() {
             // Toutes les demandes de cet artisan
             var mesDemandes = (data || []).filter(function(d) { return d.id_artisan === userId; });
 
-            // En cours : pas encore récupéré
+            // En cours : pas encore recupere
             var enCours = mesDemandes.filter(function(d) { return d.statut !== 'recupere'; });
-            // Historique : déjà récupéré
+            // Historique : deja recupere
             var historique = mesDemandes.filter(function(d) { return d.statut === 'recupere'; });
 
             afficherEnCours(enCours);
             afficherHistorique(historique);
+
+            // T3 : on transforme chaque code en vrai code-barres visuel (l'artisan lit le numero et le tape)
+            document.querySelectorAll('.code-barre').forEach(function(el) {
+                var code = el.getAttribute('data-code');
+                if (code) { JsBarcode(el, code, { format: 'CODE128', height: 45, fontSize: 14, margin: 4 }); }
+            });
         });
 }
 
 function afficherEnCours(liste) {
     if (liste.length === 0) {
-        document.getElementById('en-cours').innerHTML = '<p class="text-muted">Vous n\'avez aucune récupération en cours.</p>';
+        document.getElementById('en-cours').innerHTML = '<p class="text-muted">Vous n\'avez aucune recuperation en cours.</p>';
         return;
     }
 
@@ -74,16 +81,19 @@ function afficherEnCours(liste) {
     liste.forEach(function(d) {
         html += '<div class="card mb-3 p-3">' +
             '<h5>' + (d.titre_annonce || 'Objet') + '</h5>' +
-            '<p class="small text-muted mb-1">Déposé par : ' + (d.nom_user || '-') + '</p>' +
+            '<p class="small text-muted mb-1">Depose par : ' + (d.nom_user || '-') + '</p>' +
             '<p class="small mb-1">Box : ' + (d.adresse_box || '-') + ' — Casier : ' + (d.numero_casier || '-') + '</p>' +
             '<div class="alert alert-info py-2 my-2">' +
             '<strong>Votre code d\'ouverture : ' + d.code_artisan + '</strong><br>' +
-            '<small>Utilisez ce code pour ouvrir le casier à la box.</small>' +
+            '<small>Utilisez ce code pour ouvrir le casier a la box.</small>' +
             '</div>' +
-            '<label class="form-label small">Scannez ou saisissez le code-barres collé sur l\'objet :</label>' +
+            '<label class="form-label small">Code-barres de votre objet — scannez-le pour confirmer :</label>' +
+            '<div class="text-center mb-2">' +
+            '<svg class="code-barre" data-code="' + d.code_barre_scan + '"></svg>' +
+            '</div>' +
             '<div class="input-group">' +
-            '<input type="text" id="cb-' + d.id + '" class="form-control" placeholder="Code-barres">' +
-            '<button class="btn btn-success" onclick="confirmer(' + d.id + ')">Confirmer la récupération</button>' +
+            '<input type="text" id="cb-' + d.id + '" class="form-control" placeholder="Saisissez le code-barres ci-dessus">' +
+            '<button class="btn btn-success" onclick="confirmer(' + d.id + ')">Confirmer la recuperation</button>' +
             '</div>' +
             '<div id="msg-' + d.id + '" class="mt-2"></div>' +
             '</div>';
@@ -94,7 +104,7 @@ function afficherEnCours(liste) {
 
 function afficherHistorique(liste) {
     if (liste.length === 0) {
-        document.getElementById('historique').innerHTML = '<p class="text-muted">Aucun objet récupéré pour l\'instant.</p>';
+        document.getElementById('historique').innerHTML = '<p class="text-muted">Aucun objet recupere pour l\'instant.</p>';
         return;
     }
 
@@ -104,9 +114,9 @@ function afficherHistorique(liste) {
             '<div class="d-flex justify-content-between align-items-center">' +
             '<div>' +
             '<strong>' + (d.titre_annonce || 'Objet') + '</strong><br>' +
-            '<span class="text-muted small">Déposé par : ' + (d.nom_user || '-') + ' — Box : ' + (d.adresse_box || '-') + '</span>' +
+            '<span class="text-muted small">Depose par : ' + (d.nom_user || '-') + ' — Box : ' + (d.adresse_box || '-') + '</span>' +
             '</div>' +
-            '<span class="badge bg-success">Récupéré</span>' +
+            '<span class="badge bg-success">Recupere</span>' +
             '</div>' +
             '</div>';
     });
@@ -115,7 +125,7 @@ function afficherHistorique(liste) {
 }
 
 function confirmer(idDemande) {
-    var code = document.getElementById('cb-' + idDemande).value.trim();
+    var code = document.getElementById('cb-' + idDemande).value.trim().toUpperCase();
     if (!code) {
         document.getElementById('msg-' + idDemande).innerHTML = '<div class="alert alert-danger py-1">Saisissez le code-barres.</div>';
         return;
@@ -131,7 +141,7 @@ function confirmer(idDemande) {
         })
     }).then(function(res) {
         if (res.ok) {
-            document.getElementById('msg').innerHTML = '<div class="alert alert-success">Objet récupéré ! +5 points de score.</div>';
+            document.getElementById('msg').innerHTML = '<div class="alert alert-success">Objet recupere ! +5 points de score.</div>';
             charger();
         } else {
             document.getElementById('msg-' + idDemande).innerHTML = '<div class="alert alert-danger py-1">Code-barres incorrect.</div>';

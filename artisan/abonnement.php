@@ -63,9 +63,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
                     <h2 class="my-3">15 €<small class="text-muted fs-6">/mois</small></h2>
                     <ul class="list-unstyled text-start small">
                         <li class="mb-2">✓ Tout le Gratuit, plus :</li>
-                        <li class="mb-2">✓ Tableau de bord avancé avec statistiques</li>
                         <li class="mb-2">✓ Analyse de son impact écologique</li>
-                        <li class="mb-2">✓ Alertes prioritaires sur les nouveaux objets</li>
+                        <li class="mb-2">✓ Remises sur les frais de services</li>
                         <li class="mb-2">✓ Mise en avant de ses créations</li>
                     </ul>
                     <span id="badge-premium" class="badge bg-success d-none">Votre offre actuelle</span>

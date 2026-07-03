@@ -1,9 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ../connexion.php');
-    exit;
-}
+if (!isset($_SESSION['user_id'])) { header('Location: ../connexion.php'); exit; }
+$sujetId = isset($_GET['sujet']) ? intval($_GET['sujet']) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -23,141 +21,158 @@ if (!isset($_SESSION['user_id'])) {
 </nav>
 
 <div class="container mt-4">
-    <a href="dashboard.php" style="color:var(--primary-green);">← Retour</a>
     <h4 class="mt-3" style="color:var(--primary-green);">Forum de la communauté</h4>
-    <p class="text-muted small">Échangez avec les autres membres autour de l'upcycling.</p>
 
-    <!-- Formulaire de post principal -->
-    <div class="card mb-4 p-3 shadow-sm border-0">
-        <h6>Poster un message</h6>
-        <textarea id="contenu" class="form-control mb-2" rows="3" placeholder="Partagez vos astuces, posez vos questions..."></textarea>
-        <button class="btn btn-primary-upcycle btn-sm" onclick="poster(0)">Envoyer</button>
-        <div id="msg"></div>
-    </div>
-
-    <!-- Liste des messages -->
-    <div id="messages"></div>
+    <?php if ($sujetId === 0): ?>
+        <a href="dashboard.php" style="color:var(--primary-green);">← Retour à l'accueil</a>
+        <p class="text-muted small mt-2">Ouvrez un sujet et discutez avec les autres membres.</p>
+        <div class="card mb-4 p-3 shadow-sm border-0">
+            <h6>Ouvrir un nouveau sujet</h6>
+            <input type="text" id="titre" class="form-control mb-2" placeholder="Titre du sujet (ex: Comment repeindre un meuble ?)">
+            <select id="categorie" class="form-select form-select-sm mb-2" style="max-width:220px;">
+                <option value="Général">Général</option>
+                <option value="Annonces">Annonces</option>
+                <option value="Questions">Questions</option>
+                <option value="Astuces">Astuces</option>
+            </select>
+            <textarea id="contenu" class="form-control mb-2" rows="3" placeholder="Votre premier message..."></textarea>
+            <button class="btn btn-primary-upcycle btn-sm" onclick="creerSujet()">Créer le sujet</button>
+            <div id="msg"></div>
+        </div>
+        <div class="row g-2 mb-3">
+            <div class="col-md-7">
+                <input type="text" id="recherche" class="form-control form-control-sm" placeholder="Rechercher un sujet ou un auteur..." oninput="afficherListe()">
+            </div>
+            <div class="col-md-5">
+                <select id="filtre-cat" class="form-select form-select-sm" onchange="afficherListe()">
+                    <option value="">Toutes les catégories</option>
+                    <option value="Général">Général</option>
+                    <option value="Annonces">Annonces</option>
+                    <option value="Questions">Questions</option>
+                    <option value="Astuces">Astuces</option>
+                </select>
+            </div>
+        </div>
+        <div id="sujets"></div>
+    <?php else: ?>
+        <a href="forum.php" style="color:var(--primary-green);">← Retour aux sujets</a>
+        <div id="detail-sujet" class="mt-3"></div>
+    <?php endif; ?>
 </div>
 
 <script>
 var userId = <?php echo $_SESSION['user_id']; ?>;
+var sujetId = <?php echo $sujetId; ?>;
 var tousMessages = [];
 
-// Charger les messages
+function echapper(t) {
+    if (t === null || t === undefined) return '';
+    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function formatDate(d) { return d ? d.replace('T', ' ').replace('Z', '').substring(0, 16) : ''; }
+
 function charger() {
     fetch('http://localhost:8080/api/messages')
         .then(function(r) { return r.json(); })
         .then(function(data) {
             tousMessages = (data || []).filter(function(m) { return m.est_modere === 0; });
-            afficher();
+            if (sujetId > 0) afficherSujet();
+            else afficherListe();
         });
 }
 
-function afficher() {
-    var div = document.getElementById('messages');
+function afficherListe() {
+    var div = document.getElementById('sujets');
+    var recherche = document.getElementById('recherche').value.toLowerCase();
+    var cat = document.getElementById('filtre-cat').value;
 
-    // Garder seulement les messages principaux (pas les réponses)
-    var principaux = tousMessages.filter(function(m) { return m.id_message_parent === 0; });
-
-    if (principaux.length === 0) {
-        div.innerHTML = '<p class="text-muted">Aucun message pour le moment. Soyez le premier !</p>';
-        return;
+    var sujets = tousMessages.filter(function(m) { return m.id_message_parent === 0; });
+    if (cat) sujets = sujets.filter(function(m) { return m.categorie === cat; });
+    if (recherche) {
+        sujets = sujets.filter(function(m) {
+            var dansSujet = ((m.titre || '') + ' ' + m.contenu + ' ' + m.auteur).toLowerCase().indexOf(recherche) !== -1;
+            var rep = tousMessages.filter(function(r) { return r.id_message_parent === m.id; });
+            var dansRep = rep.some(function(r) { return (r.contenu + ' ' + r.auteur).toLowerCase().indexOf(recherche) !== -1; });
+            return dansSujet || dansRep;
+        });
     }
+    sujets.sort(function(a, b) { return (b.epingle || 0) - (a.epingle || 0); });
+
+    if (sujets.length === 0) { div.innerHTML = '<p class="text-muted">Aucun sujet. Soyez le premier à en ouvrir un !</p>'; return; }
 
     var html = '';
-    principaux.forEach(function(m) {
-        html += afficherMessage(m, false);
-
-        // Afficher les réponses sous le message
-        var reponses = tousMessages.filter(function(r) { return r.id_message_parent === m.id; });
-        reponses.forEach(function(r) {
-            html += afficherMessage(r, true);
-        });
+    sujets.forEach(function(m) {
+        var nbRep = tousMessages.filter(function(r) { return r.id_message_parent === m.id; }).length;
+        var badges = '<span class="badge bg-info text-dark ms-2">' + echapper(m.categorie || 'Général') + '</span>';
+        if (m.epingle === 1) badges += '<span class="badge bg-primary ms-1">Épinglé</span>';
+        html += '<div class="card mb-2 p-3">' +
+            '<div class="d-flex justify-content-between align-items-center">' +
+            '<div>' +
+            '<a href="forum.php?sujet=' + m.id + '" class="text-decoration-none">' +
+            '<strong style="color:var(--primary-green);">' + echapper(m.titre || '(sans titre)') + '</strong></a>' + badges + '<br>' +
+            '<span class="text-muted small">par ' + echapper(m.auteur) + ' · ' + formatDate(m.date) + ' · ' + nbRep + ' réponse(s)</span>' +
+            '</div>' +
+            '<a href="forum.php?sujet=' + m.id + '" class="btn btn-success btn-sm">Voir</a>' +
+            '</div></div>';
     });
-
     div.innerHTML = html;
 }
 
-function afficherMessage(m, estReponse) {
-    var btnSupprimer = m.id_user === userId
-        ? '<button class="btn btn-link btn-sm text-danger p-0" onclick="supprimer(' + m.id + ')">Supprimer</button>'
-        : '';
+function afficherSujet() {
+    var sujet = tousMessages.filter(function(m) { return m.id === sujetId; })[0];
+    var div = document.getElementById('detail-sujet');
+    if (!sujet) { div.innerHTML = '<p class="text-muted">Ce sujet n\'existe plus.</p>'; return; }
 
-    // Bouton "Répondre" uniquement pour les messages principaux (pas pour les réponses)
-    var idThread = estReponse ? m.id_message_parent : m.id;
-    var btnRepondre = '<button class="btn btn-link btn-sm p-0 me-2" style="color:var(--primary-green);" onclick="toggleReponse(' + idThread + ')">Répondre</button>';
+    var badges = '<span class="badge bg-info text-dark ms-2">' + echapper(sujet.categorie || 'Général') + '</span>';
+    var suppr = sujet.id_user === userId ? '<button class="btn btn-link btn-sm text-danger p-0 ms-2" onclick="supprimer(' + sujet.id + ')">Supprimer</button>' : '';
 
-    // Indentation visuelle pour les réponses
-    var styleCard = estReponse
-        ? 'card mb-2 p-2 ms-5 border-start border-3 border-success'
-        : 'card mb-2 p-3';
+    var html = '<h5 style="color:var(--primary-green);">' + echapper(sujet.titre || '(sans titre)') + badges + '</h5>';
+    html += '<div class="card mb-3 p-3"><div class="d-flex justify-content-between"><div><strong>' + echapper(sujet.auteur) + '</strong>' +
+        '<span class="text-muted small ms-2">' + formatDate(sujet.date) + '</span><br><span>' + echapper(sujet.contenu) + '</span></div><div>' + suppr + '</div></div></div>';
 
-    var html = '<div class="' + styleCard + '">' +
-        '<div class="d-flex justify-content-between align-items-start">' +
-        '<div>' +
-        '<strong style="color:var(--primary-green);">' + m.auteur + '</strong>' +
-        '<span class="text-muted small ms-2">' + (m.date ? m.date.replace('T', ' ').substring(0, 16) : '') + '</span><br>' +
-        '<span>' + m.contenu + '</span>' +
-        '</div>' +
-        '<div>' + btnRepondre + btnSupprimer + '</div>' +
-        '</div>';
+    var reponses = tousMessages.filter(function(r) { return r.id_message_parent === sujetId; });
+    if (reponses.length === 0) html += '<p class="text-muted small">Aucune réponse pour le moment.</p>';
+    else reponses.forEach(function(r) {
+        var sup = r.id_user === userId ? '<button class="btn btn-link btn-sm text-danger p-0" onclick="supprimer(' + r.id + ')">Supprimer</button>' : '';
+        html += '<div class="card mb-2 p-2 ms-4 border-start border-3 border-success">' +
+            '<div class="d-flex justify-content-between"><div><strong>' + echapper(r.auteur) + '</strong>' +
+            '<span class="text-muted small ms-2">' + formatDate(r.date) + '</span><br><span>' + echapper(r.contenu) + '</span></div><div>' + sup + '</div></div></div>';
+    });
 
-    // Zone de réponse cachée (ouverte au clic sur "Répondre")
-    if (!estReponse) {
-        html += '<div id="zone-reponse-' + m.id + '" class="mt-2" style="display:none;">' +
-            '<textarea id="contenu-reponse-' + m.id + '" class="form-control mb-2" rows="2" placeholder="Votre réponse..."></textarea>' +
-            '<button class="btn btn-primary-upcycle btn-sm" onclick="poster(' + m.id + ')">Répondre</button>' +
-            '<button class="btn btn-link btn-sm text-muted" onclick="toggleReponse(' + m.id + ')">Annuler</button>' +
-            '</div>';
-    }
-
-    html += '</div>';
-    return html;
+    html += '<div class="card p-3 mt-3"><textarea id="reponse" class="form-control mb-2" rows="2" placeholder="Votre réponse..."></textarea>' +
+        '<button class="btn btn-primary-upcycle btn-sm" onclick="repondre()">Répondre</button></div>';
+    div.innerHTML = html;
 }
 
-// Afficher/cacher la zone de réponse
-function toggleReponse(idMessage) {
-    var zone = document.getElementById('zone-reponse-' + idMessage);
-    zone.style.display = zone.style.display === 'none' ? 'block' : 'none';
-}
-
-// Poster — idParent = 0 pour message principal, sinon = id du message parent
-function poster(idParent) {
-    var contenu;
-    if (idParent === 0) {
-        contenu = document.getElementById('contenu').value.trim();
-    } else {
-        contenu = document.getElementById('contenu-reponse-' + idParent).value.trim();
-    }
-
-    if (!contenu) {
-        alert('Le message ne peut pas être vide.');
+function creerSujet() {
+    var titre = document.getElementById('titre').value.trim();
+    var contenu = document.getElementById('contenu').value.trim();
+    var categorie = document.getElementById('categorie').value;
+    if (!titre || !contenu) {
+        document.getElementById('msg').innerHTML = '<div class="alert alert-danger py-1 mt-2">Le titre et le message sont obligatoires.</div>';
         return;
     }
-
     fetch('http://localhost:8080/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contenu: contenu, id_user: userId, id_message_parent: idParent })
-    }).then(function(res) {
-        if (res.ok) {
-            if (idParent === 0) {
-                document.getElementById('contenu').value = '';
-            }
-            charger();
-        }
-    });
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contenu: contenu, id_user: userId, id_message_parent: 0, categorie: categorie, titre: titre })
+    }).then(function(res) { if (res.ok) window.location.href = 'forum.php'; });
 }
-
+function repondre() {
+    var contenu = document.getElementById('reponse').value.trim();
+    if (!contenu) { alert('La réponse ne peut pas être vide.'); return; }
+    fetch('http://localhost:8080/api/messages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contenu: contenu, id_user: userId, id_message_parent: sujetId })
+    }).then(function(res) { if (res.ok) window.location.reload(); });
+}
 function supprimer(id) {
     if (confirm('Supprimer ce message ?')) {
         fetch('http://localhost:8080/api/messages/' + id, { method: 'DELETE' })
-            .then(function(res) { if (res.ok) charger(); });
+            .then(function(res) { if (res.ok) { if (id === sujetId) window.location.href = 'forum.php'; else window.location.reload(); } });
     }
 }
 
 charger();
 </script>
-
 </body>
 </html>

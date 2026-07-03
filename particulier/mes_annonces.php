@@ -51,7 +51,7 @@ fetch('http://localhost:8080/api/annonces?id_user=<?php echo $_SESSION['user_id'
                 // Badge statut validation
                 var validation;
                 if (a.statut_validation === 1) {
-                    validation = '<span class="badge bg-success"> Publiée</span>';
+                    validation = '<span class="badge bg-primary"> En ligne</span>';
                 } else if (a.statut_validation === 2) {
                 validation = '<span class="badge bg-danger"> Refusée</span>';
                 if (a.motif_refus) {
@@ -71,9 +71,9 @@ fetch('http://localhost:8080/api/annonces?id_user=<?php echo $_SESSION['user_id'
                 if (a.statut_annonce === 'vendu') {
                     statutAnnonce = '<span class="badge bg-danger">Vendu</span>';
                 } else if (a.statut_annonce === 'recupere') {
-                    statutAnnonce = '<span class="badge bg-primary">Récupéré</span>';
+                    statutAnnonce = '<span class="badge bg-secondary">Récupéré</span>';
                 } else {
-                    statutAnnonce = '<span class="badge bg-light text-dark border">Disponible</span>';
+                    statutAnnonce = '<span class="badge bg-success">Disponible</span>';
                 }
 
                 html += '<div class="card mb-3 p-3">' +

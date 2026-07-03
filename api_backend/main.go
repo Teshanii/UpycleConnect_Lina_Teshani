@@ -11,7 +11,8 @@ func main() {
 
 	mux.HandleFunc("/api/users", handleUsers)
 	mux.HandleFunc("/api/users/{id}", handleUsers)
-	mux.HandleFunc("/api/profil/{id}", handleProfil) 
+	mux.HandleFunc("/api/profil/{id}", handleProfil)
+	mux.HandleFunc("/api/notifications", handleNotifications)
 
 	mux.HandleFunc("/api/roles", handleRoles)
 
@@ -39,6 +40,11 @@ func main() {
 	mux.HandleFunc("/api/projets", handleProjets)
 	mux.HandleFunc("/api/projets/{id}", handleProjets)
 
+	mux.HandleFunc("/api/sponsoriser/{id}", handleSponsoriser)
+	
+	mux.HandleFunc("/api/participants", handleParticipants)
+	mux.HandleFunc("/api/participants/{id}", handleParticipants)
+
 	mux.HandleFunc("/api/etapes", handleEtapes)
 	mux.HandleFunc("/api/etapes/{id}", handleEtapes)
 
@@ -55,6 +61,7 @@ func main() {
 	mux.HandleFunc("/api/inscriptions", handleInscriptions)
 	mux.HandleFunc("/api/inscriptions/{id}", handleInscriptions)
 	mux.HandleFunc("/api/inscrits-evenement/{id}", handleInscritsEvenement)
+	mux.HandleFunc("/api/presence", handlePresence)
 
 	mux.HandleFunc("/api/transactions", handleTransactions)
 	mux.HandleFunc("/api/abonnements", handleAbonnements)
@@ -76,8 +83,6 @@ func main() {
 
 	mux.HandleFunc("POST /api/register", handleRegister)
 	mux.HandleFunc("POST /api/login", handleLogin)
-
-
 
 	mux.HandleFunc("PUT /api/verify/{token}", handleVerify)
 

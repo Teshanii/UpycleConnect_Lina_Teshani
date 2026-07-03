@@ -55,7 +55,8 @@
                 <!-- Champ photo -->
                 <div class="mb-3">
                     <label class="form-label">Photo de l'objet</label>
-                    <input type="file" class="form-control" id="photo" accept="image/*">
+                    <input type="file" class="form-control" id="photo" accept=".jpg,.jpeg,.png,.webp">
+                    <small class="text-muted">Formats acceptés : JPG, PNG ou WEBP.</small>
                 </div>
 
                 <div class="mb-3">
@@ -89,6 +90,11 @@
         var photoFile = document.getElementById('photo').files[0];
         
         if (photoFile) {
+            var typesOk = ['image/jpeg', 'image/png', 'image/webp'];
+            if (typesOk.indexOf(photoFile.type) === -1) {
+                document.getElementById('msg').innerHTML = '<div class="alert alert-danger">Format d\'image non accepté. Choisissez un fichier JPG, PNG ou WEBP.</div>';
+                return;
+            }
             var formData = new FormData();
             formData.append('photo', photoFile);
 
@@ -133,7 +139,7 @@ fetch('http://localhost:8080/api/categories')
             })
         }).then(function(res) {
             if (res.ok) {
-                                        document.getElementById('msg').innerHTML = '<div class="alert alert-success">Annonce envoyée !</div>';
+                                        document.getElementById('msg').innerHTML = '<div class="alert alert-success">Annonce envoyée ! Elle sera visible par la communauté une fois validée par un administrateur. Vous pouvez suivre son statut dans « Mes annonces ».</div>';
                             // On vide le formulaire
                             document.getElementById('titre').value = '';
                             document.getElementById('description').value = '';

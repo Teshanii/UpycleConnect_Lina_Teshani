@@ -4,6 +4,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
     header('Location: ../connexion.php');
     exit;
 }
+$sujetId = isset($_GET['sujet']) ? intval($_GET['sujet']) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -22,187 +23,212 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
     </div>
 </nav>
 
+<?php include __DIR__ . '/menu.php'; ?>
+
 <div class="container mt-4">
-    <a href="dashboard.php" style="color:var(--primary-green);">← Retour</a>
     <h4 class="mt-3" style="color:var(--primary-green);">Forum — Animation & Modération</h4>
-    <p class="text-muted small">Participez aux discussions et modérez les messages inappropriés.</p>
 
-    <!-- Formulaire de post principal -->
-    <div class="card mb-4 p-3 shadow-sm border-0">
-        <h6>Poster un message</h6>
-        <textarea id="contenu" class="form-control mb-2" rows="3" placeholder="Animez la communauté, répondez aux questions..."></textarea>
-        <button class="btn btn-primary-upcycle btn-sm" onclick="poster(0)">Envoyer</button>
-        <div id="msg"></div>
-    </div>
+    <?php if ($sujetId === 0): ?>
+        <!-- ===== PAGE LISTE DES SUJETS ===== -->
+        <p class="text-muted small">Ouvrez des sujets, répondez et modérez les messages.</p>
+        <div class="card mb-4 p-3 shadow-sm border-0">
+            <h6>Ouvrir un nouveau sujet</h6>
+            <input type="text" id="titre" class="form-control mb-2" placeholder="Titre du sujet (ex: Idées pour recycler des palettes)">
+            <select id="categorie" class="form-select form-select-sm mb-2" style="max-width:220px;">
+                <option value="Général">Général</option>
+                <option value="Annonces">Annonces</option>
+                <option value="Questions">Questions</option>
+                <option value="Astuces">Astuces</option>
+            </select>
+            <textarea id="contenu" class="form-control mb-2" rows="3" placeholder="Votre premier message..."></textarea>
+            <button class="btn btn-primary-upcycle btn-sm" onclick="creerSujet()">Créer le sujet</button>
+            <div id="msg"></div>
+        </div>
 
-    <!-- Filtres de modération -->
-    <div class="mb-3">
-        <button class="btn btn-success btn-sm me-2" onclick="filtrer('visible')">Visibles</button>
-        <button class="btn btn-warning btn-sm me-2" onclick="filtrer('modere')">Masqués</button>
-        <button class="btn btn-secondary btn-sm" onclick="filtrer('tous')">Tous</button>
-    </div>
+        <div class="mb-2">
+            <button class="btn btn-success btn-sm me-2" onclick="filtrer('visible')">Visibles</button>
+            <button class="btn btn-warning btn-sm me-2" onclick="filtrer('modere')">Masqués</button>
+            <button class="btn btn-secondary btn-sm" onclick="filtrer('tous')">Tous</button>
+        </div>
+        <div class="row g-2 mb-3">
+            <div class="col-md-7">
+                <input type="text" id="recherche" class="form-control form-control-sm" placeholder="Rechercher un sujet ou un auteur..." oninput="afficherListe()">
+            </div>
+            <div class="col-md-5">
+                <select id="filtre-cat" class="form-select form-select-sm" onchange="afficherListe()">
+                    <option value="">Toutes les catégories</option>
+                    <option value="Général">Général</option>
+                    <option value="Annonces">Annonces</option>
+                    <option value="Questions">Questions</option>
+                    <option value="Astuces">Astuces</option>
+                </select>
+            </div>
+        </div>
+        <div id="sujets"></div>
 
-    <!-- Liste des messages -->
-    <div id="messages"></div>
+    <?php else: ?>
+        <!-- ===== PAGE D'UN SUJET ===== -->
+        <a href="forum.php" style="color:var(--primary-green);">← Retour aux sujets</a>
+        <div id="detail-sujet" class="mt-3"></div>
+    <?php endif; ?>
 </div>
 
 <script>
 var userId = <?php echo $_SESSION['user_id']; ?>;
+var sujetId = <?php echo $sujetId; ?>;
 var tousMessages = [];
 var filtreActuel = 'visible';
 
-// Échappe le HTML pour éviter les injections de code (XSS)
 function echapper(t) {
     if (t === null || t === undefined) return '';
     return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+function formatDate(d) { return d ? d.replace('T', ' ').replace('Z', '').substring(0, 16) : ''; }
 
-
-// Charger tous les messages (le salarié voit aussi les masqués)
 function charger() {
     fetch('http://localhost:8080/api/messages')
         .then(function(r) { return r.json(); })
         .then(function(data) {
             tousMessages = data || [];
-            afficher();
+            if (sujetId > 0) afficherSujet();
+            else afficherListe();
         });
 }
 
-function afficher() {
-    var div = document.getElementById('messages');
+// ---------- LISTE ----------
+function afficherListe() {
+    var div = document.getElementById('sujets');
+    var recherche = document.getElementById('recherche').value.toLowerCase();
+    var cat = document.getElementById('filtre-cat').value;
 
-    // Appliquer le filtre choisi pour les messages PRINCIPAUX
-    var principaux = tousMessages.filter(function(m) { return m.id_message_parent === 0; });
-
-    if (filtreActuel === 'visible') {
-        principaux = principaux.filter(function(m) { return m.est_modere === 0; });
-    } else if (filtreActuel === 'modere') {
-        principaux = principaux.filter(function(m) { return m.est_modere === 1; });
+    var sujets = tousMessages.filter(function(m) { return m.id_message_parent === 0; });
+    if (filtreActuel === 'visible') sujets = sujets.filter(function(m) { return m.est_modere === 0; });
+    else if (filtreActuel === 'modere') sujets = sujets.filter(function(m) { return m.est_modere === 1; });
+    if (cat) sujets = sujets.filter(function(m) { return m.categorie === cat; });
+    if (recherche) {
+        sujets = sujets.filter(function(m) {
+            var dansSujet = ((m.titre || '') + ' ' + m.contenu + ' ' + m.auteur).toLowerCase().indexOf(recherche) !== -1;
+            var rep = tousMessages.filter(function(r) { return r.id_message_parent === m.id; });
+            var dansRep = rep.some(function(r) { return (r.contenu + ' ' + r.auteur).toLowerCase().indexOf(recherche) !== -1; });
+            return dansSujet || dansRep;
+        });
     }
+    sujets.sort(function(a, b) { return (b.epingle || 0) - (a.epingle || 0); });
 
-    if (principaux.length === 0) {
-        div.innerHTML = '<p class="text-muted">Aucun message à afficher.</p>';
-        return;
-    }
+    if (sujets.length === 0) { div.innerHTML = '<p class="text-muted">Aucun sujet.</p>'; return; }
 
     var html = '';
-    principaux.forEach(function(m) {
-        html += afficherMessage(m, false);
+    sujets.forEach(function(m) {
+        var nbRep = tousMessages.filter(function(r) { return r.id_message_parent === m.id; }).length;
+        var badges = '<span class="badge bg-info text-dark ms-2">' + echapper(m.categorie || 'Général') + '</span>';
+        if (m.epingle === 1) badges += '<span class="badge bg-primary ms-1">Épinglé</span>';
+        if (m.est_modere === 1) badges += '<span class="badge bg-danger ms-1">Masqué</span>';
 
-        // Afficher les réponses sous le message
-        var reponses = tousMessages.filter(function(r) { return r.id_message_parent === m.id; });
-        reponses.forEach(function(r) {
-            html += afficherMessage(r, true);
-        });
+        var btnEpingle = m.epingle === 1
+            ? '<button class="btn btn-outline-secondary btn-sm me-1" onclick="epingler(' + m.id + ', 0, ' + m.est_modere + ')">Désépingler</button>'
+            : '<button class="btn btn-outline-primary btn-sm me-1" onclick="epingler(' + m.id + ', 1, ' + m.est_modere + ')">Épingler</button>';
+        var btnModere = m.est_modere === 1
+            ? '<button class="btn btn-outline-success btn-sm me-1" onclick="changerStatut(' + m.id + ', 0, ' + m.epingle + ')">Réactiver</button>'
+            : '<button class="btn btn-warning btn-sm me-1" onclick="changerStatut(' + m.id + ', 1, ' + m.epingle + ')">Masquer</button>';
+        var btnSuppr = '<button class="btn btn-outline-danger btn-sm" onclick="supprimer(' + m.id + ')">Supprimer</button>';
+
+        html += '<div class="card mb-2 p-3">' +
+            '<div class="d-flex justify-content-between align-items-start">' +
+            '<div style="flex:1;">' +
+            '<a href="forum.php?sujet=' + m.id + '" class="text-decoration-none">' +
+            '<strong style="color:var(--primary-green);">' + echapper(m.titre || '(sans titre)') + '</strong></a>' + badges + '<br>' +
+            '<span class="text-muted small">par ' + echapper(m.auteur) + ' · ' + formatDate(m.date) + ' · ' + nbRep + ' réponse(s)</span>' +
+            '</div>' +
+            '<div class="text-end" style="min-width:240px;">' + '<a href="forum.php?sujet=' + m.id + '" class="btn btn-success btn-sm me-1">Voir</a>' + btnEpingle + btnModere + btnSuppr + '</div>' +
+            '</div></div>';
     });
-
     div.innerHTML = html;
 }
 
-function afficherMessage(m, estReponse) {
-    var estMasque = m.est_modere === 1;
+// ---------- SUJET ----------
+function afficherSujet() {
+    var sujet = tousMessages.filter(function(m) { return m.id === sujetId; })[0];
+    var div = document.getElementById('detail-sujet');
+    if (!sujet) { div.innerHTML = '<p class="text-muted">Ce sujet n\'existe plus.</p>'; return; }
 
-    // Boutons de modération (le salarié les a sur TOUS les messages)
-    var btnModere = estMasque
-        ? '<button class="btn btn-outline-success btn-sm me-1" onclick="changerStatut(' + m.id + ', 0)">Réactiver</button>'
-        : '<button class="btn btn-warning btn-sm me-1" onclick="changerStatut(' + m.id + ', 1)">Masquer</button>';
+    var badges = '<span class="badge bg-info text-dark ms-2">' + echapper(sujet.categorie || 'Général') + '</span>';
+    if (sujet.epingle === 1) badges += '<span class="badge bg-primary ms-1">Épinglé</span>';
 
-    var btnSupprimer = '<button class="btn btn-outline-danger btn-sm" onclick="supprimer(' + m.id + ')">Supprimer</button>';
+    var html = '<h5 style="color:var(--primary-green);">' + echapper(sujet.titre || '(sans titre)') + badges + '</h5>';
+    html += '<div class="card mb-3 p-3"><strong>' + echapper(sujet.auteur) + '</strong>' +
+        '<span class="text-muted small ms-2">' + formatDate(sujet.date) + '</span><br>' +
+        '<span>' + echapper(sujet.contenu) + '</span></div>';
 
-    
-    var idThread = estReponse ? m.id_message_parent : m.id;
-    var btnRepondre = '<button class="btn btn-link btn-sm p-0 me-2" style="color:var(--primary-green);" onclick="toggleReponse(' + idThread + ')">Répondre</button>';
+    var reponses = tousMessages.filter(function(r) { return r.id_message_parent === sujetId; });
+    if (reponses.length === 0) html += '<p class="text-muted small">Aucune réponse pour le moment.</p>';
+    else reponses.forEach(function(r) {
+        var masque = r.est_modere === 1 ? '<span class="badge bg-danger ms-2">Masqué</span>' : '';
+        var btnMod = r.est_modere === 1
+            ? '<button class="btn btn-outline-success btn-sm me-1" onclick="changerStatut(' + r.id + ', 0, 0)">Réactiver</button>'
+            : '<button class="btn btn-warning btn-sm me-1" onclick="changerStatut(' + r.id + ', 1, 0)">Masquer</button>';
+        html += '<div class="card mb-2 p-2 ms-4 border-start border-3 border-success">' +
+            '<div class="d-flex justify-content-between align-items-start"><div><strong>' + echapper(r.auteur) + '</strong>' + masque +
+            '<span class="text-muted small ms-2">' + formatDate(r.date) + '</span><br><span>' + echapper(r.contenu) + '</span></div>' +
+            '<div>' + btnMod + '<button class="btn btn-outline-danger btn-sm" onclick="supprimer(' + r.id + ')">Supprimer</button></div></div></div>';
+    });
 
-    // Badge si masqué
-    var badgeMasque = estMasque ? '<span class="badge bg-danger ms-2">Masqué</span>' : '';
-
-    // Indentation pour les réponses
-    var styleCard = estReponse
-        ? 'card mb-2 p-2 ms-5 border-start border-3 border-success'
-        : 'card mb-2 p-3';
-
-    var html = '<div class="' + styleCard + '">' +
-        '<div class="d-flex justify-content-between align-items-start">' +
-        '<div>' +
-        '<strong style="color:var(--primary-green);">' + echapper(m.auteur) + '</strong>' + badgeMasque +
-        '<span class="text-muted small ms-2">' + (m.date ? m.date.replace('T', ' ').substring(0, 16) : '') + '</span><br>' +
-        '<span>' + echapper(m.contenu) + '</span>' +
-        '</div>' +
-        '<div>' + btnRepondre + btnModere + btnSupprimer + '</div>' +
-        '</div>';
-
-    // Zone de réponse cachée (messages principaux seulement)
-    if (!estReponse) {
-        html += '<div id="zone-reponse-' + m.id + '" class="mt-2" style="display:none;">' +
-            '<textarea id="contenu-reponse-' + m.id + '" class="form-control mb-2" rows="2" placeholder="Votre réponse..."></textarea>' +
-            '<button class="btn btn-primary-upcycle btn-sm" onclick="poster(' + m.id + ')">Répondre</button>' +
-            '<button class="btn btn-link btn-sm text-muted" onclick="toggleReponse(' + m.id + ')">Annuler</button>' +
-            '</div>';
-    }
-
-    html += '</div>';
-    return html;
+    html += '<div class="card p-3 mt-3">' +
+        '<textarea id="reponse" class="form-control mb-2" rows="2" placeholder="Votre réponse..."></textarea>' +
+        '<button class="btn btn-primary-upcycle btn-sm" onclick="repondre()">Répondre</button></div>';
+    div.innerHTML = html;
 }
 
-function toggleReponse(idMessage) {
-    var zone = document.getElementById('zone-reponse-' + idMessage);
-    zone.style.display = zone.style.display === 'none' ? 'block' : 'none';
-}
-
-// Poster — idParent = 0 pour message principal, sinon réponse
-function poster(idParent) {
-    var contenu;
-    if (idParent === 0) {
-        contenu = document.getElementById('contenu').value.trim();
-    } else {
-        contenu = document.getElementById('contenu-reponse-' + idParent).value.trim();
-    }
-
-    if (!contenu) {
-        alert('Le message ne peut pas être vide.');
+// ---------- ACTIONS ----------
+function creerSujet() {
+    var titre = document.getElementById('titre').value.trim();
+    var contenu = document.getElementById('contenu').value.trim();
+    var categorie = document.getElementById('categorie').value;
+    if (!titre || !contenu) {
+        document.getElementById('msg').innerHTML = '<div class="alert alert-danger py-1 mt-2">Le titre et le message sont obligatoires.</div>';
         return;
     }
-
     fetch('http://localhost:8080/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contenu: contenu, id_user: userId, id_message_parent: idParent })
-    }).then(function(res) {
-        if (res.ok) {
-            if (idParent === 0) document.getElementById('contenu').value = '';
-            charger();
-        }
-    }).catch(function() { alert('Connexion impossible, réessayez.'); });
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contenu: contenu, id_user: userId, id_message_parent: 0, categorie: categorie, titre: titre })
+    }).then(function(res) { if (res.ok) window.location.href = 'forum.php'; })
+      .catch(function() { alert('Connexion impossible, réessayez.'); });
 }
 
-// Modérer : masquer (1) ou réactiver (0)
-function changerStatut(id, nouvelEtat) {
+function repondre() {
+    var contenu = document.getElementById('reponse').value.trim();
+    if (!contenu) { alert('La réponse ne peut pas être vide.'); return; }
+    fetch('http://localhost:8080/api/messages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contenu: contenu, id_user: userId, id_message_parent: sujetId })
+    }).then(function(res) { if (res.ok) window.location.reload(); })
+      .catch(function() { alert('Connexion impossible, réessayez.'); });
+}
+
+function changerStatut(id, nouvelEtat, epingleActuel) {
     var action = nouvelEtat === 1 ? 'masquer' : 'réactiver';
     if (confirm('Voulez-vous ' + action + ' ce message ?')) {
         fetch('http://localhost:8080/api/messages/' + id, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ est_modere: nouvelEtat })
-        }).then(function(res) { if (res.ok) charger(); }).catch(function() { alert('Connexion impossible, réessayez.'); });
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ est_modere: nouvelEtat, epingle: epingleActuel })
+        }).then(function(res) { if (res.ok) charger(); }).catch(function() { alert('Connexion impossible.'); });
     }
 }
-
-// Supprimer définitivement
+function epingler(id, nouvelEtat, modereActuel) {
+    fetch('http://localhost:8080/api/messages/' + id, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ est_modere: modereActuel, epingle: nouvelEtat })
+    }).then(function(res) { if (res.ok) charger(); }).catch(function() { alert('Connexion impossible.'); });
+}
 function supprimer(id) {
     if (confirm('Supprimer définitivement ce message (et ses réponses) ?')) {
         fetch('http://localhost:8080/api/messages/' + id, { method: 'DELETE' })
-            .then(function(res) { if (res.ok) charger(); })
-            .catch(function() { alert('Connexion impossible, réessayez.'); });
+            .then(function(res) { if (res.ok) { if (id === sujetId) window.location.href = 'forum.php'; else charger(); } })
+            .catch(function() { alert('Connexion impossible.'); });
     }
 }
-
-function filtrer(type) {
-    filtreActuel = type;
-    afficher();
-}
+function filtrer(type) { filtreActuel = type; afficherListe(); }
 
 charger();
 </script>
-
 </body>
 </html>

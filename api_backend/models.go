@@ -17,6 +17,7 @@ type User struct {
 	DateFinAbo       string `json:"date_fin_abonnement"`
 	AbonnementAnnule int    `json:"abonnement_annule"`
 	Solde            float64 `json:"solde"`
+	Present          int     `json:"present"`
 }
 
 type Role struct {
@@ -57,6 +58,7 @@ type Evenements struct {
 	Lieu             string  `json:"lieu"`
 	Description      string  `json:"description"`
 	Date             string  `json:"date"`
+	DateFin          string  `json:"date_fin"`
 	Prix             float64 `json:"prix"`
 	Place            int     `json:"place"`
 	IdAnim           int     `json:"id_anim"`
@@ -68,9 +70,11 @@ type Evenements struct {
 
 // --- LOGISTIQUE : BOX & ANNONCES ---
 type Box struct {
-	Id          int    `json:"id"`
-	Adresse     string `json:"adresse"`
-	CapaciteMax int    `json:"capacite_max"`
+	Id            int    `json:"id"`
+	Adresse       string `json:"adresse"`
+	Ville         string `json:"ville"`
+	CapaciteMax   int    `json:"capacite_max"`
+	CasiersLibres int    `json:"casiers_libres"`
 }
 
 type Annonce struct {
@@ -97,6 +101,17 @@ type ForumMessage struct {
     IdMessageParent int    `json:"id_message_parent"`
     Date            string `json:"date"`
     EstModere       int    `json:"est_modere"`
+    Categorie       string `json:"categorie"`
+    Epingle         int    `json:"epingle"`
+    Titre           string `json:"titre"`
+}
+
+type Notif struct {
+	Id      int    `json:"id"`
+	Titre   string `json:"titre"`
+	Message string `json:"message"`
+	Date    string `json:"date"`
+	EstLue  int    `json:"est_lue"`
 }
 
 type Transaction struct {
@@ -157,6 +172,7 @@ type ObjetCatalogue struct {
     NomParticulier string  `json:"nom_particulier"`
     AdresseBox     string  `json:"adresse_box"`
     NumeroCasier   string  `json:"numero_casier"`
+	Ville 		   string  `json:"ville"`
 }
 
 // --- CASIERS ---
@@ -185,6 +201,7 @@ type ArticleConseil struct {
 	Date     string `json:"date"`
 	Auteur   string `json:"auteur"`
 	IdAuteur int    `json:"id_auteur"`
+	Statut   int    `json:"statut"`
 }
 
 type Traduction struct {
@@ -195,12 +212,19 @@ type Traduction struct {
 }
 
 type Projet struct {
-	Id            int    `json:"id"`
-	Titre         string `json:"titre"`
-	Description   string `json:"description"`
-	EstSponsorise int    `json:"est_sponsorise"`
-	IdCreateur    int    `json:"id_createur"`
-	Createur      string `json:"createur"`
+	Id                  int    `json:"id"`
+	Titre               string `json:"titre"`
+	Description         string `json:"description"`
+	Adresse             string `json:"adresse"`
+	Ville               string `json:"ville"`
+	Statut              string `json:"statut"`
+	PhotoCouverture     string `json:"photo_couverture"`
+	OuvertParticipation int    `json:"ouvert_participation"`
+	EstSponsorise       int    `json:"est_sponsorise"`
+	IdCreateur          int    `json:"id_createur"`
+	Createur            string `json:"createur"`
+	DateDebut 			string `json:"date_debut"`
+	DateFin   			string `json:"date_fin"`
 }
 
 type Etape struct {
@@ -210,4 +234,13 @@ type Etape struct {
 	Image       string `json:"image"`
 	Ordre       int    `json:"ordre"`
 	IdProjet    int    `json:"id_projet"`
+}
+
+type Participant struct {
+	Id       int    `json:"id"`
+	IdProjet int    `json:"id_projet"`
+	IdUser   int    `json:"id_user"`
+	Tache    string `json:"tache"`
+	Statut   string `json:"statut"`
+	NomUser  string `json:"nom_user"` // pour afficher le nom dans le front
 }

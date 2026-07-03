@@ -116,7 +116,7 @@ function afficher(liste) {
             '<p class="card-text small">' + (p.desc ? p.desc.substring(0, 100) + (p.desc.length > 100 ? '...' : '') : '') + '</p>' +
             '<div class="d-flex justify-content-between align-items-center">' +
             '<span class="fw-bold" style="color:var(--primary-green);">' + p.prix.toFixed(2) + ' €</span>' +
-            '<button class="btn btn-primary-upcycle btn-sm" onclick=\'ouvrir(' + JSON.stringify(p) + ')\'>Voir</button>' +
+            '<button class="btn btn-primary-upcycle btn-sm" onclick="ouvrirParId(' + p.id + ')">Voir</button>' +
             '</div>' +
             '</div>' +
             '</div>' +
@@ -146,6 +146,11 @@ function filtrer() {
     else res.sort(function(a, b) { return b.id - a.id; }); // récent
 
     afficher(res);
+}
+
+function ouvrirParId(id) {
+    var p = toutesPrestations.find(function(x) { return x.id === id; });
+    if (p) ouvrir(p);
 }
 
 function ouvrir(p) {

@@ -235,7 +235,7 @@ func handleEvenements(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		lignes, _ := bd.Query(`
 				SELECT e.id_event, e.titre, COALESCE(e.type_event,''), COALESCE(e.lieu,''), COALESCE(e.description,''),
-				e.date_debut, e.prix_actuel, e.places_max,
+				DATE_FORMAT(e.date_debut, '%Y-%m-%dT%H:%i:%s'), COALESCE(DATE_FORMAT(e.date_fin, '%Y-%m-%dT%H:%i:%s'),''), e.prix_actuel, e.places_max,
 				e.statut_validation, u.nom, e.id_animateur,
 				COUNT(i.id_inscription) as nb_inscrits, e.motif_refus
 				FROM evenements e 
@@ -246,7 +246,7 @@ func handleEvenements(w http.ResponseWriter, r *http.Request) {
 		var res []Evenements
 		for lignes.Next() {
 			var e Evenements
-			lignes.Scan(&e.Id, &e.Titre, &e.Type, &e.Lieu, &e.Description, &e.Date, &e.Prix, &e.Place, &e.StatutValidation, &e.Anim, &e.IdAnim, &e.NbInscrits, &e.MotifRefus)
+			lignes.Scan(&e.Id, &e.Titre, &e.Type, &e.Lieu, &e.Description, &e.Date, &e.DateFin, &e.Prix, &e.Place, &e.StatutValidation, &e.Anim, &e.IdAnim, &e.NbInscrits, &e.MotifRefus)
 			res = append(res, e)
 		}
 		json.NewEncoder(w).Encode(res)
@@ -256,8 +256,8 @@ func handleEvenements(w http.ResponseWriter, r *http.Request) {
 		if e.MotifRefus != "" {
 			bd.Exec("UPDATE evenements SET statut_validation = 2, motif_refus = ? WHERE id_event = ?", e.MotifRefus, id)
 		} else {
-			bd.Exec("UPDATE evenements SET titre=?, type_event=?, lieu=?, description=?, date_debut=?, prix_actuel=?, places_max=?, id_animateur=? WHERE id_event=?",
-				e.Titre, e.Type, e.Lieu, e.Description, e.Date, e.Prix, e.Place, e.IdAnim, id)
+			bd.Exec("UPDATE evenements SET titre=?, type_event=?, lieu=?, description=?, date_debut=?, date_fin=?, prix_actuel=?, places_max=?, id_animateur=? WHERE id_event=?",
+				e.Titre, e.Type, e.Lieu, e.Description, e.Date, e.DateFin, e.Prix, e.Place, e.IdAnim, id)
 		}
 		w.WriteHeader(http.StatusOK)
 	case "DELETE":
@@ -268,8 +268,8 @@ func handleEvenements(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		var e Evenements
 		json.NewDecoder(r.Body).Decode(&e)
-		bd.Exec("INSERT INTO evenements (titre, type_event, lieu, description, date_debut, prix_actuel, places_max, id_animateur) VALUES (?,?,?,?,?,?,?,?)",
-			e.Titre, e.Type, e.Lieu, e.Description, e.Date, e.Prix, e.Place, e.IdAnim)
+		bd.Exec("INSERT INTO evenements (titre, type_event, lieu, description, date_debut, date_fin, prix_actuel, places_max, id_animateur) VALUES (?,?,?,?,?,?,?,?,?)",
+			e.Titre, e.Type, e.Lieu, e.Description, e.Date, e.DateFin, e.Prix, e.Place, e.IdAnim)
 		w.WriteHeader(http.StatusCreated)
 	}
 
@@ -278,6 +278,15 @@ func handleEvenements(w http.ResponseWriter, r *http.Request) {
 func handleValidation(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	bd.Exec("UPDATE evenements SET statut_validation = 1 WHERE id_event = ?", id)
+
+	// A3 : prevenir les particuliers qu'un nouvel atelier est disponible
+	var titre string
+	bd.QueryRow("SELECT titre FROM evenements WHERE id_event = ?", id).Scan(&titre)
+	res, _ := bd.Exec("INSERT INTO notifications (titre, message) VALUES (?, ?)",
+		"Nouvel atelier disponible", "L'atelier \""+titre+"\" est maintenant ouvert aux inscriptions.")
+	idNotif, _ := res.LastInsertId()
+	bd.Exec(`INSERT INTO recoit_notif (id_user, id_notif) SELECT id_user, ? FROM utilisateurs WHERE id_role = 4`, idNotif)
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -341,21 +350,27 @@ func handleAnnonces(w http.ResponseWriter, r *http.Request) {
 			bd.Exec("UPDATE annonces SET statut_validation = ? WHERE id_annonce = ?", a.StatutValidation, id)
 		}
 		w.WriteHeader(http.StatusOK)
-
 	case "DELETE":
-		// Avant de supprimer, on récupère le type et l'auteur pour déduire les points
-		var idUser int
-		var typeAnnonce string
-		bd.QueryRow("SELECT id_user_auteur, type_annonce FROM annonces WHERE id_annonce = ?", id).Scan(&idUser, &typeAnnonce)
-		points := 10
-		if typeAnnonce == "don" {
-			points = 20
+			// Avant de supprimer, on récupère le type et l'auteur pour déduire les points
+			var idUser int
+			var typeAnnonce string
+			bd.QueryRow("SELECT id_user_auteur, type_annonce FROM annonces WHERE id_annonce = ?", id).Scan(&idUser, &typeAnnonce)
+			points := 10
+			if typeAnnonce == "don" {
+				points = 20
+			}
+			// On retire les points du score avant de supprimer
+			bd.Exec("UPDATE utilisateurs SET score_upcycling = score_upcycling - ? WHERE id_user = ?", points, idUser)
+
+			// On libère les casiers occupés par les demandes de box liées à cette annonce
+			bd.Exec(`UPDATE casiers SET statut = 'libre' 
+				WHERE id_casier IN (SELECT id_casier FROM demandes_depot WHERE id_annonce = ? AND id_casier IS NOT NULL)`, id)
+			// On supprime les demandes de box liées (sinon elles restent orphelines)
+			bd.Exec("DELETE FROM demandes_depot WHERE id_annonce = ?", id)
+
+			bd.Exec("DELETE FROM annonces WHERE id_annonce = ?", id)
+			w.WriteHeader(http.StatusOK)
 		}
-		// On retire les points du score avant de supprimer
-		bd.Exec("UPDATE utilisateurs SET score_upcycling = score_upcycling - ? WHERE id_user = ?", points, idUser)
-		bd.Exec("DELETE FROM annonces WHERE id_annonce = ?", id)
-		w.WriteHeader(http.StatusOK)
-	}
 }
 
 // --- GESTION DES BOX ---
@@ -364,18 +379,24 @@ func handleBox(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case "GET":
-		lignes, _ := bd.Query("SELECT id_box, adresse, capacite_max FROM box")
+		// On récupère chaque box AVEC son nombre de casiers libres (le vrai indicateur de dispo)
+		lignes, _ := bd.Query(`
+			SELECT b.id_box, b.adresse, COALESCE(b.ville,''), b.capacite_max,
+			       COUNT(CASE WHEN c.statut = 'libre' THEN 1 END) AS casiers_libres
+			FROM box b
+			LEFT JOIN casiers c ON c.id_box = b.id_box
+			GROUP BY b.id_box, b.adresse, b.ville, b.capacite_max`)
 		var res []Box
 		for lignes.Next() {
 			var b Box
-			lignes.Scan(&b.Id, &b.Adresse, &b.CapaciteMax)
+			lignes.Scan(&b.Id, &b.Adresse, &b.Ville, &b.CapaciteMax, &b.CasiersLibres)
 			res = append(res, b)
 		}
 		json.NewEncoder(w).Encode(res)
 	case "POST":
 		var b Box
 		json.NewDecoder(r.Body).Decode(&b)
-		bd.Exec("INSERT INTO box (adresse, capacite_max) VALUES (?,?)", b.Adresse, b.CapaciteMax)
+		bd.Exec("INSERT INTO box (adresse, ville, capacite_max) VALUES (?,?,?)", b.Adresse, b.Ville, b.CapaciteMax)
 		w.WriteHeader(http.StatusCreated)
 	case "DELETE":
 		bd.Exec("DELETE FROM demandes_depot WHERE id_box = ?", id)
@@ -432,13 +453,14 @@ func handleMessages(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		lignes, _ := bd.Query(`SELECT m.id_message, m.contenu, u.prenom, m.id_user_auteur, 
-					COALESCE(m.id_message_parent, 0), m.date_message, m.est_modere 
+					COALESCE(m.id_message_parent, 0), m.date_message, m.est_modere, 
+					COALESCE(m.categorie, 'Général'), COALESCE(m.epingle, 0), COALESCE(m.titre,'') 
 					FROM message_forums m JOIN utilisateurs u ON m.id_user_auteur = u.id_user 
-					ORDER BY m.date_message ASC`)
+					ORDER BY m.epingle DESC, m.date_message ASC`)
 		var res []ForumMessage
 		for lignes.Next() {
 			var m ForumMessage
-			lignes.Scan(&m.Id, &m.Contenu, &m.Auteur, &m.IdUser, &m.IdMessageParent, &m.Date, &m.EstModere)
+			lignes.Scan(&m.Id, &m.Contenu, &m.Auteur, &m.IdUser, &m.IdMessageParent, &m.Date, &m.EstModere, &m.Categorie, &m.Epingle, &m.Titre)
 			res = append(res, m)
 		}
 		json.NewEncoder(w).Encode(res)
@@ -450,13 +472,13 @@ func handleMessages(w http.ResponseWriter, r *http.Request) {
 			bd.Exec("INSERT INTO message_forums (contenu, id_user_auteur, id_message_parent) VALUES (?, ?, ?)", m.Contenu, m.IdUser, m.IdMessageParent)
 		} else {
 			// Message principal
-			bd.Exec("INSERT INTO message_forums (contenu, id_user_auteur) VALUES (?, ?)", m.Contenu, m.IdUser)
+			bd.Exec("INSERT INTO message_forums (contenu, id_user_auteur, categorie, titre) VALUES (?, ?, ?, ?)", m.Contenu, m.IdUser, m.Categorie, m.Titre)
 		}
 		w.WriteHeader(http.StatusCreated)
 	case "PUT":
 		var m ForumMessage
 		json.NewDecoder(r.Body).Decode(&m)
-		bd.Exec("UPDATE message_forums SET est_modere = ? WHERE id_message = ?", m.EstModere, id)
+		bd.Exec("UPDATE message_forums SET est_modere = ?, epingle = ? WHERE id_message = ?", m.EstModere, m.Epingle, id)
 		w.WriteHeader(http.StatusOK)
 	case "DELETE":
 		// Supprimer aussi les réponses
@@ -567,18 +589,30 @@ func handleDemandesBox(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(res)
 
 	case "POST":
-		// Le particulier crée une demande de dépôt liée à une annonce validée
-		var d DemandeBox
-		json.NewDecoder(r.Body).Decode(&d)
-		// On récupère la description et la photo depuis l'annonce pour créer l'objet
-		var desc, photo string
-		bd.QueryRow("SELECT COALESCE(description,''), COALESCE(photo,'') FROM annonces WHERE id_annonce = ?", d.IdAnnonce).Scan(&desc, &photo)
-		// On crée l'objet
-		result, _ := bd.Exec("INSERT INTO objets (description) VALUES (?)", desc)
-		idObjet, _ := result.LastInsertId()
-		// On crée la demande liée à l'annonce
-		bd.Exec("INSERT INTO demandes_depot (id_user, id_objet, id_box, id_annonce) VALUES (?,?,?,?)", d.IdUser, idObjet, d.IdBox, d.IdAnnonce)
-		w.WriteHeader(http.StatusCreated)
+			// Le particulier crée une demande de dépôt liée à une annonce validée
+			var d DemandeBox
+			json.NewDecoder(r.Body).Decode(&d)
+
+			// ANTI-DOUBLON : on refuse si cette annonce a déjà une demande active
+			// (pas refusée, pas récupérée) — un objet ne peut être qu'à un seul endroit à la fois
+			var dejaDemande int
+			bd.QueryRow(`SELECT COUNT(*) FROM demandes_depot 
+				WHERE id_annonce = ? AND statut_check NOT IN ('refuse', 'recupere')`, d.IdAnnonce).Scan(&dejaDemande)
+			if dejaDemande > 0 {
+				w.WriteHeader(http.StatusConflict)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Cet objet a déjà une demande de dépôt en cours."})
+				return
+			}
+
+			// On récupère la description et la photo depuis l'annonce pour créer l'objet
+			var desc, photo string
+			bd.QueryRow("SELECT COALESCE(description,''), COALESCE(photo,'') FROM annonces WHERE id_annonce = ?", d.IdAnnonce).Scan(&desc, &photo)
+			// On crée l'objet
+			result, _ := bd.Exec("INSERT INTO objets (description) VALUES (?)", desc)
+			idObjet, _ := result.LastInsertId()
+			// On crée la demande liée à l'annonce
+			bd.Exec("INSERT INTO demandes_depot (id_user, id_objet, id_box, id_annonce) VALUES (?,?,?,?)", d.IdUser, idObjet, d.IdBox, d.IdAnnonce)
+			w.WriteHeader(http.StatusCreated)
 
 	case "PUT":
 		var d DemandeBox
@@ -688,7 +722,7 @@ func handleInscriptions(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		idUser := r.URL.Query().Get("id_user")
-		lignes, _ := bd.Query("SELECT i.id_inscription, i.id_event, e.titre, e.date_debut, e.prix_actuel FROM inscriptions i JOIN evenements e ON i.id_event = e.id_event WHERE i.id_user = ?", idUser)
+		lignes, _ := bd.Query("SELECT i.id_inscription, i.id_event, e.titre, DATE_FORMAT(e.date_debut, '%Y-%m-%dT%H:%i:%s'), e.prix_actuel FROM inscriptions i JOIN evenements e ON i.id_event = e.id_event WHERE i.id_user = ?", idUser)
 		var res []Inscription
 		for lignes.Next() {
 			var i Inscription
@@ -704,7 +738,9 @@ func handleInscriptions(w http.ResponseWriter, r *http.Request) {
 		// Vérifier qu'il reste des places
 		var places int
 		bd.QueryRow("SELECT places_max FROM evenements WHERE id_event = ?", i.IdEvent).Scan(&places)
-		if places <= 0 {
+		var nbInscrits int
+		bd.QueryRow("SELECT COUNT(*) FROM inscriptions WHERE id_event = ?", i.IdEvent).Scan(&nbInscrits)
+		if nbInscrits >= places {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Cet atelier est complet."})
 			return
@@ -712,17 +748,10 @@ func handleInscriptions(w http.ResponseWriter, r *http.Request) {
 
 		// Insérer l'inscription
 		bd.Exec("INSERT INTO inscriptions (id_user, id_event) VALUES (?,?)", i.IdUser, i.IdEvent)
-		// Décrémenter les places
-		bd.Exec("UPDATE evenements SET places_max = places_max - 1 WHERE id_event = ?", i.IdEvent)
 		w.WriteHeader(http.StatusCreated)
 
 	case "DELETE":
 		id := r.PathValue("id")
-		// Récupérer l'id_event avant de supprimer
-		var idEvent int
-		bd.QueryRow("SELECT id_event FROM inscriptions WHERE id_inscription = ?", id).Scan(&idEvent)
-		// Remettre la place
-		bd.Exec("UPDATE evenements SET places_max = places_max + 1 WHERE id_event = ?", idEvent)
 		// Supprimer l'inscription
 		bd.Exec("DELETE FROM inscriptions WHERE id_inscription = ?", id)
 		w.WriteHeader(http.StatusOK)
@@ -733,17 +762,85 @@ func handleInscritsEvenement(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	w.Header().Set("Content-Type", "application/json")
 	lignes, _ := bd.Query(`
-				SELECT u.id_user, u.nom, u.prenom, u.email 
+				SELECT u.id_user, u.nom, u.prenom, u.email, COALESCE(i.present,0) 
 				FROM inscriptions i 
 				JOIN utilisateurs u ON i.id_user = u.id_user 
 				WHERE i.id_event = ?`, id)
 	var res []User
 	for lignes.Next() {
 		var u User
-		lignes.Scan(&u.Id, &u.Nom, &u.Pre, &u.Mail)
+		lignes.Scan(&u.Id, &u.Nom, &u.Pre, &u.Mail, &u.Present)
 		res = append(res, u)
 	}
 	json.NewEncoder(w).Encode(res)
+}
+
+// Marquer / retirer la presence d'un inscrit a un atelier
+func handlePresence(w http.ResponseWriter, r *http.Request) {
+	var p struct {
+		IdEvent int `json:"id_event"`
+		IdUser  int `json:"id_user"`
+		Present int `json:"present"`
+	}
+	json.NewDecoder(r.Body).Decode(&p)
+	bd.Exec("UPDATE inscriptions SET present = ? WHERE id_event = ? AND id_user = ?", p.Present, p.IdEvent, p.IdUser)
+	w.WriteHeader(http.StatusOK)
+}
+
+// Notifications d'un particulier (liste + marquer comme lues)
+func handleNotifications(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	idUser := r.URL.Query().Get("id_user")
+
+	if r.Method == "PUT" {
+		bd.Exec("UPDATE recoit_notif SET est_lue = 1 WHERE id_user = ?", idUser)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	lignes, _ := bd.Query(`SELECT n.id_notif, n.titre, n.message, DATE_FORMAT(n.date_envoi, '%Y-%m-%dT%H:%i:%s'), rn.est_lue
+		FROM recoit_notif rn JOIN notifications n ON rn.id_notif = n.id_notif
+		WHERE rn.id_user = ? ORDER BY n.date_envoi DESC`, idUser)
+	defer lignes.Close()
+
+	var res []Notif
+	for lignes.Next() {
+		var n Notif
+		lignes.Scan(&n.Id, &n.Titre, &n.Message, &n.Date, &n.EstLue)
+		res = append(res, n)
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
+// Renvoie / met a jour UN SEUL utilisateur -> evite la fuite de donnees (anti escalade)
+func handleProfil(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	w.Header().Set("Content-Type", "application/json")
+
+	switch r.Method {
+	case "GET":
+		var u User
+		err := bd.QueryRow(`SELECT id_user, nom, prenom, email, id_role, score_upcycling, est_verifie
+			FROM utilisateurs WHERE id_user = ?`, id).Scan(&u.Id, &u.Nom, &u.Pre, &u.Mail, &u.IdRole, &u.ScoreUpcycling, &u.EstVerifie)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		json.NewEncoder(w).Encode(u)
+
+	case "PUT":
+		var u User
+		json.NewDecoder(r.Body).Decode(&u)
+		if u.Mdp != "" {
+			hash, _ := bcrypt.GenerateFromPassword([]byte(u.Mdp), bcrypt.DefaultCost)
+			bd.Exec(`UPDATE utilisateurs SET nom=?, prenom=?, email=?, mot_de_passe=? WHERE id_user=?`,
+				u.Nom, u.Pre, u.Mail, string(hash), id)
+		} else {
+			bd.Exec(`UPDATE utilisateurs SET nom=?, prenom=?, email=? WHERE id_user=?`,
+				u.Nom, u.Pre, u.Mail, id)
+		}
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 // --- GESTION DES CONSEILS ---
@@ -756,18 +853,19 @@ func handleConseils(w http.ResponseWriter, r *http.Request) {
 		var lignes *sql.Rows
 		if idAuteur != "" {
 			// Le salarié voit seulement ses propres articles
-			lignes, _ = bd.Query(`SELECT a.id_article, a.titre, a.contenu, a.type, a.date_creation, u.nom, a.id_auteur
+			lignes, _ = bd.Query(`SELECT a.id_article, a.titre, a.contenu, a.type, a.date_creation, u.nom, a.id_auteur, COALESCE(a.statut_validation,1)
 						FROM article_conseil a JOIN utilisateurs u ON a.id_auteur = u.id_user
 						WHERE a.id_auteur = ?`, idAuteur)
 		} else {
 			// Tout le monde voit tous les articles
-			lignes, _ = bd.Query(`SELECT a.id_article, a.titre, a.contenu, a.type, a.date_creation, u.nom, a.id_auteur
-						FROM article_conseil a JOIN utilisateurs u ON a.id_auteur = u.id_user`)
+			lignes, _ = bd.Query(`SELECT a.id_article, a.titre, a.contenu, a.type, a.date_creation, u.nom, a.id_auteur, COALESCE(a.statut_validation,1)
+						FROM article_conseil a JOIN utilisateurs u ON a.id_auteur = u.id_user
+						WHERE a.statut_validation = 1`)
 		}
 		var res []ArticleConseil
 		for lignes.Next() {
 			var a ArticleConseil
-			lignes.Scan(&a.Id, &a.Titre, &a.Contenu, &a.Type, &a.Date, &a.Auteur, &a.IdAuteur)
+			lignes.Scan(&a.Id, &a.Titre, &a.Contenu, &a.Type, &a.Date, &a.Auteur, &a.IdAuteur, &a.Statut)
 			res = append(res, a)
 		}
 		json.NewEncoder(w).Encode(res)
@@ -775,13 +873,13 @@ func handleConseils(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		var a ArticleConseil
 		json.NewDecoder(r.Body).Decode(&a)
-		bd.Exec("INSERT INTO article_conseil (titre, contenu, type, id_auteur) VALUES (?,?,?,?)", a.Titre, a.Contenu, a.Type, a.IdAuteur)
+		bd.Exec("INSERT INTO article_conseil (titre, contenu, type, id_auteur, statut_validation) VALUES (?,?,?,?,?)", a.Titre, a.Contenu, a.Type, a.IdAuteur, a.Statut)
 		w.WriteHeader(http.StatusCreated)
 
 	case "PUT":
 		var a ArticleConseil
 		json.NewDecoder(r.Body).Decode(&a)
-		bd.Exec("UPDATE article_conseil SET titre=?, contenu=?, type=? WHERE id_article=?", a.Titre, a.Contenu, a.Type, id)
+		bd.Exec("UPDATE article_conseil SET titre=?, contenu=?, type=?, statut_validation=? WHERE id_article=?", a.Titre, a.Contenu, a.Type, a.Statut, id)
 		w.WriteHeader(http.StatusOK)
 
 	case "DELETE":
@@ -797,7 +895,7 @@ func handleCatalogueArtisan(w http.ResponseWriter, r *http.Request) {
 	lignes, _ := bd.Query(`
 		SELECT d.id_demande, a.titre, COALESCE(a.description,''), COALESCE(a.categorie,''), 
 		COALESCE(a.type_annonce,''), COALESCE(a.prix,0), COALESCE(a.photo,''),
-		u.nom, b.adresse, COALESCE(c.numero,'')
+		u.nom, b.adresse, COALESCE(b.ville,''), COALESCE(c.numero,'')
 		FROM demandes_depot d
 		JOIN annonces a ON d.id_annonce = a.id_annonce
 		JOIN utilisateurs u ON d.id_user = u.id_user
@@ -808,7 +906,7 @@ func handleCatalogueArtisan(w http.ResponseWriter, r *http.Request) {
 	var res []ObjetCatalogue
 	for lignes.Next() {
 		var o ObjetCatalogue
-		lignes.Scan(&o.IdDemande, &o.Titre, &o.Description, &o.Categorie, &o.TypeOffre, &o.Prix, &o.Photo, &o.NomParticulier, &o.AdresseBox, &o.NumeroCasier)
+		lignes.Scan(&o.IdDemande, &o.Titre, &o.Description, &o.Categorie, &o.TypeOffre, &o.Prix, &o.Photo, &o.NomParticulier, &o.AdresseBox, &o.Ville, &o.NumeroCasier)
 		res = append(res, o)
 	}
 	json.NewEncoder(w).Encode(res)
@@ -861,7 +959,8 @@ func handleConfirmerRecup(w http.ResponseWriter, r *http.Request) {
 	// On vérifie que le code-barres saisi correspond bien à celui de la demande
 	var codeAttendu string
 	var idCasier int
-	bd.QueryRow("SELECT COALESCE(code_barre_scan,''), COALESCE(id_casier,0) FROM demandes_depot WHERE id_demande = ?", d.Id).Scan(&codeAttendu, &idCasier)
+	var idAnnonce int
+	bd.QueryRow("SELECT COALESCE(code_barre_scan,''), COALESCE(id_casier,0), COALESCE(id_annonce,0) FROM demandes_depot WHERE id_demande = ?", d.Id).Scan(&codeAttendu, &idCasier, &idAnnonce)
 
 	if d.CodeBarre != codeAttendu {
 		w.WriteHeader(http.StatusBadRequest)
@@ -875,6 +974,11 @@ func handleConfirmerRecup(w http.ResponseWriter, r *http.Request) {
 	// On libère le casier
 	if idCasier > 0 {
 		bd.Exec("UPDATE casiers SET statut = 'libre' WHERE id_casier = ?", idCasier)
+	}
+
+	// L'objet est récupéré → l'annonce n'est plus disponible
+	if idAnnonce > 0 {
+		bd.Exec("UPDATE annonces SET statut_annonce = 'recupere' WHERE id_annonce = ?", idAnnonce)
 	}
 
 	// L'artisan gagne +5 points
@@ -891,21 +995,35 @@ func handleProjets(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		// L'artisan voit ses propres projets, sinon on voit tout
+		bd.Exec("UPDATE projets SET est_sponsorise = 0 WHERE est_sponsorise = 1 AND date_fin_sponsoring < NOW()")
 		idCreateur := r.URL.Query().Get("id_createur")
 		var lignes *sql.Rows
 		if idCreateur != "" {
-			lignes, _ = bd.Query(`SELECT p.id_projet, p.titre, COALESCE(p.description_generale,''), p.est_sponsorise, p.id_createur, u.nom 
+			// L'artisan voit ses propres projets
+			lignes, _ = bd.Query(`SELECT p.id_projet, p.titre, COALESCE(p.description_generale,''), 
+				COALESCE(p.adresse,''), COALESCE(p.ville,''), COALESCE(p.statut,'en_cours'), 
+				COALESCE(p.photo_couverture,''), COALESCE(p.ouvert_participation,1), 
+				p.est_sponsorise, p.id_createur, u.nom,
+				COALESCE(p.date_debut,''), COALESCE(p.date_fin,'')
 				FROM projets p JOIN utilisateurs u ON p.id_createur = u.id_user 
-				WHERE p.id_createur = ?`, idCreateur)
+				WHERE p.id_createur = ? 
+				ORDER BY p.est_sponsorise DESC, p.date_creation DESC`, idCreateur)
 		} else {
-			lignes, _ = bd.Query(`SELECT p.id_projet, p.titre, COALESCE(p.description_generale,''), p.est_sponsorise, p.id_createur, u.nom 
-				FROM projets p JOIN utilisateurs u ON p.id_createur = u.id_user`)
+			// Galerie publique : tout le monde voit tout, sponsorisés en tête
+			lignes, _ = bd.Query(`SELECT p.id_projet, p.titre, COALESCE(p.description_generale,''), 
+				COALESCE(p.adresse,''), COALESCE(p.ville,''), COALESCE(p.statut,'en_cours'), 
+				COALESCE(p.photo_couverture,''), COALESCE(p.ouvert_participation,1), 
+				p.est_sponsorise, p.id_createur, u.nom,
+				COALESCE(p.date_debut,''), COALESCE(p.date_fin,'')
+				FROM projets p JOIN utilisateurs u ON p.id_createur = u.id_user 
+				ORDER BY p.est_sponsorise DESC, p.date_creation DESC`)
 		}
 		var res []Projet
 		for lignes.Next() {
 			var p Projet
-			lignes.Scan(&p.Id, &p.Titre, &p.Description, &p.EstSponsorise, &p.IdCreateur, &p.Createur)
+			lignes.Scan(&p.Id, &p.Titre, &p.Description, &p.Adresse, &p.Ville, &p.Statut,
+				&p.PhotoCouverture, &p.OuvertParticipation, &p.EstSponsorise, &p.IdCreateur, &p.Createur,
+				&p.DateDebut, &p.DateFin)
 			res = append(res, p)
 		}
 		json.NewEncoder(w).Encode(res)
@@ -913,18 +1031,91 @@ func handleProjets(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		var p Projet
 		json.NewDecoder(r.Body).Decode(&p)
-		bd.Exec("INSERT INTO projets (titre, description_generale, id_createur) VALUES (?, ?, ?)", p.Titre, p.Description, p.IdCreateur)
+		bd.Exec(`INSERT INTO projets (titre, description_generale, adresse, ville, photo_couverture, ouvert_participation, id_createur, date_debut, date_fin) 
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			p.Titre, p.Description, p.Adresse, p.Ville, p.PhotoCouverture, p.OuvertParticipation, p.IdCreateur, p.DateDebut, p.DateFin)
 		w.WriteHeader(http.StatusCreated)
 
 	case "PUT":
 		var p Projet
 		json.NewDecoder(r.Body).Decode(&p)
-		bd.Exec("UPDATE projets SET titre=?, description_generale=? WHERE id_projet=?", p.Titre, p.Description, id)
+		bd.Exec(`UPDATE projets SET titre=?, description_generale=?, adresse=?, ville=?, 
+			statut=?, photo_couverture=?, ouvert_participation=?, date_debut=?, date_fin=? WHERE id_projet=?`,
+			p.Titre, p.Description, p.Adresse, p.Ville, p.Statut, p.PhotoCouverture, p.OuvertParticipation, p.DateDebut, p.DateFin, id)
 		w.WriteHeader(http.StatusOK)
 
 	case "DELETE":
-		// Les étapes sont supprimées en cascade grâce à ON DELETE CASCADE
+		// Les étapes et participants sont supprimés en cascade (ON DELETE CASCADE)
 		bd.Exec("DELETE FROM projets WHERE id_projet=?", id)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// --- ACTIVER LE SPONSORING D'UN PROJET (après paiement Stripe) ---
+func handleSponsoriser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != "PUT" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	id := r.PathValue("id")
+	// On active le sponsoring et on met la date de fin à +30 jours
+	bd.Exec(`UPDATE projets 
+		SET est_sponsorise = 1, 
+		    date_fin_sponsoring = DATE_ADD(NOW(), INTERVAL 30 DAY) 
+		WHERE id_projet = ?`, id)
+	w.WriteHeader(http.StatusOK)
+}
+
+// --- GESTION DES PARTICIPANTS DE PROJET (collaboration) ---
+func handleParticipants(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	w.Header().Set("Content-Type", "application/json")
+
+	switch r.Method {
+	case "GET":
+		// On récupère les participants d'un projet (avec leur nom)
+		idProjet := r.URL.Query().Get("id_projet")
+		lignes, _ := bd.Query(`SELECT pp.id_participation, pp.id_projet, pp.id_user, 
+			COALESCE(pp.tache,''), pp.statut, u.nom 
+			FROM participants_projet pp JOIN utilisateurs u ON pp.id_user = u.id_user 
+			WHERE pp.id_projet = ?`, idProjet)
+		var res []Participant
+		for lignes.Next() {
+			var p Participant
+			lignes.Scan(&p.Id, &p.IdProjet, &p.IdUser, &p.Tache, &p.Statut, &p.NomUser)
+			res = append(res, p)
+		}
+		json.NewEncoder(w).Encode(res)
+
+	case "POST":
+		// Un user demande à participer (statut en_attente par défaut)
+		var p Participant
+		json.NewDecoder(r.Body).Decode(&p)
+
+		// On vérifie qu'il n'a pas déjà une demande sur ce projet (anti-doublon)
+		var dejaInscrit int
+		bd.QueryRow("SELECT COUNT(*) FROM participants_projet WHERE id_projet = ? AND id_user = ?", p.IdProjet, p.IdUser).Scan(&dejaInscrit)
+		if dejaInscrit > 0 {
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Vous avez déjà demandé à participer à ce projet."})
+			return
+		}
+
+		bd.Exec("INSERT INTO participants_projet (id_projet, id_user, tache) VALUES (?, ?, ?)",
+			p.IdProjet, p.IdUser, p.Tache)
+		w.WriteHeader(http.StatusCreated)
+
+	case "PUT":
+		// L'artisan accepte/refuse et assigne une tâche
+		var p Participant
+		json.NewDecoder(r.Body).Decode(&p)
+		bd.Exec("UPDATE participants_projet SET statut=?, tache=? WHERE id_participation=?",
+			p.Statut, p.Tache, id)
+		w.WriteHeader(http.StatusOK)
+
+	case "DELETE":
+		bd.Exec("DELETE FROM participants_projet WHERE id_participation=?", id)
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -1026,10 +1217,11 @@ func handleAcheterObjet(w http.ResponseWriter, r *http.Request) {
 	var idArtisanActuel int
 	var idParticulier int
 	var prix float64
-	bd.QueryRow(`SELECT COALESCE(dd.id_artisan, 0), dd.id_user, COALESCE(a.prix, 0)
+	var titreObjet string
+	bd.QueryRow(`SELECT COALESCE(dd.id_artisan, 0), dd.id_user, COALESCE(a.prix, 0), COALESCE(a.titre, '')
 		FROM demandes_depot dd
 		JOIN annonces a ON dd.id_annonce = a.id_annonce
-		WHERE dd.id_demande = ?`, d.Id).Scan(&idArtisanActuel, &idParticulier, &prix)
+		WHERE dd.id_demande = ?`, d.Id).Scan(&idArtisanActuel, &idParticulier, &prix, &titreObjet)
 
 	if idArtisanActuel != 0 {
 		w.WriteHeader(http.StatusConflict)
@@ -1050,7 +1242,7 @@ func handleAcheterObjet(w http.ResponseWriter, r *http.Request) {
 	// On crédite le portefeuille du particulier
 	bd.Exec("UPDATE utilisateurs SET solde = solde + ? WHERE id_user = ?", partParticulier, idParticulier)
 	// On enregistre le mouvement dans le portefeuille du particulier
-	bd.Exec("INSERT INTO mouvements_portefeuille (id_user, montant, type, description) VALUES (?, ?, 'vente_objet', 'Vente de votre objet (commission déduite)')", idParticulier, partParticulier)
+	bd.Exec("INSERT INTO mouvements_portefeuille (id_user, montant, type, description) VALUES (?, ?, 'vente_objet', ?)", idParticulier, partParticulier, "Vente de « "+titreObjet+" »")
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
@@ -1124,16 +1316,24 @@ func handleVentePrestation(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewDecoder(r.Body).Decode(&data)
 
-	// On trouve l'artisan qui a créé cette prestation
+	// On trouve l'artisan qui a créé cette prestation + le nom de la prestation
 	var idArtisan int
-	bd.QueryRow("SELECT id_createur FROM prestations WHERE id_prestation = ?", data.IdPrestation).Scan(&idArtisan)
+	var nomPrestation string
+	bd.QueryRow("SELECT id_createur, COALESCE(nom_prestation,'') FROM prestations WHERE id_prestation = ?", data.IdPrestation).Scan(&idArtisan, &nomPrestation)
 
 	// On calcule la part de l'artisan (93%) - la commission (7%) reste à la plateforme
-	partArtisan := data.Montant - (data.Montant * 0.07)
+	// On regarde l'abonnement de l'artisan : Premium = 3%, Gratuit = 7%
+	var aboArtisan string
+	bd.QueryRow("SELECT COALESCE(abonnement,'gratuit') FROM utilisateurs WHERE id_user = ?", idArtisan).Scan(&aboArtisan)
+	taux := 0.07
+	if aboArtisan == "premium" {
+		taux = 0.03
+	}
+	partArtisan := data.Montant - (data.Montant * taux)
 
 	// On crédite le portefeuille de l'artisan + on trace le mouvement
 	bd.Exec("UPDATE utilisateurs SET solde = solde + ? WHERE id_user = ?", partArtisan, idArtisan)
-	bd.Exec("INSERT INTO mouvements_portefeuille (id_user, montant, type, description) VALUES (?, ?, 'vente_prestation', 'Vente de votre prestation (commission déduite)')", idArtisan, partArtisan)
+	bd.Exec("INSERT INTO mouvements_portefeuille (id_user, montant, type, description) VALUES (?, ?, 'vente_prestation', ?)", idArtisan, partArtisan, "Vente de « "+nomPrestation+" »")
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Artisan crédité."})
@@ -1144,43 +1344,22 @@ func handleStatsArtisan(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	idArtisan := r.URL.Query().Get("id_artisan")
 
-	// 1. Nombre d'objets récupérés par cet artisan
+	// 1. Nombre d'objets récupérés
 	var nbRecups int
 	bd.QueryRow("SELECT COUNT(*) FROM demandes_depot WHERE id_artisan = ?", idArtisan).Scan(&nbRecups)
 
-	// 2. Nombre de prestations vendues par cet artisan
+	// 2. Nombre de prestations vendues
 	var nbVentes int
 	bd.QueryRow("SELECT COUNT(*) FROM prestations WHERE id_createur = ? AND vendu = 1", idArtisan).Scan(&nbVentes)
 
-	// 3. Chiffre d'affaires de l'artisan (somme de ses mouvements de vente)
+	// 3. Chiffre d'affaires
 	var chiffreAffaires float64
 	bd.QueryRow("SELECT COALESCE(SUM(montant),0) FROM mouvements_portefeuille WHERE id_user = ? AND montant > 0", idArtisan).Scan(&chiffreAffaires)
 
-	// 5. Répartition par catégorie (pour le camembert)
-	lignesCat, _ := bd.Query("SELECT c.code_ref_cat, COUNT(*) FROM demandes_depot d JOIN objets o ON d.id_objet = o.id_objet JOIN categories c ON o.id_cat = c.id_cat WHERE d.id_artisan = ? GROUP BY c.code_ref_cat", idArtisan)
-	var categories []map[string]interface{}
-	for lignesCat.Next() {
-		var nom string
-		var nb int
-		lignesCat.Scan(&nom, &nb)
-		categories = append(categories, map[string]interface{}{"nom": nom, "nb": nb})
-	}
-
-	// 6. Récupérations par mois (pour la courbe)
-	lignesMois, _ := bd.Query("SELECT DATE_FORMAT(date_demande, '%Y-%m') AS mois, COUNT(*) FROM demandes_depot WHERE id_artisan = ? GROUP BY mois ORDER BY mois", idArtisan)
-	var parMois []map[string]interface{}
-	for lignesMois.Next() {
-		var mois string
-		var nb int
-		lignesMois.Scan(&mois, &nb)
-		parMois = append(parMois, map[string]interface{}{"mois": mois, "nb": nb})
-	}
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"nb_recups":        nbRecups,
 		"nb_ventes":        nbVentes,
 		"chiffre_affaires": chiffreAffaires,
-		"categories":       categories,
-		"par_mois":         parMois,
 	})
 }
 
@@ -1221,35 +1400,4 @@ func handleRecompense(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Félicitations ! 1 mois de Premium ajouté à votre compte."})
-}
-
-func handleProfil(w http.ResponseWriter, r *http.Request) {
-    id := r.PathValue("id")
-    w.Header().Set("Content-Type", "application/json")
-
-    switch r.Method {
-    case "GET":
-        // On renvoie UN SEUL utilisateur (pas toute la liste) -> évite la fuite de données
-        var u User
-        err := bd.QueryRow(`SELECT id_user, nom, prenom, email, id_role, score_upcycling, est_verifie
-            FROM utilisateurs WHERE id_user = ?`, id).Scan(&u.Id, &u.Nom, &u.Pre, &u.Mail, &u.IdRole, &u.ScoreUpcycling, &u.EstVerifie)
-        if err != nil {
-            w.WriteHeader(http.StatusNotFound)
-            return
-        }
-        json.NewEncoder(w).Encode(u)
-
-    case "PUT":
-        var u User
-        json.NewDecoder(r.Body).Decode(&u)
-        if u.Mdp != "" {
-            hash, _ := bcrypt.GenerateFromPassword([]byte(u.Mdp), bcrypt.DefaultCost)
-            bd.Exec(`UPDATE utilisateurs SET nom=?, prenom=?, email=?, mot_de_passe=? WHERE id_user=?`,
-                u.Nom, u.Pre, u.Mail, string(hash), id)
-        } else {
-            bd.Exec(`UPDATE utilisateurs SET nom=?, prenom=?, email=? WHERE id_user=?`,
-                u.Nom, u.Pre, u.Mail, id)
-        }
-        w.WriteHeader(http.StatusOK)
-    }
 }

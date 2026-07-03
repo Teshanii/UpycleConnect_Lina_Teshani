@@ -44,6 +44,16 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
                 <option value="vente">Vente</option>
             </select>
         </div>
+        <div class="col-md-6">
+            <select id="filtre-ville" class="form-select" onchange="filtrer()">
+                <option value="">Toutes les villes</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <select id="filtre-lieu" class="form-select" onchange="filtrer()">
+                <option value="">Toutes les box</option>
+            </select>
+        </div>
     </div>
 
     <div id="loader" class="text-center mt-3">
@@ -114,6 +124,8 @@ fetch('http://localhost:8080/api/catalogue-artisan')
         document.getElementById('loader').style.display = 'none';
         tousObjets = data || [];
         remplirCategories();
+        remplirVilles();
+        remplirLieux();
         afficher(tousObjets);
     });
 
@@ -127,6 +139,34 @@ function remplirCategories() {
     var select = document.getElementById('filtre-categorie');
     categories.forEach(function(c) {
         select.innerHTML += '<option value="' + c + '">' + c + '</option>';
+    });
+}
+
+
+function remplirVilles() {
+    var villes = [];
+    tousObjets.forEach(function(o) {
+        if (o.ville && villes.indexOf(o.ville) === -1) {
+            villes.push(o.ville);
+        }
+    });
+    var select = document.getElementById('filtre-ville');
+    villes.forEach(function(v) {
+        select.innerHTML += '<option value="' + v + '">' + v + '</option>';
+    });
+}
+
+// On remplit le menu déroulant des box (adresses, sans doublon)
+function remplirLieux() {
+    var lieux = [];
+    tousObjets.forEach(function(o) {
+        if (o.adresse_box && lieux.indexOf(o.adresse_box) === -1) {
+            lieux.push(o.adresse_box);
+        }
+    });
+    var select = document.getElementById('filtre-lieu');
+    lieux.forEach(function(l) {
+        select.innerHTML += '<option value="' + l + '">' + l + '</option>';
     });
 }
 
@@ -176,13 +216,17 @@ function filtrer() {
     var terme = document.getElementById('recherche').value.toLowerCase();
     var cat = document.getElementById('filtre-categorie').value;
     var type = document.getElementById('filtre-type').value;
+    var ville = document.getElementById('filtre-ville').value;
+    var lieu = document.getElementById('filtre-lieu').value;
 
     var resultats = tousObjets.filter(function(o) {
         var nom = (o.titre || '').toLowerCase();
         var matchNom = nom.includes(terme);
         var matchCat = cat === '' || o.categorie === cat;
         var matchType = type === '' || o.type_offre === type;
-        return matchNom && matchCat && matchType;
+        var matchVille = ville === '' || o.ville === ville;
+        var matchLieu = lieu === '' || o.adresse_box === lieu;
+        return matchNom && matchCat && matchType && matchVille && matchLieu;
     });
 
     afficher(resultats);

@@ -11,28 +11,6 @@ include 'includes/header.php';
             <div class="badge bg-light text-dark p-2">Session Admin : <strong><?= htmlspecialchars($_SESSION['user_prenom']) ?></strong></div>
         </div>
 
-        <!-- Stats -->
-        <div class="row mb-4 g-3">
-            <div class="col-md-4">
-                <div class="card p-3 border-0 shadow-sm" style="border-left: 4px solid var(--primary-green) !important;">
-                    <small class="text-muted">Total catégories</small>
-                    <h3 id="kpi-total" class="fw-bold" style="color:var(--primary-green);">0</h3>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card p-3 border-0 shadow-sm" style="border-left: 4px solid #0d6efd !important;">
-                    <small class="text-muted">Catégorie la + utilisée</small>
-                    <h5 id="kpi-top" class="fw-bold text-primary">-</h5>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card p-3 border-0 shadow-sm" style="border-left: 4px solid #f4a261 !important;">
-                    <small class="text-muted">Total annonces</small>
-                    <h3 id="kpi-annonces" class="fw-bold" style="color:#f4a261;">0</h3>
-                </div>
-            </div>
-        </div>
-
         <!-- Formulaire ajout/modification -->
         <div class="card mb-4 p-3 shadow-sm border-0">
             <h5 id="form-title">Ajouter / Modifier une catégorie</h5>
@@ -77,7 +55,7 @@ include 'includes/header.php';
         let toutesAnnonces = [];
 
         async function load() {
-            // Charger les annonces pour compter
+            // Charger les annonces pour compter le nombre par catégorie
             const resA = await fetch(API_ANNONCES);
             toutesAnnonces = await resA.json() || [];
 
@@ -93,16 +71,8 @@ include 'includes/header.php';
                 return;
             }
 
-            let totalAnnonces = 0;
-            let topNom = '-';
-            let topCount = 0;
-
             data.forEach(c => {
-                // Compter les annonces dans cette catégorie
                 const nb = toutesAnnonces.filter(a => a.categorie === c.nom).length;
-                totalAnnonces += nb;
-                if (nb > topCount) { topCount = nb; topNom = c.nom; }
-
                 tbody.innerHTML += `<tr>
                     <td>#${c.id}</td>
                     <td><code class="text-success fw-bold">${c.nom}</code></td>
@@ -113,11 +83,6 @@ include 'includes/header.php';
                     </td>
                 </tr>`;
             });
-
-            // Mise à jour des KPIs
-            document.getElementById("kpi-total").innerText = data.length;
-            document.getElementById("kpi-top").innerText = topCount > 0 ? topNom + ' (' + topCount + ')' : 'Aucune';
-            document.getElementById("kpi-annonces").innerText = totalAnnonces;
         }
 
         document.getElementById("f-cat").onsubmit = async (e) => {

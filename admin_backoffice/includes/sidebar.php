@@ -14,6 +14,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <a href="evenements.php" class="<?= $current_page == 'evenements.php' ? 'active' : '' ?>">Événements</a>
     <a href="annonces.php" class="<?= $current_page == 'annonces.php' ? 'active' : '' ?>">Annonces</a>
     <a href="box.php" class="<?= $current_page == 'box.php' ? 'active' : '' ?>">Box / Conteneurs</a>
+    <a href="projets.php" class="<?= $current_page == 'projets.php' ? 'active' : '' ?>">Projets</a>
     <a href="messages.php" class="<?= $current_page == 'messages.php' ? 'active' : '' ?>">Forum</a>
     <a href="finance.php" class="<?= $current_page == 'finance.php' ? 'active' : '' ?>">Finance</a>
     <a href="langues.php" class="<?= $current_page == 'langues.php' ? 'active' : '' ?>">Langues</a>

@@ -40,9 +40,9 @@ if ($session->payment_status === 'paid') {
     curl_exec($ch);
     curl_close($ch);
 
-    // Sauvegarder la transaction
-    $pdo->prepare("INSERT INTO transactions (montant, reference_stripe, statut_paiement, id_user) VALUES (?, ?, 'succeeded', ?)")
-        ->execute([$montant, $ref, $user_id]);
+    
+    $pdo->prepare("INSERT INTO transactions (montant, reference_stripe, statut_paiement, id_user, type, id_event) VALUES (?, ?, 'succeeded', ?, 'atelier', ?)")
+        ->execute([$montant, $ref, $user_id, $id_event]);
 
     $ok = true;
 }

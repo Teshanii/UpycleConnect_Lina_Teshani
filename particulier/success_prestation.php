@@ -17,14 +17,21 @@ $nom_prestation = '';
 
 if ($session->payment_status === 'paid') {
     $montant = $session->amount_total / 100;
-    $commission = round($montant * 0.07, 2); // 7% pour UpcycleConnect
 
     $pdo = new PDO('mysql:host=database;dbname=upcycle_connect', 'root', 'root');
 
-    // Récupérer le nom de la prestation
-    $stmt = $pdo->prepare("SELECT nom_prestation FROM prestations WHERE id_prestation = ?");
-    $stmt->execute([$id_prestation]);
-    $nom_prestation = $stmt->fetchColumn() ?: 'Prestation';
+    // On récupère le nom de la prestation ET l'abonnement de l'artisan créateur
+    $requete = $pdo->prepare("SELECT p.nom_prestation, COALESCE(u.abonnement,'gratuit') 
+        FROM prestations p JOIN utilisateurs u ON p.id_createur = u.id_user 
+        WHERE p.id_prestation = ?");
+    $requete->execute([$id_prestation]);
+    $ligne = $requete->fetch(PDO::FETCH_NUM);
+    $nom_prestation = $ligne[0] ?: 'Prestation';
+    $aboArtisan = $ligne[1];
+
+    // Commission : 3% si l'artisan est Premium, sinon 7% (même règle que côté Go)
+    $taux = ($aboArtisan === 'premium') ? 0.03 : 0.07;
+    $commission = round($montant * $taux, 2);
 
     // On marque la prestation comme vendue pour qu'elle disparaisse du catalogue
     $pdo->prepare("UPDATE prestations SET vendu = 1 WHERE id_prestation = ?")->execute([$id_prestation]);

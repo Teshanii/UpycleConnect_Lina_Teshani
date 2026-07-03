@@ -118,6 +118,19 @@ fetch('http://localhost:8080/api/evenements')
         document.getElementById('evenements').innerHTML = '<div class="alert alert-danger">Impossible de charger les ateliers.</div>';
     });
 
+// Formate une date '2026-07-03T10:00:00' en '3 juillet 2026 à 10h00'
+function formaterDate(d) {
+    if (!d) return 'Non précisée';
+    var partie = d.replace('T', ' ').replace('Z', '');
+    var bloc = partie.split(' ');
+    var dateP = bloc[0].split('-');
+    var heureP = bloc[1] ? bloc[1].split(':') : ['00', '00'];
+    var mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    var jour = parseInt(dateP[2], 10);
+    var nomMois = mois[parseInt(dateP[1], 10) - 1];
+    return jour + ' ' + nomMois + ' ' + dateP[0] + ' à ' + heureP[0] + 'h' + heureP[1];
+}
+
 function afficherEvenements(liste) {
     if (!liste || liste.length === 0) {
         document.getElementById('evenements').innerHTML = '<p class="text-muted">Aucun atelier disponible.</p>';
@@ -127,18 +140,19 @@ function afficherEvenements(liste) {
     var html = '';
     liste.forEach(function(e) {
         var dejaInscrit = mesInscriptions.some(function(i) { return i.id_event === e.id; });
+        var restantes = e.place - (e.nb_inscrits || 0);
 
         var badgePrix = e.prix === 0
             ? '<span class="badge bg-success">Gratuit</span>'
             : '<span class="badge bg-warning text-dark">' + e.prix + '€</span>';
 
         var badgePlaces;
-        if (e.place === 0) {
+        if (restantes <= 0) {
             badgePlaces = '<span class="badge bg-danger">Complet</span>';
-        } else if (e.place <= 3) {
-            badgePlaces = '<span class="badge bg-warning text-dark">' + e.place + ' places restantes</span>';
+        } else if (restantes <= 3) {
+            badgePlaces = '<span class="badge bg-warning text-dark">' + restantes + ' places restantes</span>';
         } else {
-            badgePlaces = '<span class="badge bg-light text-dark border">' + e.place + ' places</span>';
+            badgePlaces = '<span class="badge bg-light text-dark border">' + restantes + ' places</span>';
         }
 
         var diffJours = Math.abs((new Date() - new Date(e.date)) / (1000 * 60 * 60 * 24));
@@ -147,7 +161,7 @@ function afficherEvenements(liste) {
         var bouton;
         if (dejaInscrit) {
             bouton = '<button class="btn btn-secondary btn-sm" disabled>Deja inscrit</button>';
-        } else if (e.place === 0) {
+        } else if (restantes <= 0) {
             bouton = '<button class="btn btn-danger btn-sm" disabled>Complet</button>';
         } else if (e.prix > 0) {
             // Atelier payant — paiement par Stripe
@@ -160,7 +174,7 @@ function afficherEvenements(liste) {
             '<div class="d-flex justify-content-between align-items-start">' +
             '<div>' +
             '<strong>' + e.titre + '</strong>' + badgeNouveau + '<br>' +
-            '<span class="text-muted small">Date : ' + (e.date || 'Non precisee') + '</span><br>' +
+            '<span class="text-muted small">Date : ' + formaterDate(e.date) + '</span><br>' +
             '<span class="text-muted small">Animateur : ' + (e.anim || 'Non precise') + '</span><br>' +
             '<div class="mt-1">' + badgePrix + ' ' + badgePlaces + '</div>' +
             '</div>' +
@@ -203,7 +217,7 @@ function filtrer() {
         var matchPrix = filtrePrix === '' ||
             (filtrePrix === 'gratuit' && e.prix === 0) ||
             (filtrePrix === 'payant' && e.prix > 0);
-        var matchPlace = filtrePlace === '' || (filtrePlace === 'dispo' && e.place > 0);
+        var matchPlace = filtrePlace === '' || (filtrePlace === 'dispo' && (e.place - (e.nb_inscrits || 0)) > 0);
         return matchTitre && matchPrix && matchPlace;
     });
 
@@ -248,18 +262,19 @@ function initialiserCalendrier() {
 function ouvrirModal(e) {
     idEventModal = e.id;
     var dejaInscrit = mesInscriptions.some(function(i) { return i.id_event === e.id; });
+    var restantes = e.place - (e.nb_inscrits || 0);
 
     document.getElementById('modal-titre').innerText = e.titre;
-    document.getElementById('modal-date').innerText = e.date || 'Non precisee';
+    document.getElementById('modal-date').innerText = formaterDate(e.date);
     document.getElementById('modal-animateur').innerText = e.anim || 'Non precise';
     document.getElementById('modal-prix').innerText = e.prix === 0 ? 'Gratuit' : e.prix + '€';
-    document.getElementById('modal-places').innerText = e.place === 0 ? 'Complet' : e.place + ' places restantes';
+    document.getElementById('modal-places').innerText = restantes <= 0 ? 'Complet' : restantes + ' places restantes';
 
     var btnInscrire = document.getElementById('modal-btn-inscrire');
     if (dejaInscrit) {
         document.getElementById('modal-statut').innerText = 'Vous etes deja inscrit.';
         btnInscrire.style.display = 'none';
-    } else if (e.place === 0) {
+    } else if (restantes <= 0) {
         document.getElementById('modal-statut').innerText = 'Cet atelier est complet.';
         btnInscrire.style.display = 'none';
     } else {
@@ -325,7 +340,7 @@ function chargerInscriptions() {
                     html += '<div class="card mb-2 p-3">' +
                         '<div class="d-flex justify-content-between align-items-center">' +
                         '<div><strong>' + i.titre + '</strong>' + badgePasse + '<br>' +
-                        '<span class="text-muted small">Date : ' + (i.date || '') + ' — ' + i.prix + '€</span></div>' +
+                        '<span class="text-muted small">Date : ' + formaterDate(i.date) + ' — ' + i.prix + '€</span></div>' +
                         '<div>' + btnDesinscrire + '</div>' +
                         '</div></div>';
                 });

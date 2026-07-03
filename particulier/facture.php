@@ -90,4 +90,13 @@ $pdf->SetFont('Arial', 'I', 9);
 $pdf->Cell(0, 6, 'Merci pour votre confiance ! UpcycleConnect - contact@upcycle-connect.online', 0, 1, 'C');
 
 // Télécharger le PDF
-$pdf->Output('D', 'facture_' . $ref . '.pdf');
+if (!isset($pdo)) { $pdo = new PDO('mysql:host=database;dbname=upcycle_connect', 'root', 'root'); }
+$nomFichier = 'facture_' . preg_replace('/[^a-zA-Z0-9_-]/', '', $ref) . '_' . time() . '.pdf';
+$pdf->Output('F', __DIR__ . '/../documents/' . $nomFichier);
+$stmt = $pdo->prepare("INSERT INTO documents (id_user, type, nom_fichier) VALUES (?, 'facture', ?)");
+$stmt->execute([$_SESSION['user_id'], $nomFichier]);
+
+header('Content-Type: application/pdf');
+header('Content-Disposition: attachment; filename="facture_' . $ref . '.pdf"');
+readfile(__DIR__ . '/../documents/' . $nomFichier);
+exit;

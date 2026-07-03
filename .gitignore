@@ -1,7 +1,0 @@
-.env
-config.php
-includes/mail.php
-node_modules/
-.DS_Store
-Thumbs.db
-uploads/
