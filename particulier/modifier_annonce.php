@@ -74,7 +74,7 @@ $id = $_GET['id'] ?? 0;
 var id = <?php echo $id; ?>;
 
 // D'abord les catégories, puis les données de l'annonce
-fetch('http://localhost:8080/api/categories')
+fetch('/api/categories')
     .then(function(res) { return res.json(); })
     .then(function(cats) {
         var select = document.getElementById('categorie');
@@ -83,7 +83,7 @@ fetch('http://localhost:8080/api/categories')
             select.innerHTML += '<option value="' + c.nom + '">' + c.nom + '</option>';
         });
         // Une fois les catégories chargées on charge l'annonce
-        return fetch('http://localhost:8080/api/annonces?id_user=<?php echo $_SESSION['user_id']; ?>');
+        return fetch('/api/annonces?id_user=<?php echo $_SESSION['user_id']; ?>');
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
@@ -124,7 +124,7 @@ function envoyerModif(cheminPhoto) {
     };
     if (cheminPhoto) body.photo = cheminPhoto;
 
-    fetch('http://localhost:8080/api/annonces/' + id, {
+    fetch('/api/annonces/' + id, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)

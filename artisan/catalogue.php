@@ -118,7 +118,7 @@ var modalRecup = new bootstrap.Modal(document.getElementById('modalRecup'));
 var modalCode = new bootstrap.Modal(document.getElementById('modalCode'));
 
 // Charger le catalogue
-fetch('http://localhost:8080/api/catalogue-artisan')
+fetch('/api/catalogue-artisan')
     .then(function(r) { return r.json(); })
     .then(function(data) {
         document.getElementById('loader').style.display = 'none';
@@ -189,7 +189,7 @@ function afficher(liste) {
             : '';
 
         var photo = o.photo
-            ? '<img src="http://localhost/' + o.photo + '" class="card-img-top" style="height:160px; object-fit:cover;">'
+            ? '<img src="/' + o.photo + '" class="card-img-top" style="height:160px; object-fit:cover;">'
             : '<div class="d-flex align-items-center justify-content-center" style="height:160px; background-color:#f0f7f0;"><span class="text-muted">Pas de photo</span></div>';
 
         html += '<div class="col-md-4">' +
@@ -277,7 +277,7 @@ function confirmerReservation() {
     }
 
     // Si c'est un DON → réservation directe (comme avant)
-    fetch('http://localhost:8080/api/recuperation', {
+    fetch('/api/recuperation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: objetEnCours.id_demande, id_artisan: userId })

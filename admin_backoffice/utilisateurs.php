@@ -117,7 +117,7 @@ include 'includes/header.php';
     </div>
 
     <script>
-        const API = "http://localhost:8080/api/users";
+        const API = "/api/users";
         let tousLesUsers = [];
         let filtreActif = 'tous';
 
@@ -217,7 +217,7 @@ include 'includes/header.php';
         }
 
         async function loadRoles() {
-            const res = await fetch("http://localhost:8080/api/roles");
+            const res = await fetch("/api/roles");
             const roles = await res.json();
             const select = document.getElementById("role");
             select.innerHTML = '';

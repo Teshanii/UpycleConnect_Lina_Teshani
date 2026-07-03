@@ -24,8 +24,8 @@ $session = \Stripe\Checkout\Session::create([
         'quantity' => 1,
     ]],
     'mode'        => 'payment',
-    'success_url' => 'http://localhost/particulier/success_prestation.php?id_prestation=' . $id_prestation . '&session_id={CHECKOUT_SESSION_ID}',
-    'cancel_url'  => 'http://localhost/particulier/prestations.php',
+    'success_url' => BASE_URL . '/particulier/success_prestation.php?id_prestation=' . $id_prestation . '&session_id={CHECKOUT_SESSION_ID}',
+    'cancel_url'  => BASE_URL . '/particulier/prestations.php',
 ]);
 
 header('Content-Type: application/json');

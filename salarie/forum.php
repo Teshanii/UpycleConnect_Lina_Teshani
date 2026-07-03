@@ -86,7 +86,7 @@ function echapper(t) {
 function formatDate(d) { return d ? d.replace('T', ' ').replace('Z', '').substring(0, 16) : ''; }
 
 function charger() {
-    fetch('http://localhost:8080/api/messages')
+    fetch('/api/messages')
         .then(function(r) { return r.json(); })
         .then(function(data) {
             tousMessages = data || [];
@@ -187,7 +187,7 @@ function creerSujet() {
         document.getElementById('msg').innerHTML = '<div class="alert alert-danger py-1 mt-2">Le titre et le message sont obligatoires.</div>';
         return;
     }
-    fetch('http://localhost:8080/api/messages', {
+    fetch('/api/messages', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contenu: contenu, id_user: userId, id_message_parent: 0, categorie: categorie, titre: titre })
     }).then(function(res) { if (res.ok) window.location.href = 'forum.php'; })
@@ -197,7 +197,7 @@ function creerSujet() {
 function repondre() {
     var contenu = document.getElementById('reponse').value.trim();
     if (!contenu) { alert('La réponse ne peut pas être vide.'); return; }
-    fetch('http://localhost:8080/api/messages', {
+    fetch('/api/messages', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contenu: contenu, id_user: userId, id_message_parent: sujetId })
     }).then(function(res) { if (res.ok) window.location.reload(); })
@@ -207,21 +207,21 @@ function repondre() {
 function changerStatut(id, nouvelEtat, epingleActuel) {
     var action = nouvelEtat === 1 ? 'masquer' : 'réactiver';
     if (confirm('Voulez-vous ' + action + ' ce message ?')) {
-        fetch('http://localhost:8080/api/messages/' + id, {
+        fetch('/api/messages/' + id, {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ est_modere: nouvelEtat, epingle: epingleActuel })
         }).then(function(res) { if (res.ok) charger(); }).catch(function() { alert('Connexion impossible.'); });
     }
 }
 function epingler(id, nouvelEtat, modereActuel) {
-    fetch('http://localhost:8080/api/messages/' + id, {
+    fetch('/api/messages/' + id, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ est_modere: modereActuel, epingle: nouvelEtat })
     }).then(function(res) { if (res.ok) charger(); }).catch(function() { alert('Connexion impossible.'); });
 }
 function supprimer(id) {
     if (confirm('Supprimer définitivement ce message (et ses réponses) ?')) {
-        fetch('http://localhost:8080/api/messages/' + id, { method: 'DELETE' })
+        fetch('/api/messages/' + id, { method: 'DELETE' })
             .then(function(res) { if (res.ok) { if (id === sujetId) window.location.href = 'forum.php'; else charger(); } })
             .catch(function() { alert('Connexion impossible.'); });
     }

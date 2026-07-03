@@ -74,7 +74,7 @@ var userId = <?php echo $userId; ?>;
 var projetCourant = null; // on garde le projet en mémoire (pour savoir si participation ouverte)
 
 // 1. On charge le projet (on prend tous les projets et on cherche le bon)
-fetch('http://localhost:8080/api/projets')
+fetch('/api/projets')
     .then(function(r) { return r.json(); })
     .then(function(data) {
         var projet = (data || []).find(function(p) { return p.id === idProjet; });
@@ -88,7 +88,7 @@ fetch('http://localhost:8080/api/projets')
     });
 
 function afficherEntete(p) {
-    var photo = p.photo_couverture ? 'http://localhost/' + p.photo_couverture : 'https://via.placeholder.com/800x350?text=Projet';
+    var photo = p.photo_couverture ? '/' + p.photo_couverture : 'https://via.placeholder.com/800x350?text=Projet';
 
     var badgeStatut = p.statut === 'termine'
         ? '<span class="badge bg-success">Terminé</span>'
@@ -114,7 +114,7 @@ function afficherEntete(p) {
 }
 
 // 2. On charge les étapes (déjà triées par ordre côté Go)
-fetch('http://localhost:8080/api/etapes?id_projet=' + idProjet)
+fetch('/api/etapes?id_projet=' + idProjet)
     .then(function(r) { return r.json(); })
     .then(function(data) {
         var zone = document.getElementById('zone-etapes');
@@ -124,7 +124,7 @@ fetch('http://localhost:8080/api/etapes?id_projet=' + idProjet)
         }
         var html = '';
         data.forEach(function(e, index) {
-            var img = e.image ? 'http://localhost/' + e.image : '';
+            var img = e.image ? '/' + e.image : '';
             html += '<div class="card mb-3 shadow-sm">';
             html += '  <div class="card-body">';
             html += '    <h6 style="color:var(--primary-green);">Étape ' + (index + 1) + ' : ' + echapper(e.titre || '') + '</h6>';
@@ -139,7 +139,7 @@ fetch('http://localhost:8080/api/etapes?id_projet=' + idProjet)
     });
 
 // 3. On charge les participants (on n'affiche que les acceptés)
-fetch('http://localhost:8080/api/participants?id_projet=' + idProjet)
+fetch('/api/participants?id_projet=' + idProjet)
     .then(function(r) { return r.json(); })
     .then(function(data) {
         var zone = document.getElementById('zone-participants');
@@ -200,7 +200,7 @@ function afficherBoutonParticiper(p) {
 
 function participer() {
     var tache = document.getElementById('tache').value;
-    fetch('http://localhost:8080/api/participants', {
+    fetch('/api/participants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

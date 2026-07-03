@@ -42,7 +42,7 @@ var userId = <?php echo $_SESSION['user_id']; ?>;
 var tousMessages = [];
 
 function charger() {
-    fetch('http://localhost:8080/api/messages')
+    fetch('/api/messages')
         .then(function(r) { return r.json(); })
         .then(function(data) {
             tousMessages = (data || []).filter(function(m) { return m.est_modere === 0; });
@@ -123,7 +123,7 @@ function poster(idParent) {
         return;
     }
 
-    fetch('http://localhost:8080/api/messages', {
+    fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contenu: contenu, id_user: userId, id_message_parent: idParent })
@@ -139,7 +139,7 @@ function poster(idParent) {
 
 function supprimer(id) {
     if (confirm('Supprimer ce message ?')) {
-        fetch('http://localhost:8080/api/messages/' + id, { method: 'DELETE' })
+        fetch('/api/messages/' + id, { method: 'DELETE' })
             .then(function(res) { if (res.ok) charger(); });
     }
 }

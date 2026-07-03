@@ -181,9 +181,9 @@ include 'includes/header.php';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const API_BOX = 'http://localhost:8080/api/box';
-        const API_DEMANDES = 'http://localhost:8080/api/demandes_box';
-        const API_CASIERS = 'http://localhost:8080/api/casiers';
+        const API_BOX = '/api/box';
+        const API_DEMANDES = '/api/demandes_box';
+        const API_CASIERS = '/api/casiers';
 
         let toutesLesDemandes = [];
         let toutesLesBox = [];

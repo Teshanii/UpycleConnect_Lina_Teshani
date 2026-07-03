@@ -219,7 +219,7 @@ function formaterDate(d) {
     return jour + ' ' + nomMois + ' ' + dateP[0] + ' à ' + heureP[0] + 'h' + heureP[1];
 }
 
-fetch('http://localhost:8080/api/evenements')
+fetch('/api/evenements')
     .then(function(r) { return r.json(); })
     .then(function(data) {
         var maintenant = new Date();

@@ -1,0 +1,13 @@
+# === Secrets : JAMAIS sur GitHub ===
+.env
+
+# === Fichiers uploades par les utilisateurs ===
+/uploads/*
+!/uploads/.gitkeep
+
+# === Documents PDF generes (factures, attestations) ===
+/documents/*.pdf
+
+# === Divers ===
+*.log
+.DS_Store

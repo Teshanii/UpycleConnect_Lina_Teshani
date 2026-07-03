@@ -79,7 +79,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
 // On regarde l'abonnement actuel pour afficher le bon état
-fetch('http://localhost:8080/api/abonnement?id_user=' + userId)
+fetch('/api/abonnement?id_user=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.abonnement === 'premium') {

@@ -101,7 +101,7 @@ var calendar;
 var idEventModal = null;
 var modalCtrl = new bootstrap.Modal(document.getElementById('modalEvent'));
 
-fetch('http://localhost:8080/api/evenements')
+fetch('/api/evenements')
     .then(function(res) { return res.json(); })
     .then(function(data) {
         document.getElementById('loader').style.display = 'none';
@@ -302,7 +302,7 @@ function sinscrire(idEvent) {
     var dejaInscrit = mesInscriptions.some(function(i) { return i.id_event === idEvent; });
     if (dejaInscrit) { afficherMsg('Vous etes deja inscrit a cet atelier.', 'warning'); return; }
 
-    fetch('http://localhost:8080/api/inscriptions', {
+    fetch('/api/inscriptions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_user: userId, id_event: idEvent })
@@ -318,7 +318,7 @@ function sinscrire(idEvent) {
 
 function seDesinscrire(idInscription, titreAtelier) {
     if (confirm('Se desinscrire de "' + titreAtelier + '" ?')) {
-        fetch('http://localhost:8080/api/inscriptions/' + idInscription, { method: 'DELETE' })
+        fetch('/api/inscriptions/' + idInscription, { method: 'DELETE' })
         .then(function(res) {
             if (res.ok) { afficherMsg('Desinscription effectuee.', 'success'); chargerInscriptions(); }
         });
@@ -326,7 +326,7 @@ function seDesinscrire(idInscription, titreAtelier) {
 }
 
 function chargerInscriptions() {
-    fetch('http://localhost:8080/api/inscriptions?id_user=' + userId)
+    fetch('/api/inscriptions?id_user=' + userId)
         .then(function(res) { return res.json(); })
         .then(function(data) {
             mesInscriptions = data || [];

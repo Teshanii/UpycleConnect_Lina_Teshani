@@ -91,8 +91,8 @@ include 'includes/header.php';
     </div>
 
     <script>
-        const API_LANGUES = "http://localhost:8080/api/langues";
-        const API_TRADUCTIONS = "http://localhost:8080/api/traductions";
+        const API_LANGUES = "/api/langues";
+        const API_TRADUCTIONS = "/api/traductions";
 
         // Liste des clés utilisées dans le site (à compléter au fur et à mesure)
         // C'est cette liste qui sera affichée à l'admin pour qu'il traduise

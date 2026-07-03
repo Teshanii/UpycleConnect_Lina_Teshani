@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt2 = $pdo->prepare("UPDATE utilisateurs SET reset_token = ?, reset_token_expiry = ? WHERE id_user = ?");
             $stmt2->execute([$token, $expiry, $user['id_user']]);
 
-            $lien = "http://localhost/reset_password.php?token=" . $token;
+            $lien = "/reset_password.php?token=" . $token;
 
             $contenu = "
             <div style='font-family:Arial,sans-serif; max-width:600px; margin:auto; padding:30px; border:1px solid #eee; border-radius:10px;'>

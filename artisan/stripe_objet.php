@@ -27,8 +27,8 @@ $session = \Stripe\Checkout\Session::create([
     ]],
     'mode'        => 'payment',
     // On passe l'id_demande dans l'URL de succès pour réserver après paiement
-    'success_url' => 'http://localhost/artisan/success_objet.php?id_demande=' . $id_demande . '&session_id={CHECKOUT_SESSION_ID}',
-    'cancel_url'  => 'http://localhost/artisan/catalogue.php',
+    'success_url' => BASE_URL . '/artisan/success_objet.php?id_demande=' . $id_demande . '&session_id={CHECKOUT_SESSION_ID}',
+    'cancel_url'  => BASE_URL . '/artisan/catalogue.php',
 ]);
 
 header('Content-Type: application/json');

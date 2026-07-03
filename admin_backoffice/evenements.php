@@ -131,7 +131,7 @@ include 'includes/header.php';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const API = "http://localhost:8080/api/evenements";
+        const API = "/api/evenements";
         let tousLesEvents = [];
         let tousLesInscrits = [];
         let titreEventEnCours = '';
@@ -230,7 +230,7 @@ include 'includes/header.php';
             document.getElementById('inscrits-titre').innerText = titre;
             document.getElementById('recherche-inscrits').value = '';
 
-            const res = await fetch(`http://localhost:8080/api/inscrits-evenement/${idEvent}`);
+            const res = await fetch(`/api/inscrits-evenement/${idEvent}`);
             tousLesInscrits = await res.json();
             afficherInscrits(tousLesInscrits);
             modalInscrits.show();
@@ -331,7 +331,7 @@ include 'includes/header.php';
         }
 
         async function loadAnimateurs() {
-            const res = await fetch("http://localhost:8080/api/users");
+            const res = await fetch("/api/users");
             const users = await res.json();
             const select = document.getElementById("anim");
             select.innerHTML = '<option value="">Choisir un salarie...</option>';

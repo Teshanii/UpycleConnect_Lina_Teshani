@@ -64,7 +64,7 @@ var modalCtrl = new bootstrap.Modal(document.getElementById('modalPrestation'));
 
 // Charger toutes les prestations
 function charger() {
-    fetch('http://localhost:8080/api/prestations')
+    fetch('/api/prestations')
         .then(function(r) { return r.json(); })
         .then(function(data) {
             toutesPrestations = data || [];
@@ -93,7 +93,7 @@ function afficher(liste) {
         }
 
         var photo = p.photo
-            ? '<img src="http://localhost/' + p.photo + '" class="card-img-top" style="height:160px; object-fit:cover;">'
+            ? '<img src="/' + p.photo + '" class="card-img-top" style="height:160px; object-fit:cover;">'
             : '<div class="d-flex align-items-center justify-content-center" style="height:160px; background-color:#f0f7f0;"><span class="text-muted">Pas de photo</span></div>';
 
         // Boutons selon le statut
@@ -137,7 +137,7 @@ function voir(p) {
     document.getElementById('modal-prix').innerText = p.prix.toFixed(2) + ' €';
 
     if (p.photo) {
-        document.getElementById('modal-photo').innerHTML = '<img src="http://localhost/' + p.photo + '" style="max-width:100%; border-radius:8px;">';
+        document.getElementById('modal-photo').innerHTML = '<img src="/' + p.photo + '" style="max-width:100%; border-radius:8px;">';
     } else {
         document.getElementById('modal-photo').innerHTML = '';
     }
@@ -148,7 +148,7 @@ function voir(p) {
 // Valider une prestation (PUT sans rien = validation dans le handler Go)
 function valider(id) {
     if (!confirm('Valider cette prestation ? Elle sera visible par les particuliers.')) return;
-    fetch('http://localhost:8080/api/prestations/' + id, {
+    fetch('/api/prestations/' + id, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
@@ -159,7 +159,7 @@ function valider(id) {
 function refuser(id) {
     var motif = prompt('Motif du refus :');
     if (!motif) return;
-    fetch('http://localhost:8080/api/prestations/' + id, {
+    fetch('/api/prestations/' + id, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ motif_refus: motif })

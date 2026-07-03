@@ -124,7 +124,7 @@ var modalCtrl = new bootstrap.Modal(document.getElementById('modalEtape'));
 
 // Charger mes projets
 function chargerProjets() {
-    fetch('http://localhost:8080/api/projets?id_createur=' + userId)
+    fetch('/api/projets?id_createur=' + userId)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             document.getElementById('loader').style.display = 'none';
@@ -148,7 +148,7 @@ function chargerProjets() {
                     : '<button class="btn btn-sm btn-success mb-3 ms-1" onclick="terminerProjet(' + p.id + ')">Marquer terminé</button>';
 
                 var imgCouverture = p.photo_couverture
-                    ? '<img src="http://localhost/' + p.photo_couverture + '" class="card-img-top" style="width:100%; height:180px; object-fit:cover;">'
+                    ? '<img src="/' + p.photo_couverture + '" class="card-img-top" style="width:100%; height:180px; object-fit:cover;">'
                     : '';
 
                 html += '<div class="card mb-4">' +
@@ -204,7 +204,7 @@ function sponsoriser(idProjet) {
 
 // Charger les étapes d'un projet
 function chargerEtapes(idProjet) {
-    fetch('http://localhost:8080/api/etapes?id_projet=' + idProjet)
+    fetch('/api/etapes?id_projet=' + idProjet)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             var div = document.getElementById('etapes-' + idProjet);
@@ -216,7 +216,7 @@ function chargerEtapes(idProjet) {
             var html = '<div class="row g-2">';
             data.forEach(function(e) {
                 var photo = e.image
-                    ? '<img src="http://localhost/' + e.image + '" class="card-img-top" style="height:140px; object-fit:cover;">'
+                    ? '<img src="/' + e.image + '" class="card-img-top" style="height:140px; object-fit:cover;">'
                     : '<div class="d-flex align-items-center justify-content-center" style="height:140px; background-color:#f0f7f0;"><span class="text-muted small">Pas de photo</span></div>';
 
                 html += '<div class="col-md-4">' +
@@ -239,7 +239,7 @@ function chargerEtapes(idProjet) {
 
 // Charger les demandes de participation d'un projet
 function chargerParticipants(idProjet) {
-    fetch('http://localhost:8080/api/participants?id_projet=' + idProjet)
+    fetch('/api/participants?id_projet=' + idProjet)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             var div = document.getElementById('participants-' + idProjet);
@@ -270,7 +270,7 @@ function chargerParticipants(idProjet) {
 
 // Accepter ou refuser une demande de participation
 function repondreParticipant(idParticipation, statut, tache, idProjet) {
-    fetch('http://localhost:8080/api/participants/' + idParticipation, {
+    fetch('/api/participants/' + idParticipation, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ statut: statut, tache: tache })
@@ -318,7 +318,7 @@ function creerProjet() {
 }
 
 function envoyerProjet(titre, desc, adresse, ville, ouvert, photoCouverture, debut, fin) {
-    fetch('http://localhost:8080/api/projets', {
+    fetch('/api/projets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -352,12 +352,12 @@ function envoyerProjet(titre, desc, adresse, ville, ouvert, photoCouverture, deb
 function terminerProjet(id) {
     if (!confirm("Marquer ce projet comme terminé ?")) return;
     // On récupère d'abord le projet pour garder ses infos, puis on change juste le statut
-    fetch('http://localhost:8080/api/projets?id_createur=' + userId)
+    fetch('/api/projets?id_createur=' + userId)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             var p = data.find(function(x) { return x.id === id; });
             if (!p) return;
-            fetch('http://localhost:8080/api/projets/' + id, {
+            fetch('/api/projets/' + id, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -378,7 +378,7 @@ function terminerProjet(id) {
 // Supprimer un projet
 function supprimerProjet(id) {
     if (!confirm("Supprimer cette création et toutes ses étapes ?")) return;
-    fetch('http://localhost:8080/api/projets/' + id, { method: 'DELETE' })
+    fetch('/api/projets/' + id, { method: 'DELETE' })
         .then(function(res) { if (res.ok) chargerProjets(); });
 }
 
@@ -419,7 +419,7 @@ function enregistrerEtape() {
 }
 
 function envoyerEtape(titre, desc, ordre, image) {
-    fetch('http://localhost:8080/api/etapes', {
+    fetch('/api/etapes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -440,7 +440,7 @@ function envoyerEtape(titre, desc, ordre, image) {
 // Supprimer une étape
 function supprimerEtape(id, idProjet) {
     if (!confirm("Supprimer cette étape ?")) return;
-    fetch('http://localhost:8080/api/etapes/' + id, { method: 'DELETE' })
+    fetch('/api/etapes/' + id, { method: 'DELETE' })
         .then(function(res) { if (res.ok) chargerEtapes(idProjet); });
 }
 

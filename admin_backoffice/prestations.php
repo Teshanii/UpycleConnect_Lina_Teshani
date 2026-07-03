@@ -68,7 +68,7 @@ include 'includes/header.php';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const API = "http://localhost:8080/api/prestations";
+        const API = "/api/prestations";
         let toutesPrestations = [];
         let modalCtrl = new bootstrap.Modal(document.getElementById('modalPrestation'));
 
@@ -127,7 +127,7 @@ include 'includes/header.php';
             document.getElementById("motif-refus").value = '';
 
             if (p.photo) {
-                document.getElementById("modal-photo").innerHTML = `<img src="http://localhost/${p.photo}" style="max-width:100%; border-radius:8px;" class="mt-2">`;
+                document.getElementById("modal-photo").innerHTML = `<img src="/${p.photo}" style="max-width:100%; border-radius:8px;" class="mt-2">`;
             } else {
                 document.getElementById("modal-photo").innerHTML = '<p class="text-muted small">Pas de photo.</p>';
             }

@@ -72,7 +72,7 @@ var boxChoisie = null;
 
 // 1. On charge d'abord les demandes existantes pour savoir quels objets sont déjà engagés
 function chargerObjets() {
-    fetch('http://localhost:8080/api/demandes_box')
+    fetch('/api/demandes_box')
         .then(function(r) { return r.json(); })
         .then(function(demandes) {
             // Les annonces déjà engagées dans une demande active (pas refusée, pas récupérée)
@@ -84,7 +84,7 @@ function chargerObjets() {
             });
 
             // Puis on charge les annonces validées du particulier
-            fetch('http://localhost:8080/api/annonces?id_user=' + userId)
+            fetch('/api/annonces?id_user=' + userId)
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     var sel = document.getElementById('select-objet');
@@ -107,7 +107,7 @@ function chargerObjets() {
 chargerObjets();
 
 // 2. On charge les box avec leur nombre de casiers libres
-fetch('http://localhost:8080/api/box')
+fetch('/api/box')
     .then(function(r) { return r.json(); })
     .then(function(data) {
         toutesBox = data || [];
@@ -190,7 +190,7 @@ function envoyerDemande() {
         return;
     }
 
-    fetch('http://localhost:8080/api/demandes_box', {
+    fetch('/api/demandes_box', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -219,7 +219,7 @@ function envoyerDemande() {
 // Marquer la demande comme "déposée"
 function marquerDepose(idDemande) {
     if (!confirm("Confirmez-vous avoir déposé votre objet dans le casier ?")) return;
-    fetch('http://localhost:8080/api/demandes_box/' + idDemande, {
+    fetch('/api/demandes_box/' + idDemande, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ statut: 'depose' })
@@ -230,7 +230,7 @@ function marquerDepose(idDemande) {
 
 // Charger les demandes de l'utilisateur
 function chargerDemandes() {
-    fetch('http://localhost:8080/api/demandes_box')
+    fetch('/api/demandes_box')
         .then(function(r) { return r.json(); })
         .then(function(data) {
             document.getElementById('loader').style.display = 'none';

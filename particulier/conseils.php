@@ -76,7 +76,7 @@ if (!isset($_SESSION['user_id'])) {
 var tousLesArticles = [];
 var modalArticle = new bootstrap.Modal(document.getElementById('modalArticle'));
 
-fetch('http://localhost:8080/api/conseils')
+fetch('/api/conseils')
     .then(function(res) { return res.json(); })
     .then(function(data) {
         document.getElementById('loader').style.display = 'none';

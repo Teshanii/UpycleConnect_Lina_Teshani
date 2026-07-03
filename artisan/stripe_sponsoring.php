@@ -26,8 +26,8 @@ $session = \Stripe\Checkout\Session::create([
     ]],
     'mode'        => 'payment',
     // On passe l'id du projet dans l'URL de retour pour l'activer après paiement
-    'success_url' => 'http://localhost/artisan/success_sponsoring.php?id_projet=' . $idProjet . '&session_id={CHECKOUT_SESSION_ID}',
-    'cancel_url'  => 'http://localhost/artisan/mes_creations.php',
+    'success_url' => BASE_URL . '/artisan/success_sponsoring.php?id_projet=' . $idProjet . '&session_id={CHECKOUT_SESSION_ID}',
+    'cancel_url'  => BASE_URL . '/artisan/mes_creations.php',
 ]);
 
 header('Content-Type: application/json');

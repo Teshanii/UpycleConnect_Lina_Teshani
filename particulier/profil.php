@@ -95,7 +95,7 @@ var userRoleId = <?php echo $_SESSION['user_role'] ?? 4; ?>;
 var userData = null;
 
 // Charger les infos du profil
-fetch('http://localhost:8080/api/users')
+fetch('/api/users')
     .then(function(r) { return r.json(); })
     .then(function(data) {
         userData = data.find(function(u) { return u.id === userId; });
@@ -108,7 +108,7 @@ fetch('http://localhost:8080/api/users')
     });
 
 // Charger les transactions du user
-fetch('http://localhost:8080/api/transactions?id_user=' + userId)
+fetch('/api/transactions?id_user=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(data) {
         var div = document.getElementById('mes-paiements');
@@ -194,7 +194,7 @@ function demanderRemboursement(ref, idTransaction) {
 }
 
 function sauvegarder() {
-    fetch('http://localhost:8080/api/users/' + userId, {
+    fetch('/api/users/' + userId, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -233,7 +233,7 @@ function changerMdp() {
         return;
     }
 
-    fetch('http://localhost:8080/api/users/' + userId, {
+    fetch('/api/users/' + userId, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -261,7 +261,7 @@ function changerMdp() {
 function supprimerCompte() {
     if (confirm("Supprimer votre compte ? Cette action est irréversible.")) {
         if (confirm("Êtes-vous vraiment sûr ? Toutes vos annonces seront supprimées.")) {
-            fetch('http://localhost:8080/api/users/' + userId, { method: 'DELETE' })
+            fetch('/api/users/' + userId, { method: 'DELETE' })
                 .then(function(res) {
                     if (res.ok) {
                         window.location.href = '../connexion.php?logout=1';

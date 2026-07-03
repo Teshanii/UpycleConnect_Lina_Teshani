@@ -130,7 +130,7 @@ function formaterDate(d) {
 
 // Récupère mes ateliers puis affiche l'onglet actif
 function charger() {
-    fetch('http://localhost:8080/api/evenements')
+    fetch('/api/evenements')
         .then(function(r) { return r.json(); })
         .then(function(data) {
             tousMesAteliers = (data || []).filter(function(e) { return e.id_anim === userId; });
@@ -257,7 +257,7 @@ function sauvegarder() {
     }
 
     var dateMysql = date.replace('T', ' ') + ':00';
-    var url = id ? 'http://localhost:8080/api/evenements/' + id : 'http://localhost:8080/api/evenements';
+    var url = id ? '/api/evenements/' + id : '/api/evenements';
     var methode = id ? 'PUT' : 'POST';
 
     // On désactive le bouton pendant l'envoi (évite le double-clic)
@@ -368,7 +368,7 @@ function voirInscrits(idEvent, titre) {
     document.getElementById('modal-inscrits').innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" style="color:var(--primary-green);"></div></div>';
     modalInscritsCtrl.show();
 
-    fetch('http://localhost:8080/api/inscrits-evenement/' + idEvent)
+    fetch('/api/inscrits-evenement/' + idEvent)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (!data || data.length === 0) {
@@ -415,7 +415,7 @@ function exporterCSV() {
 
 // Enregistre la presence (1 clic = sauvegarde immediate)
 function marquerPresence(idEvent, idUser, present) {
-    fetch('http://localhost:8080/api/presence', {
+    fetch('/api/presence', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_event: idEvent, id_user: idUser, present: present ? 1 : 0 })

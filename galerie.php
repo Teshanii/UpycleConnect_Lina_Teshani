@@ -64,7 +64,7 @@ var estConnecte = <?php echo $estConnecte ? 'true' : 'false'; ?>;
 var tousLesProjets = [];
 
 // On charge tous les projets (galerie publique : pas de id_createur, donc on voit tout)
-fetch('http://localhost:8080/api/projets')
+fetch('/api/projets')
     .then(function(r) { return r.json(); })
     .then(function(data) {
         tousLesProjets = data || [];
@@ -88,7 +88,7 @@ function afficherProjets() {
     var html = '';
     projets.forEach(function(p) {
         // Photo de couverture (ou image par défaut si vide)
-        var photo = p.photo_couverture ? 'http://localhost/' + p.photo_couverture : 'https://via.placeholder.com/400x250?text=Projet';
+        var photo = p.photo_couverture ? '/' + p.photo_couverture : 'https://via.placeholder.com/400x250?text=Projet';
 
         // Badges
         var badgeSponsor = '';

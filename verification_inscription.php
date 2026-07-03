@@ -43,7 +43,7 @@ $stmt = $pdo->prepare("UPDATE utilisateurs SET token_verification = ?, est_verif
 $stmt->execute([$token, $email]);
 
 
-$lien = "http://localhost/verify.php?token=" . $token;
+$lien = "/verify.php?token=" . $token;
 
 $contenu = "
 <div style='font-family:Arial,sans-serif; max-width:600px; margin:auto; padding:30px; border:1px solid #eee; border-radius:10px;'>

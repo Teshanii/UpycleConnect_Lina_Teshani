@@ -39,7 +39,7 @@ include 'includes/header.php';
     </div>
 
     <script>
-        const API = "http://localhost:8080/api/messages";
+        const API = "/api/messages";
         let tousMessages = [];
 
         async function load() {

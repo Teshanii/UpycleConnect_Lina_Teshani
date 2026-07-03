@@ -70,7 +70,7 @@ var userRoleId = <?php echo $_SESSION['user_role']; ?>;
 var userData = null;
 
 // Charger les infos du profil
-fetch('http://localhost:8080/api/profil/' + userId)
+fetch('/api/profil/' + userId)
     .then(function(r) { return r.json(); })
     .then(function(data) {
         userData = data;
@@ -82,7 +82,7 @@ fetch('http://localhost:8080/api/profil/' + userId)
     });
 
 function sauvegarder() {
-    fetch('http://localhost:8080/api/profil/' + userId, {
+    fetch('/api/profil/' + userId, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -117,7 +117,7 @@ function changerMdp() {
         return;
     }
 
-    fetch('http://localhost:8080/api/profil/' + userId, {
+    fetch('/api/profil/' + userId, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

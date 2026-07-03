@@ -7,7 +7,7 @@ var langueActive = localStorage.getItem('langue') || 'fr';
 
 
 function chargerLangues() {
-    fetch('http://localhost:8080/api/langues')
+    fetch('/api/langues')
         .then(r => r.json())
         .then(data => {
             var sel = document.getElementById('select-langue');
@@ -27,7 +27,7 @@ function traduirePage() {
     if (!option) return;
     var idLangue = option.dataset.id;
 
-    fetch('http://localhost:8080/api/traductions?id_langue=' + idLangue)
+    fetch('/api/traductions?id_langue=' + idLangue)
         .then(r => r.json())
         .then(traductions => {
             (traductions || []).forEach(function(t) {

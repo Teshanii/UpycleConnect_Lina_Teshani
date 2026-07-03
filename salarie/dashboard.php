@@ -117,7 +117,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
 // Ateliers : total + alertes (en attente de validation, presque complets)
-fetch('http://localhost:8080/api/evenements')
+fetch('/api/evenements')
     .then(function(r) { return r.json(); })
     .then(function(data) {
         var mesAteliers = (data || []).filter(function(e) { return e.id_anim === userId; });
@@ -150,14 +150,14 @@ fetch('http://localhost:8080/api/evenements')
     });
 
 // Mes articles (filtre par auteur)
-fetch('http://localhost:8080/api/conseils?id_auteur=' + userId)
+fetch('/api/conseils?id_auteur=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(data) {
         document.getElementById('kpi-articles').innerText = (data || []).length;
     });
 
 // Prestations EN ATTENTE de validation (statut 0)
-fetch('http://localhost:8080/api/prestations')
+fetch('/api/prestations')
     .then(function(r) { return r.json(); })
     .then(function(data) {
         var enAttente = (data || []).filter(function(p) { return p.statut_validation === 0; });

@@ -80,7 +80,7 @@ var soldeActuel = 0;
 var modalRetrait = new bootstrap.Modal(document.getElementById('modalRetrait'));
 
 function charger() {
-    fetch('http://localhost:8080/api/portefeuille?id_user=' + userId)
+    fetch('/api/portefeuille?id_user=' + userId)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             soldeActuel = data.solde || 0;
@@ -138,7 +138,7 @@ function confirmerRetrait() {
         return;
     }
 
-    fetch('http://localhost:8080/api/portefeuille', {
+    fetch('/api/portefeuille', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_user: userId, montant: montant })

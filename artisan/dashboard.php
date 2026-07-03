@@ -207,7 +207,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
 // Mon score upcycling
-fetch('http://localhost:8080/api/users')
+fetch('/api/users')
     .then(r => r.json())
     .then(data => {
         var moi = (data || []).find(u => u.id === userId);
@@ -215,14 +215,14 @@ fetch('http://localhost:8080/api/users')
     });
 
 // Objets disponibles dans le catalogue
-fetch('http://localhost:8080/api/catalogue-artisan')
+fetch('/api/catalogue-artisan')
     .then(r => r.json())
     .then(data => {
         document.getElementById('kpi-objets').innerText = (data || []).length;
     });
 
 // Mes réservations en cours (objets réservés, pas encore récupérés)
-fetch('http://localhost:8080/api/demandes_box')
+fetch('/api/demandes_box')
     .then(r => r.json())
     .then(data => {
         var mesRecups = (data || []).filter(function(d) {
@@ -232,7 +232,7 @@ fetch('http://localhost:8080/api/demandes_box')
     });
 
 // Mon abonnement (gratuit ou premium)
-fetch('http://localhost:8080/api/abonnement?id_user=' + userId)
+fetch('/api/abonnement?id_user=' + userId)
     .then(r => r.json())
     .then(data => {
         var abo = data.abonnement === 'premium' ? 'Premium' : 'Gratuit';
@@ -240,7 +240,7 @@ fetch('http://localhost:8080/api/abonnement?id_user=' + userId)
     });
 
 // ===== STATISTIQUES AVANCÉES (Premium) =====
-fetch('http://localhost:8080/api/abonnement?id_user=' + userId)
+fetch('/api/abonnement?id_user=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(abo) {
         if (abo.abonnement !== 'premium') {
@@ -251,7 +251,7 @@ fetch('http://localhost:8080/api/abonnement?id_user=' + userId)
     });
 
 function chargerStats() {
-    fetch('http://localhost:8080/api/stats-artisan?id_artisan=' + userId)
+    fetch('/api/stats-artisan?id_artisan=' + userId)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             document.getElementById('stat-recups').innerText = data.nb_recups || 0;

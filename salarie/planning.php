@@ -109,7 +109,7 @@ function formaterDate(d) {
 }
 
 // Charger mes ateliers validés
-fetch('http://localhost:8080/api/evenements')
+fetch('/api/evenements')
     .then(function(r) { return r.json(); })
     .then(function(data) {
         document.getElementById('loader').style.display = 'none';
@@ -247,7 +247,7 @@ function voirInscrits(idEvent, titre) {
     document.getElementById('modal-inscrits').innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" style="color:var(--primary-green);"></div></div>';
     modalCtrl.show();
 
-    fetch('http://localhost:8080/api/inscrits-evenement/' + idEvent)
+    fetch('/api/inscrits-evenement/' + idEvent)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (!data || data.length === 0) {

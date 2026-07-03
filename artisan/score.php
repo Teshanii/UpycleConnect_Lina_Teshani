@@ -55,7 +55,7 @@ var scoreActuel = 0;
 
 // On charge le score puis l'état des récompenses
 function chargerScore() {
-    fetch('http://localhost:8080/api/users')
+    fetch('/api/users')
         .then(function(res) { return res.json(); })
         .then(function(data) {
             var user = data.find(function(u) { return u.id === userId; });
@@ -74,7 +74,7 @@ function chargerScore() {
 }
 
 function chargerRecompense() {
-    fetch('http://localhost:8080/api/abonnement?id_user=' + userId)
+    fetch('/api/abonnement?id_user=' + userId)
         .then(function(res) { return res.json(); })
         .then(function(abo) {
             var bloc = document.getElementById('bloc-recompense');
@@ -100,7 +100,7 @@ function reclamer() {
     btn.disabled = true; // anti double-clic
     btn.innerText = 'Traitement...';
 
-    fetch('http://localhost:8080/api/recompense', {
+    fetch('/api/recompense', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_user: userId })

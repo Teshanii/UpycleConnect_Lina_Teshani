@@ -67,7 +67,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
 function charger() {
-    fetch('http://localhost:8080/api/prestations?id_createur=' + userId)
+    fetch('/api/prestations?id_createur=' + userId)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             document.getElementById('loader').style.display = 'none';
@@ -97,7 +97,7 @@ function charger() {
 
                 // Photo ou placeholder
                 var photo = p.photo
-                    ? '<img src="http://localhost/' + p.photo + '" class="card-img-top" style="height:180px; object-fit:cover;">'
+                    ? '<img src="/' + p.photo + '" class="card-img-top" style="height:180px; object-fit:cover;">'
                     : '<div class="d-flex align-items-center justify-content-center" style="height:180px; background-color:#f0f7f0;"><span class="text-muted">Pas de photo</span></div>';
 
                 // Badge prix
@@ -160,7 +160,7 @@ function ajouter() {
 }
 
 function envoyer(nom, desc, prix, photo) {
-    fetch('http://localhost:8080/api/prestations', {
+    fetch('/api/prestations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -185,7 +185,7 @@ function envoyer(nom, desc, prix, photo) {
 
 function supprimer(id) {
     if (!confirm("Supprimer cette prestation ?")) return;
-    fetch('http://localhost:8080/api/prestations/' + id, { method: 'DELETE' })
+    fetch('/api/prestations/' + id, { method: 'DELETE' })
         .then(function(res) { if (res.ok) charger(); });
 }
 

@@ -82,7 +82,7 @@ var prestationActuelle = null;
 var modalCtrl = new bootstrap.Modal(document.getElementById('modalPrestation'));
 
 // Charger les prestations validées
-fetch('http://localhost:8080/api/prestations')
+fetch('/api/prestations')
     .then(function(r) { return r.json(); })
     .then(function(data) {
         // On garde seulement les prestations validées
@@ -104,7 +104,7 @@ function afficher(liste) {
     var html = '';
     liste.forEach(function(p) {
         var photo = p.photo
-            ? '<img src="http://localhost/' + p.photo + '" class="card-img-top" style="height:180px; object-fit:cover;">'
+            ? '<img src="/' + p.photo + '" class="card-img-top" style="height:180px; object-fit:cover;">'
             : '<div class="d-flex align-items-center justify-content-center" style="height:180px; background-color:#f0f7f0;"><span class="text-muted">Pas de photo</span></div>';
 
         html += '<div class="col-md-4">' +
@@ -161,7 +161,7 @@ function ouvrir(p) {
     document.getElementById('modal-prix').innerText = p.prix.toFixed(2) + ' €';
 
     if (p.photo) {
-        document.getElementById('modal-photo').innerHTML = '<img src="http://localhost/' + p.photo + '" style="max-width:100%; border-radius:8px;">';
+        document.getElementById('modal-photo').innerHTML = '<img src="/' + p.photo + '" style="max-width:100%; border-radius:8px;">';
     } else {
         document.getElementById('modal-photo').innerHTML = '';
     }

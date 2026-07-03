@@ -26,8 +26,8 @@ $session = \Stripe\Checkout\Session::create([
         'quantity' => 1,
     ]],
     'mode'        => 'payment',
-    'success_url' => 'http://localhost/artisan/success_atelier.php?id_event=' . $id_event . '&session_id={CHECKOUT_SESSION_ID}',
-    'cancel_url'  => 'http://localhost/artisan/ateliers.php',
+    'success_url' => BASE_URL . '/artisan/success_atelier.php?id_event=' . $id_event . '&session_id={CHECKOUT_SESSION_ID}',
+    'cancel_url'  => BASE_URL . '/artisan/ateliers.php',
 ]);
 
 // On renvoie l'URL au JS

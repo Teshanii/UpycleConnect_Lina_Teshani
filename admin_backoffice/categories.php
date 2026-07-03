@@ -50,8 +50,8 @@ include 'includes/header.php';
     </div>
 
     <script>
-        const API = "http://localhost:8080/api/categories";
-        const API_ANNONCES = "http://localhost:8080/api/annonces";
+        const API = "/api/categories";
+        const API_ANNONCES = "/api/annonces";
         let toutesAnnonces = [];
 
         async function load() {

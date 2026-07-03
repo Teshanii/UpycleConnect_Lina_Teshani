@@ -72,7 +72,7 @@ include 'includes/header.php';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const API = "http://localhost:8080/api/annonces";
+        const API = "/api/annonces";
         let modalCtrl = new bootstrap.Modal(document.getElementById('modalAnnonce'));
         let toutesLesAnnonces = []; // on garde toutes les annonces en mémoire pour filtrer
 
@@ -136,7 +136,7 @@ include 'includes/header.php';
 
             // Afficher la photo si elle existe
             if (a.photo) {
-                document.getElementById("modal-photo").innerHTML = `<img src="http://localhost/${a.photo}" style="max-width:100%; border-radius:8px;" class="mt-2">`;
+                document.getElementById("modal-photo").innerHTML = `<img src="/${a.photo}" style="max-width:100%; border-radius:8px;" class="mt-2">`;
             } else {
                 document.getElementById("modal-photo").innerHTML = '<p class="text-muted small">Pas de photo.</p>';
             }

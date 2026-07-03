@@ -30,7 +30,7 @@ $idProjet = isset($_GET['id_projet']) ? intval($_GET['id_projet']) : 0;
 var idProjet = <?php echo $idProjet; ?>;
 
 // On active le sponsoring du projet via l'API
-fetch('http://localhost:8080/api/sponsoriser/' + idProjet, { method: 'PUT' })
+fetch('/api/sponsoriser/' + idProjet, { method: 'PUT' })
     .then(function(res) {
         if (res.ok) {
             document.getElementById('msg').innerHTML =

@@ -49,7 +49,7 @@ if (!isset($_SESSION['user_id'])) {
     </div>
 </div>
 <script>
-fetch('http://localhost:8080/api/users')
+fetch('/api/users')
     .then(function(res) { return res.json(); })
     .then(function(data) {
         var userId = <?php echo $_SESSION['user_id']; ?>;

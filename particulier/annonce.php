@@ -112,7 +112,7 @@
     }
 
     // Charger les catégories depuis la base
-fetch('http://localhost:8080/api/categories')
+fetch('/api/categories')
     .then(function(res) { return res.json(); })
     .then(function(data) {
         var select = document.getElementById('categorie');
@@ -125,7 +125,7 @@ fetch('http://localhost:8080/api/categories')
 
     // Fonction qui envoie l'annonce à l'API Go
     function envoyerAnnonce(cheminPhoto) {
-        fetch('http://localhost:8080/api/annonces', {
+        fetch('/api/annonces', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

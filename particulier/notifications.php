@@ -40,7 +40,7 @@ function formaterDate(d) {
     return jj[2] + '/' + jj[1] + '/' + jj[0] + ' à ' + hh;
 }
 
-fetch('http://localhost:8080/api/notifications?id_user=' + userId)
+fetch('/api/notifications?id_user=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(data) {
         var div = document.getElementById('liste');
@@ -62,7 +62,7 @@ fetch('http://localhost:8080/api/notifications?id_user=' + userId)
         div.innerHTML = html;
 
         // On marque les notifications comme lues (elles ne seront plus "Nouveau" au prochain passage)
-        fetch('http://localhost:8080/api/notifications?id_user=' + userId, { method: 'PUT' });
+        fetch('/api/notifications?id_user=' + userId, { method: 'PUT' });
     })
     .catch(function() {
         document.getElementById('liste').innerHTML = '<div class="alert alert-danger">Impossible de charger les notifications.</div>';

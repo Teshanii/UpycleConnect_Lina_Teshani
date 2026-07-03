@@ -89,7 +89,7 @@ function focusForm() {
 
 // Charger mes articles (filtre par auteur)
 function charger() {
-    fetch('http://localhost:8080/api/conseils?id_auteur=' + userId)
+    fetch('/api/conseils?id_auteur=' + userId)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             var div = document.getElementById('articles');
@@ -149,7 +149,7 @@ function sauvegarder(statut) {
         return;
     }
 
-    var url = id ? 'http://localhost:8080/api/conseils/' + id : 'http://localhost:8080/api/conseils';
+    var url = id ? '/api/conseils/' + id : '/api/conseils';
     var methode = id ? 'PUT' : 'POST';
 
     var btn = document.getElementById('btn-pub');
@@ -191,14 +191,14 @@ function modifier(a) {
 
 function supprimer(id) {
     if (confirm('Supprimer cet article ?')) {
-        fetch('http://localhost:8080/api/conseils/' + id, { method: 'DELETE' })
+        fetch('/api/conseils/' + id, { method: 'DELETE' })
             .then(function(res) { if (res.ok) charger(); });
     }
 }
 
 // A7 : publier un brouillon en un clic
 function publierArticle(a) {
-    fetch('http://localhost:8080/api/conseils/' + a.id, {
+    fetch('/api/conseils/' + a.id, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ titre: a.titre, type: a.type, contenu: a.contenu, statut: 1 })

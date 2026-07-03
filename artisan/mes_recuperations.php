@@ -47,7 +47,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
 function charger() {
-    fetch('http://localhost:8080/api/demandes_box')
+    fetch('/api/demandes_box')
         .then(function(r) { return r.json(); })
         .then(function(data) {
             document.getElementById('loader').style.display = 'none';
@@ -131,7 +131,7 @@ function confirmer(idDemande) {
         return;
     }
 
-    fetch('http://localhost:8080/api/confirmer-recup', {
+    fetch('/api/confirmer-recup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

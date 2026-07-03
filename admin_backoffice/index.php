@@ -138,12 +138,12 @@ async function charger(url) {
 }
 
 async function chargerStats() {
-    var users    = await charger('http://localhost:8080/api/users');
-    var events   = await charger('http://localhost:8080/api/evenements');
-    var annonces = await charger('http://localhost:8080/api/annonces');
-    var box      = await charger('http://localhost:8080/api/box');
-    var casiers  = await charger('http://localhost:8080/api/casiers');
-    var demandes = await charger('http://localhost:8080/api/demandes_box');
+    var users    = await charger('/api/users');
+    var events   = await charger('/api/evenements');
+    var annonces = await charger('/api/annonces');
+    var box      = await charger('/api/box');
+    var casiers  = await charger('/api/casiers');
+    var demandes = await charger('/api/demandes_box');
 
     document.getElementById('heure-maj').innerText = 'Mis à jour à ' + new Date().toLocaleTimeString('fr-FR');
 
