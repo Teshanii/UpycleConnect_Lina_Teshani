@@ -10,7 +10,7 @@ services:
       MYSQL_DATABASE: upcycle_connect
     volumes:
       - data_db:/var/lib/mysql
-      - ./api_backend/database.sql:/docker-entrypoint-initdb.d/database.sql
+      - ./base_remplie.sql:/docker-entrypoint-initdb.d/database.sql
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost"]
       interval: 10s
