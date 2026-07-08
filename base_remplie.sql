@@ -322,6 +322,20 @@ INSERT INTO utilisateurs (id_user, nom, prenom, email, mot_de_passe, score_upcyc
 -- Compte banni par l'administration (est_actif = 0)
 (24,'Blanc','Leo','leo.blanc@gmail.com','$2b$10$YPmZNewvrHbHiBC9uUcAXuJ68419fVDfz8.Q1VwNrloHLHC9eovqa',0,'gratuit',0.00,0,1,4);
 
+-- Comptes reels issus de la sauvegarde 
+INSERT INTO utilisateurs (id_user, nom, prenom, email, mot_de_passe, score_upcycling, abonnement, solde, est_actif, est_verifie, id_role) VALUES
+(25,'Fernando','Teshani','t.fernando@myskolae.fr','$2a$10$KmvKQQnt/Vcf6Sx4O8UuZeKCPKCjj1.g6sJE9qYAE6cF0xb3KU0WO',0,'gratuit',0.00,1,1,2),
+(26,'Admin','Teshani','teshanifernandotf@gmail.com','$2a$10$PstdXoQPif2pvdxkyY2UH.C6F0J.d7533b1WC2iaM4MO108FADTry',0,'gratuit',0.00,1,1,1),
+(27,'Particulier','Teshani','teshanifernando@outlook.com','$2a$10$qHw1LiherzotE1UGD/VE4elP13Sx7GQCuS.Okf0WPH5KYYaajskRi',30,'gratuit',18.60,1,1,4),
+(28,'Artisan','Teshani','tfernando6@myges.fr','$2a$10$tpAEsxGDLxEMFjv1qavzB.XmeWqQm6Lss5sTnwO/THveq/Cg8OOQK',10,'gratuit',0.50,1,1,3),
+(29,'Demo','Particulier','demo_particulier@upcycle.fr','$2b$10$KzveIpj2xoJ4m3pBGdiMt.uJ3aT1XDWBLUS76UBpbcqe/21rMBU7G',0,'gratuit',0.00,1,1,4),
+(30,'Demo','Admin','demo_admin@upcycle.fr','$2b$10$aKyb2qcA6SzafIgvB1xbOOCz0dIVnq4e0.TPCtzFF1Jstqsl.ywdu',0,'gratuit',0.00,1,1,1),
+(31,'Jean','Gabrielle','gabrielle.jean@biomedecine.fr','$2a$10$2OFEVuSEsDt0MiAOaX0GH.QBp0XlYI25s8b7qJPkI0e9S8pEiTpkq',0,'gratuit',0.00,1,1,4),
+(32,'Chellala','Lina','lenachellala@gmail.com','$2a$10$ePq0l23sxnv54lpfc/q29.piTCoTCNLiHv/Gtan8P5mMIYigQAy86',10,'gratuit',18.60,1,1,4),
+(33,'Demo','Artisan','demo_artisan@upcycle.fr','$2a$10$fisAhy8LdhQfC6x033vnvOUUUrWmuHWZ2ykYp1SOKADwSafic4BMi',0,'gratuit',0.00,1,1,3),
+(34,'Demo','Salarie','demo_salarie@upcycle.fr','$2a$10$FrcpZ1SRy4tO1u3yhO5wJuH6mV3SV5rtFCizEN2PK8/mORa7Ui2Xa',0,'gratuit',0.00,1,1,2),
+(35,'chellala','lina','djrigalealine@gmail.com','$2a$10$evS6lECFon7tdxA5QNaVye2Ay1tmYRltbIIT9uMMCEzSfEtU9apOa',0,'gratuit',0.00,1,0,3);
+
 -- --- Categories de materiaux (pour les objets) ---
 INSERT INTO categories (id_cat, code_ref_cat) VALUES
 (1,'BOIS'),(2,'TEXTILE'),(3,'METAL'),(4,'PLASTIQUE'),(5,'VERRE'),(6,'PALETTE'),(7,'ELECTRONIQUE'),(8,'MEUBLE');
