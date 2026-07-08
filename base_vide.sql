@@ -1,0 +1,279 @@
+SET NAMES utf8mb4;
+
+
+CREATE TABLE roles (
+    id_role INT AUTO_INCREMENT PRIMARY KEY,
+    libelle_role VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB;
+
+CREATE TABLE utilisateurs (
+    id_user INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    prenom VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    mot_de_passe VARCHAR(255) NOT NULL,
+    date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP,
+    score_upcycling INT DEFAULT 0,
+    abonnement VARCHAR(20) DEFAULT 'gratuit',
+    date_fin_abonnement DATETIME NULL,
+    abonnement_annule TINYINT DEFAULT 0,
+    solde DECIMAL(10,2) DEFAULT 0,
+    onesignal_player_id VARCHAR(255),
+    est_actif TINYINT DEFAULT 1,
+    est_verifie TINYINT DEFAULT 1,
+    token_verification VARCHAR(64) NULL,
+    reset_token VARCHAR(64) NULL,
+    reset_token_expiry DATETIME NULL,
+    id_role INT NOT NULL,
+    recompense_reclamee TINYINT DEFAULT 0,
+    FOREIGN KEY (id_role) REFERENCES roles(id_role)
+) ENGINE=InnoDB;
+
+
+CREATE TABLE langues (
+    id_langue INT AUTO_INCREMENT PRIMARY KEY,
+    code_iso VARCHAR(5) NOT NULL UNIQUE, 
+    nom_langue VARCHAR(50) NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE categories (
+    id_cat INT AUTO_INCREMENT PRIMARY KEY,
+    code_ref_cat VARCHAR(50) NOT NULL UNIQUE 
+) ENGINE=InnoDB;
+
+CREATE TABLE traductions (
+    id_traduction INT AUTO_INCREMENT PRIMARY KEY,
+    cle VARCHAR(100) NOT NULL,
+    id_langue INT NOT NULL,
+    texte TEXT NOT NULL,
+    UNIQUE KEY (cle, id_langue),
+    FOREIGN KEY (id_langue) REFERENCES langues(id_langue) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+
+CREATE TABLE objets (
+    id_objet INT AUTO_INCREMENT PRIMARY KEY,
+    description TEXT,
+    etat VARCHAR(50),
+    poids_estime DECIMAL(10,2),
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id_cat INT,
+    FOREIGN KEY (id_cat) REFERENCES categories(id_cat)
+) ENGINE=InnoDB;
+
+CREATE TABLE annonces (
+    id_annonce INT AUTO_INCREMENT PRIMARY KEY,
+    titre VARCHAR(150) NOT NULL,
+    statut_validation TINYINT DEFAULT 0,
+    id_user_auteur INT NOT NULL,
+    description TEXT,
+    categorie VARCHAR(50),
+    type_annonce VARCHAR(10) DEFAULT 'don',
+    prix DECIMAL(10,2) DEFAULT 0.00,
+    statut_annonce VARCHAR(20) DEFAULT 'disponible',
+    motif_refus VARCHAR(255),
+    photo VARCHAR(255),
+    FOREIGN KEY (id_user_auteur) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+CREATE TABLE box (
+    id_box INT AUTO_INCREMENT PRIMARY KEY,
+    adresse VARCHAR(255) NOT NULL,
+    ville VARCHAR(100),
+    capacite_max INT NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE casiers (
+    id_casier INT AUTO_INCREMENT PRIMARY KEY,
+    numero VARCHAR(10) NOT NULL,
+    statut VARCHAR(20) DEFAULT 'libre', -- libre / occupe
+    id_box INT NOT NULL,
+    FOREIGN KEY (id_box) REFERENCES box(id_box) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE demandes_depot (
+    id_demande INT AUTO_INCREMENT PRIMARY KEY,
+    statut_check VARCHAR(50) DEFAULT 'en_attente',
+    code_ouverture VARCHAR(10),
+    code_barre_scan VARCHAR(100),
+    code_artisan VARCHAR(10),
+    motif_refus VARCHAR(255),
+    id_casier INT,
+    date_demande DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id_user INT NOT NULL,
+    id_objet INT NOT NULL,
+    id_box INT NOT NULL,
+    id_artisan INT NULL,
+    id_annonce INT NULL,
+    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user),
+    FOREIGN KEY (id_objet) REFERENCES objets(id_objet),
+    FOREIGN KEY (id_box) REFERENCES box(id_box),
+    FOREIGN KEY (id_casier) REFERENCES casiers(id_casier),
+    FOREIGN KEY (id_annonce) REFERENCES annonces(id_annonce)
+) ENGINE=InnoDB;
+
+CREATE TABLE prestations (
+    id_prestation INT AUTO_INCREMENT PRIMARY KEY,
+    nom_prestation VARCHAR(150) NOT NULL,
+    prix DECIMAL(10,2) NOT NULL,
+    description TEXT,
+    photo VARCHAR(255),
+    id_createur INT,
+    statut_validation TINYINT DEFAULT 0,
+    motif_refus VARCHAR(255),
+    vendu TINYINT DEFAULT 0,
+    FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+CREATE TABLE projets (
+    id_projet INT AUTO_INCREMENT PRIMARY KEY,
+    titre VARCHAR(150) NOT NULL,
+    description_generale TEXT,
+    adresse VARCHAR(255),
+    ville VARCHAR(100),
+    statut VARCHAR(20) DEFAULT 'en_cours',
+    photo_couverture VARCHAR(255),
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_debut DATETIME NULL,
+    date_fin DATETIME NULL,
+    ouvert_participation TINYINT DEFAULT 1,
+    est_sponsorise TINYINT DEFAULT 0,
+    date_fin_sponsoring DATETIME NULL,
+    id_createur INT NOT NULL,
+    FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+CREATE TABLE participants_projet (
+    id_participation INT AUTO_INCREMENT PRIMARY KEY,
+    id_projet INT NOT NULL,
+    id_user INT NOT NULL,
+    tache VARCHAR(255),
+    statut VARCHAR(20) DEFAULT 'en_attente',
+    date_demande DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_projet) REFERENCES projets(id_projet) ON DELETE CASCADE,
+    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+
+CREATE TABLE etapes_projet (
+    id_etape INT AUTO_INCREMENT PRIMARY KEY,
+    titre_etape VARCHAR(150),
+    description_etape TEXT,
+    image_etape VARCHAR(255),
+    ordre INT,
+    id_projet INT NOT NULL,
+    FOREIGN KEY (id_projet) REFERENCES projets(id_projet) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE evenements (
+    id_event INT AUTO_INCREMENT PRIMARY KEY,
+    titre VARCHAR(150),
+    type_event VARCHAR(50),
+    lieu VARCHAR(150),
+    description TEXT,
+    date_debut DATETIME,
+    date_fin DATETIME,
+    prix_actuel DECIMAL(10,2) NOT NULL,
+    places_max INT NOT NULL,
+    statut_validation TINYINT DEFAULT 0,
+    motif_refus VARCHAR(255),
+    id_animateur INT NOT NULL,
+    FOREIGN KEY (id_animateur) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+
+CREATE TABLE types_abonnements (
+    id_type_abo INT AUTO_INCREMENT PRIMARY KEY,
+    nom_offre VARCHAR(100) NOT NULL,
+    prix_mensuel_actuel DECIMAL(10, 2) NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE transactions (
+    id_transac INT AUTO_INCREMENT PRIMARY KEY,
+    montant DECIMAL(10, 2) NOT NULL,
+    reference_stripe VARCHAR(255),
+    statut_paiement VARCHAR(50),
+    date_transac DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id_user INT,
+    type VARCHAR(50) DEFAULT 'atelier',
+    commission DECIMAL(10,2) DEFAULT 0,
+    id_event INT NULL,
+    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+CREATE TABLE mouvements_portefeuille (
+    id_mouvement INT AUTO_INCREMENT PRIMARY KEY,
+    id_user INT NOT NULL,
+    montant DECIMAL(10,2) NOT NULL,
+    type VARCHAR(30) NOT NULL,
+    description VARCHAR(255),
+    date_mouvement DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE message_forums (
+    id_message INT AUTO_INCREMENT PRIMARY KEY,
+    contenu TEXT NOT NULL,
+    id_user_auteur INT NOT NULL,
+    date_message DATETIME DEFAULT CURRENT_TIMESTAMP,
+    est_modere TINYINT DEFAULT 0,
+    categorie VARCHAR(50) DEFAULT 'Général',
+    epingle TINYINT DEFAULT 0,
+    titre VARCHAR(255),
+    id_message_parent INT NULL,
+    FOREIGN KEY (id_user_auteur) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+
+CREATE TABLE notifications (
+    id_notif INT AUTO_INCREMENT PRIMARY KEY,
+    titre VARCHAR(150),
+    message TEXT,
+    date_envoi DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE recoit_notif (
+    id_user INT,
+    id_notif INT,
+    est_lue TINYINT DEFAULT 0,
+    PRIMARY KEY (id_user, id_notif),
+    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user),
+    FOREIGN KEY (id_notif) REFERENCES notifications(id_notif)
+) ENGINE=InnoDB;
+
+
+CREATE TABLE article_conseil (
+    id_article INT AUTO_INCREMENT PRIMARY KEY,
+    titre VARCHAR(255) NOT NULL,
+    contenu TEXT NOT NULL,
+    type VARCHAR(50),
+    id_auteur INT NOT NULL,
+    statut_validation TINYINT DEFAULT 1,
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE documents (
+    id_document INT AUTO_INCREMENT PRIMARY KEY,
+    id_user INT NOT NULL,
+    type VARCHAR(50),
+    nom_fichier VARCHAR(255) NOT NULL,
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user)
+) ENGINE=InnoDB;
+
+CREATE TABLE inscriptions (
+    id_inscription INT AUTO_INCREMENT PRIMARY KEY,
+    id_user INT NOT NULL,
+    id_event INT NOT NULL,
+    date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP,
+    present TINYINT DEFAULT 0
+) ENGINE=InnoDB;
+
+-- INSERTIONS INITIALES
+INSERT INTO roles (libelle_role) VALUES ('Admin'), ('Salarie'), ('Professionnel et Artisan'), ('Particulier');
+INSERT INTO langues (code_iso, nom_langue) VALUES ('fr', 'Français'), ('en', 'English');
+INSERT INTO types_abonnements (nom_offre, prix_mensuel_actuel) VALUES ('Gratuit', 0.00), ('Premium Artisan', 29.99);
+
+INSERT INTO `utilisateurs` (`id_user`, `nom`, `prenom`, `email`, `mot_de_passe`, `date_inscription`, `score_upcycling`, `abonnement`, `date_fin_abonnement`, `abonnement_annule`, `solde`, `onesignal_player_id`, `est_actif`, `est_verifie`, `token_verification`, `reset_token`, `reset_token_expiry`, `id_role`, `recompense_reclamee`) VALUES (1,'Fernando','Teshani','t.fernando@myskolae.fr','$2a$10$bOv16dQsnhjpBGzuXRFxo./DAqnRr6n29.4VZsM2lU/afiXuQl4Oa','2026-07-02 12:40:51',0,'gratuit',NULL,0,0.00,NULL,1,1,NULL,NULL,NULL,2,0);
+INSERT INTO `utilisateurs` (`id_user`, `nom`, `prenom`, `email`, `mot_de_passe`, `date_inscription`, `score_upcycling`, `abonnement`, `date_fin_abonnement`, `abonnement_annule`, `solde`, `onesignal_player_id`, `est_actif`, `est_verifie`, `token_verification`, `reset_token`, `reset_token_expiry`, `id_role`, `recompense_reclamee`) VALUES (2,'Admin','Teshani','teshanifernandotf@gmail.com','$2a$10$PstdXoQPif2pvdxkyY2UH.C6F0J.d7533b1WC2iaM4MO108FADTry','2026-07-02 12:47:21',0,'gratuit',NULL,0,0.00,NULL,1,1,NULL,NULL,NULL,1,0);
+INSERT INTO `utilisateurs` (`id_user`, `nom`, `prenom`, `email`, `mot_de_passe`, `date_inscription`, `score_upcycling`, `abonnement`, `date_fin_abonnement`, `abonnement_annule`, `solde`, `onesignal_player_id`, `est_actif`, `est_verifie`, `token_verification`, `reset_token`, `reset_token_expiry`, `id_role`, `recompense_reclamee`) VALUES (3,'Particulier','Teshani','teshanifernando@outlook.com','$2a$10$qHw1LiherzotE1UGD/VE4elP13Sx7GQCuS.Okf0WPH5KYYaajskRi','2026-07-02 12:52:30',10,'gratuit',NULL,0,18.60,NULL,1,1,NULL,NULL,NULL,4,0);
+INSERT INTO `utilisateurs` (`id_user`, `nom`, `prenom`, `email`, `mot_de_passe`, `date_inscription`, `score_upcycling`, `abonnement`, `date_fin_abonnement`, `abonnement_annule`, `solde`, `onesignal_player_id`, `est_actif`, `est_verifie`, `token_verification`, `reset_token`, `reset_token_expiry`, `id_role`, `recompense_reclamee`) VALUES (4,'Artisan','Teshani','tfernando6@myges.fr','$2a$10$vtqTIWT90MtA0piCF2DO.uECl2bny8cSaZS./ta3Cnus45CAsKSVC','2026-07-03 05:35:47',5,'gratuit',NULL,0,0.00,NULL,1,1,NULL,NULL,NULL,3,0);

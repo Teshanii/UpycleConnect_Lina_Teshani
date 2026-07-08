@@ -41,10 +41,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">Catégorie</label>
-                    <select class="form-select" id="categorie">
-                        <select class="form-select" id="categorie">
-                        
-                    </select>
+                    <select class="form-select" id="categorie"></select>
                 </div>
 
                 <div class="mb-3">

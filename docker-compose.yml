@@ -4,6 +4,7 @@ services:
   database:
     image: mysql:8.0
     container_name: upcycle_db
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: upcycle_connect
@@ -24,8 +25,8 @@ services:
       context: .
       dockerfile: ./api_backend/dockerfile
     container_name: upcycle_api
-    # Plus d'exposition publique du 8080 : l'API n'est joignable qu'en interne
-    # (par le conteneur web via le reverse proxy). C'est plus propre et plus sur.
+    restart: unless-stopped
+    # Plus d'exposition publique du 8080 comme ca l'API n'est joignable qu'en interne
     depends_on:
       database:
         condition: service_healthy
@@ -38,6 +39,7 @@ services:
       context: .
       dockerfile: dockerfile.php
     container_name: upcycle_web
+    restart: unless-stopped
     ports:
       - "80:80"
     env_file:

@@ -24,7 +24,7 @@ if (isset($_FILES['photo']) && $_FILES['photo']['error'] === 0) {
 
     // 3. On vérifie la taille 
     if ($_FILES['photo']['size'] > 10 * 1024 * 1024) {
-        echo json_encode(['chemin' => '', 'error' => 'Image trop lourde (max 5 Mo).']);
+        echo json_encode(['chemin' => '', 'error' => 'Image trop lourde (max 10 Mo).']);
         exit;
     }
 
