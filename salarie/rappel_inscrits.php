@@ -1,6 +1,5 @@
 <?php
 session_start();
-// Seul un salarié connecté peut envoyer un rappel
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
     http_response_code(403);
     exit;
@@ -17,7 +16,7 @@ if ($id === 0 || $message === '') {
     exit;
 }
 
-// Petit appel à l'API Go côté serveur (même principe que dans annuler_atelier.php)
+
 function appelApi($url) {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -26,7 +25,7 @@ function appelApi($url) {
     return $reponse;
 }
 
-// On récupère la liste des inscrits (avec leur email)
+
 $inscrits = json_decode(appelApi('http://api:8080/api/inscrits-evenement/' . $id), true);
 
 // On envoie le rappel à chaque inscrit

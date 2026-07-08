@@ -24,7 +24,7 @@ if ($session->payment_status === 'paid') {
     $ref = $session->payment_intent;
     $commission = round($montant * 0.07, 2); // 7% pour UpcycleConnect
 
-    // 1. On réserve l'objet + crédite le portefeuille du particulier (via l'API Go)
+    
     $ch = curl_init('http://api:8080/api/acheter-objet');
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
@@ -49,7 +49,7 @@ if ($session->payment_status === 'paid') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../style.css">
     <?php if ($ok): ?>
-    <!-- Redirection automatique vers mes récupérations après 3 secondes -->
+   
     <meta http-equiv="refresh" content="3;url=mes_recuperations.php">
     <?php endif; ?>
 </head>

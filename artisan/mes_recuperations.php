@@ -52,18 +52,18 @@ function charger() {
         .then(function(data) {
             document.getElementById('loader').style.display = 'none';
 
-            // Toutes les demandes de cet artisan
+            
             var mesDemandes = (data || []).filter(function(d) { return d.id_artisan === userId; });
 
-            // En cours : pas encore recupere
+            
             var enCours = mesDemandes.filter(function(d) { return d.statut !== 'recupere'; });
-            // Historique : deja recupere
+            
             var historique = mesDemandes.filter(function(d) { return d.statut === 'recupere'; });
 
             afficherEnCours(enCours);
             afficherHistorique(historique);
 
-            // T3 : on transforme chaque code en vrai code-barres visuel (l'artisan lit le numero et le tape)
+            
             document.querySelectorAll('.code-barre').forEach(function(el) {
                 var code = el.getAttribute('data-code');
                 if (code) { JsBarcode(el, code, { format: 'CODE128', height: 45, fontSize: 14, margin: 4 }); }

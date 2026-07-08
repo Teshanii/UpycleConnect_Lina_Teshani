@@ -117,7 +117,7 @@ var objetEnCours = null;
 var modalRecup = new bootstrap.Modal(document.getElementById('modalRecup'));
 var modalCode = new bootstrap.Modal(document.getElementById('modalCode'));
 
-// Charger le catalogue
+
 fetch('/api/catalogue-artisan')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -156,7 +156,7 @@ function remplirVilles() {
     });
 }
 
-// On remplit le menu déroulant des box (adresses, sans doublon)
+
 function remplirLieux() {
     var lieux = [];
     tousObjets.forEach(function(o) {
@@ -239,7 +239,7 @@ function ouvrirRecup(o) {
     document.getElementById('modal-casier').innerText = o.numero_casier;
     document.getElementById('modal-msg').innerHTML = '';
 
-    // On adapte le texte et le bouton selon don ou vente
+ 
     var texteModal = document.getElementById('modal-texte');
     var btnConfirm = document.getElementById('modal-btn-confirm');
     if (o.type_offre === 'don') {
@@ -254,7 +254,7 @@ function ouvrirRecup(o) {
 }
 
 function confirmerReservation() {
-    // Si c'est une VENTE → on passe par le paiement Stripe
+    
     if (objetEnCours.type_offre !== 'don') {
         fetch('stripe_objet.php', {
             method: 'POST',
@@ -276,7 +276,7 @@ function confirmerReservation() {
         return;
     }
 
-    // Si c'est un DON → réservation directe (comme avant)
+    
     fetch('/api/recuperation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -38,25 +38,24 @@ try {
         }
     }
 
-    // On fait le remboursement via Stripe (l'argent revient sur la carte du client)
+    
     $remboursement = \Stripe\Refund::create(['payment_intent' => $ref]);
 
-    // Stripe renvoie 'succeeded' ou parfois 'pending' selon la banque, les deux sont OK
+    
     if ($remboursement->status === 'succeeded' || $remboursement->status === 'pending') {
-        // On met à jour le statut en BDD
+        
         $pdo->prepare("UPDATE transactions SET statut_paiement = 'refunded' WHERE id_transac = ?")
             ->execute([$id_transaction]);
 
-        // Si c'était un abonnement, on coupe le Premium immédiatement
-        // (l'artisan est remboursé, donc il ne doit plus avoir l'accès Premium)
+        
         if ($transac['type'] === 'abonnement') {
             $pdo->prepare("UPDATE utilisateurs SET abonnement = 'gratuit', date_fin_abonnement = NULL, abonnement_annule = 0 WHERE id_user = ?")
                 ->execute([$transac['id_user']]);
         }
 
-        // Si c'était un atelier, on annule l'inscription et on libère la place
+        
         if ($transac['type'] === 'atelier' && !empty($transac['id_event'])) {
-            // On retrouve l'inscription de ce user à cet atelier
+            
             $stmtInsc = $pdo->prepare("SELECT id_inscription FROM inscriptions WHERE id_user = ? AND id_event = ? LIMIT 1");
             $stmtInsc->execute([$transac['id_user'], $transac['id_event']]);
             $idInscription = $stmtInsc->fetchColumn();
@@ -76,6 +75,6 @@ try {
         echo json_encode(['ok' => false, 'error' => 'Remboursement échoué.']);
     }
 } catch (Exception $e) {
-    // Si Stripe renvoie une erreur (déjà remboursé, paiement introuvable...)
+    
     echo json_encode(['ok' => false, 'error' => 'Impossible de rembourser ce paiement.']);
 }

@@ -96,7 +96,7 @@ function afficher(liste) {
             ? '<img src="/' + p.photo + '" class="card-img-top" style="height:160px; object-fit:cover;">'
             : '<div class="d-flex align-items-center justify-content-center" style="height:160px; background-color:#f0f7f0;"><span class="text-muted">Pas de photo</span></div>';
 
-        // Boutons selon le statut
+        
         var boutons = '';
         if (p.statut_validation === 0) {
             boutons = '<button class="btn btn-success btn-sm me-1" onclick="valider(' + p.id + ')">Valider</button>' +
@@ -145,7 +145,7 @@ function voir(p) {
     modalCtrl.show();
 }
 
-// Valider une prestation (PUT sans rien = validation dans le handler Go)
+
 function valider(id) {
     if (!confirm('Valider cette prestation ? Elle sera visible par les particuliers.')) return;
     fetch('/api/prestations/' + id, {
@@ -155,7 +155,6 @@ function valider(id) {
     }).then(function(res) { if (res.ok) charger(); });
 }
 
-// Refuser avec motif
 function refuser(id) {
     var motif = prompt('Motif du refus :');
     if (!motif) return;

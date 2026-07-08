@@ -2,6 +2,7 @@
 session_start();
 require_once 'includes/db.php';
 require_once 'includes/mail.php';
+require_once 'config.php';
 
 // 1. Validation du captcha
 if (!isset($_SESSION['captcha_reponse']) || strtolower(trim($_POST['captcha_reponse'] ?? '')) !== $_SESSION['captcha_reponse']) {
@@ -43,7 +44,7 @@ $stmt = $pdo->prepare("UPDATE utilisateurs SET token_verification = ?, est_verif
 $stmt->execute([$token, $email]);
 
 
-$lien = "/verify.php?token=" . $token;
+$lien = BASE_URL . "/verify.php?token=" . $token;
 
 $contenu = "
 <div style='font-family:Arial,sans-serif; max-width:600px; margin:auto; padding:30px; border:1px solid #eee; border-radius:10px;'>
@@ -59,6 +60,6 @@ $contenu = "
 
 envoyerMail($email, "Activez votre compte UpcycleConnect", $contenu);
 
-// 7. Redirection vers connexion avec message de succès
+
 header('Location: connexion.php?success=registered');
 exit;

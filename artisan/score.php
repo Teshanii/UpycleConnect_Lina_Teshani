@@ -39,7 +39,7 @@ if (!isset($_SESSION['user_id'])) {
 
             <hr>
 
-            <!-- Bloc récompense : tous les 100 pts = 1 mois Premium -->
+            
             <div id="bloc-recompense" class="mt-3"></div>
 
             <hr>
@@ -53,7 +53,7 @@ if (!isset($_SESSION['user_id'])) {
 var userId = <?php echo $_SESSION['user_id']; ?>;
 var scoreActuel = 0;
 
-// On charge le score puis l'état des récompenses
+
 function chargerScore() {
     fetch('/api/users')
         .then(function(res) { return res.json(); })
@@ -63,7 +63,7 @@ function chargerScore() {
             scoreActuel = user.score_upcycling;
             document.getElementById('score').innerText = scoreActuel;
 
-            // barre de progression vers le prochain palier de 100
+            
             var dansLePalier = scoreActuel % 100;
             var pct = (dansLePalier / 100) * 100;
             document.getElementById('barre').style.width = pct + '%';
@@ -79,7 +79,7 @@ function chargerRecompense() {
         .then(function(abo) {
             var bloc = document.getElementById('bloc-recompense');
 
-            // Récompenses méritées (1 par tranche de 100) vs déjà réclamées
+            
             var meritees = Math.floor(scoreActuel / 100);
             var dejaPrises = abo.recompense_reclamee || 0;
             var dispo = meritees - dejaPrises;
@@ -97,7 +97,7 @@ function chargerRecompense() {
 
 function reclamer() {
     var btn = document.getElementById('btn-recompense');
-    btn.disabled = true; // anti double-clic
+    btn.disabled = true; 
     btn.innerText = 'Traitement...';
 
     fetch('/api/recompense', {

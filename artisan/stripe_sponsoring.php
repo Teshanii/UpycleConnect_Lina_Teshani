@@ -12,7 +12,7 @@ $data      = json_decode(file_get_contents('php://input'), true);
 $prix      = intval($data['prix']); // en centimes (10000 = 100€)
 $idProjet  = intval($data['id_projet']);
 
-// Créer la session Stripe
+
 $session = \Stripe\Checkout\Session::create([
     'payment_method_types' => ['card'],
     'customer_email' => $_SESSION['user_email'],
@@ -25,7 +25,7 @@ $session = \Stripe\Checkout\Session::create([
         'quantity' => 1,
     ]],
     'mode'        => 'payment',
-    // On passe l'id du projet dans l'URL de retour pour l'activer après paiement
+    
     'success_url' => BASE_URL . '/artisan/success_sponsoring.php?id_projet=' . $idProjet . '&session_id={CHECKOUT_SESSION_ID}',
     'cancel_url'  => BASE_URL . '/artisan/mes_creations.php',
 ]);

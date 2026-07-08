@@ -25,13 +25,12 @@ if ($session->payment_status === 'paid') {
     $montant = $session->amount_total / 100;
     $ref = $session->payment_intent;
 
-    // Récupérer le titre de l'atelier
     $pdo = new PDO('mysql:host=database;dbname=upcycle_connect', 'root', 'root');
     $stmt = $pdo->prepare("SELECT titre FROM evenements WHERE id_event = ?");
     $stmt->execute([$id_event]);
     $titre_atelier = $stmt->fetchColumn() ?: 'Atelier';
 
-    // Inscrire via l'API Go
+    
     $ch = curl_init('http://api:8080/api/inscriptions');
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);

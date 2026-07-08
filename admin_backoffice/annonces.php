@@ -74,16 +74,16 @@ include 'includes/header.php';
     <script>
         const API = "/api/annonces";
         let modalCtrl = new bootstrap.Modal(document.getElementById('modalAnnonce'));
-        let toutesLesAnnonces = []; // on garde toutes les annonces en mémoire pour filtrer
+        let toutesLesAnnonces = []; 
 
-        // Charger toutes les annonces
+        
         async function load() {
             const res = await fetch(API);
             toutesLesAnnonces = await res.json();
             afficher(toutesLesAnnonces);
         }
 
-        // Afficher les annonces dans le tableau
+        
         function afficher(data) {
             const tbody = document.getElementById("corps");
             tbody.innerHTML = "";
@@ -115,7 +115,7 @@ include 'includes/header.php';
             });
         }
 
-        // Filtrer les annonces
+        
         function filtrer(type) {
             if (type === 'toutes') return afficher(toutesLesAnnonces);
             if (type === 'attente') return afficher(toutesLesAnnonces.filter(a => a.statut_validation === 0));
@@ -123,7 +123,7 @@ include 'includes/header.php';
             if (type === 'refusee') return afficher(toutesLesAnnonces.filter(a => a.statut_validation === 2));
         }
 
-        // Ouvrir la modal avec les vraies données
+        
         function ouvrir(a) {
             document.getElementById("display-id").innerText = a.id;
             document.getElementById("modal-titre").innerText = a.titre;
@@ -134,7 +134,8 @@ include 'includes/header.php';
             document.getElementById("modal-prix").innerText = a.prix || '0';
             document.getElementById("motif-refus").value = '';
 
-            // Afficher la photo si elle existe
+            
+        
             if (a.photo) {
                 document.getElementById("modal-photo").innerHTML = `<img src="/${a.photo}" style="max-width:100%; border-radius:8px;" class="mt-2">`;
             } else {
@@ -158,7 +159,7 @@ include 'includes/header.php';
             }
         }
 
-        // Refuser avec motif
+        
         async function refuser() {
             const id = document.getElementById("display-id").innerText;
             const motif = document.getElementById("motif-refus").value.trim();
@@ -177,7 +178,7 @@ include 'includes/header.php';
             }
         }
 
-        // Supprimer définitivement
+        
         async function supprimer() {
             const id = document.getElementById("display-id").innerText;
             if (confirm("Supprimer définitivement cette annonce ?")) {

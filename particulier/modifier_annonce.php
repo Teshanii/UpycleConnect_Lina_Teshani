@@ -73,7 +73,7 @@ $id = $_GET['id'] ?? 0;
 <script>
 var id = <?php echo $id; ?>;
 
-// D'abord les catégories, puis les données de l'annonce
+
 fetch('/api/categories')
     .then(function(res) { return res.json(); })
     .then(function(cats) {
@@ -82,7 +82,7 @@ fetch('/api/categories')
         cats.forEach(function(c) {
             select.innerHTML += '<option value="' + c.nom + '">' + c.nom + '</option>';
         });
-        // Une fois les catégories chargées on charge l'annonce
+        
         return fetch('/api/annonces?id_user=<?php echo $_SESSION['user_id']; ?>');
     })
     .then(function(res) { return res.json(); })

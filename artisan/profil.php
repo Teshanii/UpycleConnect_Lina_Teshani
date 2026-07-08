@@ -71,7 +71,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
 
             <hr class="mt-4">
 
-            <!-- Mon abonnement -->
+            
             <h5 style="color:var(--primary-green);">Mon abonnement</h5>
             <div id="bloc-abonnement">
                 <div class="text-center"><div class="spinner-border spinner-border-sm" style="color:var(--primary-green);"></div></div>
@@ -79,7 +79,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
 
             <hr class="mt-4">
 
-            <!-- Mes paiements -->
+           
             <h5 style="color:var(--primary-green);">Mes paiements</h5>
             <div id="mes-paiements">
                 <div class="text-center"><div class="spinner-border spinner-border-sm" style="color:var(--primary-green);"></div></div>
@@ -99,7 +99,7 @@ var userId = <?php echo $_SESSION['user_id']; ?>;
 var userRoleId = <?php echo $_SESSION['user_role'] ?? 3; ?>;
 var userData = null;
 
-// Charger les infos du profil
+
 fetch('/api/users')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -112,7 +112,7 @@ fetch('/api/users')
         }
     });
 
-// Charger l'abonnement
+
 function chargerAbonnement() {
     fetch('/api/abonnement?id_user=' + userId)
         .then(function(r) { return r.json(); })
@@ -120,7 +120,7 @@ function chargerAbonnement() {
             var div = document.getElementById('bloc-abonnement');
 
             if (data.abonnement !== 'premium') {
-                // Gratuit : on propose de passer Premium
+                
                 div.innerHTML = '<div class="p-3 rounded" style="background-color:#f0f7f0;">' +
                     '<p class="mb-2">Vous êtes en offre <strong>Gratuite</strong>.</p>' +
                     '<a href="abonnement.php" class="btn btn-primary-upcycle btn-sm">Passer Premium</a>' +
@@ -128,11 +128,11 @@ function chargerAbonnement() {
                 return;
             }
 
-            // Premium : on affiche la date de fin
+            
             var dateFin = data.date_fin ? data.date_fin.split('T')[0].split(' ')[0] : '';
 
             if (data.abonnement_annule == 1) {
-                // Déjà annulé : Premium jusqu'à la date, pas de renouvellement
+                
                 div.innerHTML = '<div class="alert alert-warning mb-0">' +
                     '<strong>Premium jusqu\'au ' + dateFin + '</strong><br>' +
                     '<small>Votre abonnement ne sera pas renouvelé. Vous repasserez en Gratuit après cette date.</small>' +
@@ -148,7 +148,7 @@ function chargerAbonnement() {
 }
 chargerAbonnement();
 
-// Annuler l'abonnement (coupe le renouvellement, garde l'accès jusqu'à la date de fin)
+
 function annulerAbonnement() {
     if (!confirm("Annuler votre abonnement Premium ? Vous garderez l'accès jusqu'à la fin de la période déjà payée, sans renouvellement.")) return;
 
@@ -158,14 +158,14 @@ function annulerAbonnement() {
         body: JSON.stringify({ id: userId, abonnement: 'annuler' })
     }).then(function(res) {
         if (res.ok) {
-            chargerAbonnement(); // on recharge le bloc pour montrer le nouvel état
+            chargerAbonnement(); 
         } else {
             alert("Erreur lors de l'annulation.");
         }
     });
 }
 
-// Charger les transactions du user
+
 fetch('/api/transactions?id_user=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -198,7 +198,7 @@ fetch('/api/transactions?id_user=' + userId)
                 libelleType = 'Paiement';
             }
 
-            // Remboursement autorisé seulement pour les paiements à la plateforme (abonnement, atelier)
+      
             var actionRemboursement = '';
             if (t.statut === 'succeeded') {
                 if (t.type === 'abonnement' || t.type === 'atelier') {

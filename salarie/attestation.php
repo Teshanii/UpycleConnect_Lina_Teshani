@@ -1,6 +1,6 @@
 <?php
 session_start();
-// Seul un salarié connecté peut générer une attestation
+
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
     header('Location: ../connexion.php');
     exit;
@@ -12,7 +12,7 @@ $id_user  = isset($_GET['id_user']) ? intval($_GET['id_user']) : 0;
 
 $pdo = new PDO('mysql:host=database;dbname=upcycle_connect', 'root', 'root');
 
-// On récupère l'atelier ET on vérifie que le salarié en est bien l'animateur
+
 $stmt = $pdo->prepare("SELECT titre, date_debut, id_animateur FROM evenements WHERE id_event = ?");
 $stmt->execute([$id_event]);
 $atelier = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -22,7 +22,7 @@ if (!$atelier || $atelier['id_animateur'] != $_SESSION['user_id']) {
     exit('Accès refusé : cet atelier ne vous appartient pas.');
 }
 
-// On récupère le participant, et on vérifie qu'il est bien inscrit
+
 $stmt = $pdo->prepare("SELECT u.nom, u.prenom FROM inscriptions i JOIN utilisateurs u ON i.id_user = u.id_user WHERE i.id_event = ? AND i.id_user = ?");
 $stmt->execute([$id_event, $id_user]);
 $participant = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -34,7 +34,7 @@ if (!$participant) {
 
 $dateAtelier = $atelier['date_debut'] ? date('d/m/Y', strtotime($atelier['date_debut'])) : '';
 
-// Génération du PDF
+
 $pdf = new FPDF();
 $pdf->AddPage();
 
@@ -72,7 +72,7 @@ $pdf->SetFont('Arial', 'I', 11);
 $pdf->Cell(0, 7, 'Fait le ' . date('d/m/Y'), 0, 1);
 $pdf->Cell(0, 7, 'L\'equipe UpcycleConnect', 0, 1);
 
-// Affichage direct dans le navigateur
+
 $nomFichier = 'attestation_' . $id_user . '_' . $id_event . '_' . time() . '.pdf';
 $pdf->Output('F', __DIR__ . '/../documents/' . $nomFichier);
 $stmt = $pdo->prepare("INSERT INTO documents (id_user, type, nom_fichier) VALUES (?, 'attestation', ?)");

@@ -21,7 +21,7 @@ function chargerLangues() {
 }
 
 function traduirePage() {
-    if (langueActive === 'fr') return; // FR = langue par défaut, on ne touche pas
+    if (langueActive === 'fr') return; 
 
     var option = document.querySelector('#select-langue option:checked');
     if (!option) return;

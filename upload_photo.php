@@ -7,7 +7,7 @@ header('Content-Type: application/json');
 
 if (isset($_FILES['photo']) && $_FILES['photo']['error'] === 0) {
 
-    // 1. On vérifie l'extension : on n'accepte QUE les images
+   
     $extensionsOK = ['jpg', 'jpeg', 'png', 'webp'];
     $extension = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
     if (!in_array($extension, $extensionsOK)) {
@@ -15,7 +15,7 @@ if (isset($_FILES['photo']) && $_FILES['photo']['error'] === 0) {
         exit;
     }
 
-    // 2. On vérifie que le fichier est VRAIMENT une image (pas un .php renommé en .jpg)
+
     $infosImage = getimagesize($_FILES['photo']['tmp_name']);
     if ($infosImage === false) {
         echo json_encode(['chemin' => '', 'error' => 'Le fichier n\'est pas une image valide.']);
@@ -32,8 +32,7 @@ if (isset($_FILES['photo']) && $_FILES['photo']['error'] === 0) {
         mkdir('uploads', 0777, true);
     }
 
-    // 4. On génère un nom propre nous-mêmes (on ne fait PAS confiance au nom d'origine)
-    //    avec la bonne extension vérifiée, pour éviter les noms piégés
+
     $nom = time() . '_' . uniqid() . '.' . $extension;
     $destination = 'uploads/' . $nom;
 

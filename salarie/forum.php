@@ -67,7 +67,7 @@ $sujetId = isset($_GET['sujet']) ? intval($_GET['sujet']) : 0;
         <div id="sujets"></div>
 
     <?php else: ?>
-        <!-- ===== PAGE D'UN SUJET ===== -->
+        
         <a href="forum.php" style="color:var(--primary-green);">← Retour aux sujets</a>
         <div id="detail-sujet" class="mt-3"></div>
     <?php endif; ?>
@@ -95,7 +95,7 @@ function charger() {
         });
 }
 
-// ---------- LISTE ----------
+
 function afficherListe() {
     var div = document.getElementById('sujets');
     var recherche = document.getElementById('recherche').value.toLowerCase();
@@ -145,7 +145,7 @@ function afficherListe() {
     div.innerHTML = html;
 }
 
-// ---------- SUJET ----------
+
 function afficherSujet() {
     var sujet = tousMessages.filter(function(m) { return m.id === sujetId; })[0];
     var div = document.getElementById('detail-sujet');
@@ -178,7 +178,7 @@ function afficherSujet() {
     div.innerHTML = html;
 }
 
-// ---------- ACTIONS ----------
+
 function creerSujet() {
     var titre = document.getElementById('titre').value.trim();
     var contenu = document.getElementById('contenu').value.trim();

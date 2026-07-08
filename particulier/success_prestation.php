@@ -20,7 +20,7 @@ if ($session->payment_status === 'paid') {
 
     $pdo = new PDO('mysql:host=database;dbname=upcycle_connect', 'root', 'root');
 
-    // On récupère le nom de la prestation ET l'abonnement de l'artisan créateur
+    
     $requete = $pdo->prepare("SELECT p.nom_prestation, COALESCE(u.abonnement,'gratuit') 
         FROM prestations p JOIN utilisateurs u ON p.id_createur = u.id_user 
         WHERE p.id_prestation = ?");
@@ -29,18 +29,18 @@ if ($session->payment_status === 'paid') {
     $nom_prestation = $ligne[0] ?: 'Prestation';
     $aboArtisan = $ligne[1];
 
-    // Commission : 3% si l'artisan est Premium, sinon 7% (même règle que côté Go)
+    
     $taux = ($aboArtisan === 'premium') ? 0.03 : 0.07;
     $commission = round($montant * $taux, 2);
 
-    // On marque la prestation comme vendue pour qu'elle disparaisse du catalogue
+    
     $pdo->prepare("UPDATE prestations SET vendu = 1 WHERE id_prestation = ?")->execute([$id_prestation]);
 
-    // Sauvegarder la transaction (avec commission) - c'est le particulier qui paie
+    
     $pdo->prepare("INSERT INTO transactions (montant, reference_stripe, statut_paiement, id_user, type, commission) VALUES (?, ?, 'succeeded', ?, 'prestation', ?)")
         ->execute([$montant, $session->payment_intent, $user_id, $commission]);
 
-    // Créditer l'artisan vendeur via l'API Go (93% pour lui, 7% commission)
+    
     $ch = curl_init('http://api:8080/api/vente-prestation');
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);

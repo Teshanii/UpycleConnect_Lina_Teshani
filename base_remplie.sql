@@ -1,7 +1,4 @@
 
---  UpcycleConnect - BASE DE DONNEES REMPLIE 
---  A importer sur une base vide : contient la structure + des donnees d'exemple
---  Tous les comptes de demo ont le mot de passe : Demo_2026
 
 
 SET NAMES utf8mb4;

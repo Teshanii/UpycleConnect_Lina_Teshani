@@ -173,7 +173,7 @@ include 'includes/header.php';
             document.getElementById('kpi-commissions').innerText = commissions.toFixed(2) + ' €';
             document.getElementById('kpi-rembourses').innerText = rembourses.toFixed(2) + ' €';
 
-            // Trésorerie due = somme des soldes des particuliers et artisans
+            
             let tresorerie = 0;
             tousUsers.forEach(u => {
                 if (u.solde && u.id_role !== 1 && u.id_role !== 2) {

@@ -224,7 +224,7 @@ include 'includes/header.php';
             }
         }
 
-        // Voir la liste des inscrits
+        
         async function voirInscrits(idEvent, titre) {
             titreEventEnCours = titre;
             document.getElementById('inscrits-titre').innerText = titre;
@@ -254,7 +254,7 @@ include 'includes/header.php';
             });
         }
 
-        // Filtrer les inscrits par nom
+        
         function filtrerInscrits() {
             const terme = document.getElementById('recherche-inscrits').value.toLowerCase();
             const resultats = tousLesInscrits.filter(u =>
@@ -265,20 +265,20 @@ include 'includes/header.php';
             afficherInscrits(resultats);
         }
 
-        // Exporter la liste en CSV
+        
         function exporterCSV() {
             if (!tousLesInscrits || tousLesInscrits.length === 0) {
                 alert("Aucun inscrit a exporter.");
                 return;
             }
 
-            // Créer le contenu CSV
+            
             let csv = 'Nom,Prenom,Email\n';
             tousLesInscrits.forEach(u => {
                 csv += `${u.nom},${u.pre},${u.mail}\n`;
             });
 
-            // Télécharger le fichier
+            
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');

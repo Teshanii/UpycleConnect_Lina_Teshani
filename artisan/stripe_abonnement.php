@@ -12,7 +12,7 @@ $data  = json_decode(file_get_contents('php://input'), true);
 $prix  = intval($data['prix']); // déjà en centimes (1500 = 15€)
 $titre = htmlspecialchars($data['titre']);
 
-// Créer la session Stripe
+
 $session = \Stripe\Checkout\Session::create([
     'payment_method_types' => ['card'],
     'customer_email' => $_SESSION['user_email'],

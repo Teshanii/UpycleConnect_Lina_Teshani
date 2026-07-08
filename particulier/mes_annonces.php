@@ -99,7 +99,7 @@ fetch('/api/annonces?id_user=<?php echo $_SESSION['user_id']; ?>')
         document.getElementById('liste').innerHTML = html;
     })
     .catch(function() {
-        // Si le fetch échoue — on cache le loader et on affiche une erreur
+        
         document.getElementById('loader').style.display = 'none';
         document.getElementById('liste').innerHTML = '<div class="alert alert-danger">Impossible de charger vos annonces. Réessayez plus tard.</div>';
     });

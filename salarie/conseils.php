@@ -54,7 +54,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
         <button class="btn btn-link btn-sm text-muted" onclick="resetForm()">Annuler</button>
     </div>
 
-    <!-- Liste de mes articles -->
+    
     <h5 style="color:var(--primary-green);">Mes articles</h5>
     <div id="articles"></div>
 </div>
@@ -62,13 +62,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 2) {
 <script>
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
-// Échappe le HTML pour éviter les injections de code (XSS)
+
 function echapper(t) {
     if (t === null || t === undefined) return '';
     return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-// Formate une date SQL en français (ex: 5 mars 2026 à 14h30)
+
 function formaterDate(d) {
     if (!d) return 'Non précisée';
     var partie = d.replace('T', ' ').replace('Z', '');
@@ -87,7 +87,7 @@ function focusForm() {
     window.scrollTo(0, 0);
 }
 
-// Charger mes articles (filtre par auteur)
+
 function charger() {
     fetch('/api/conseils?id_auteur=' + userId)
         .then(function(r) { return r.json(); })
@@ -104,7 +104,7 @@ function charger() {
 
             var html = '';
             data.forEach(function(a) {
-                // Badge selon le type
+                
                 var badge = a.type === 'tuto'
                     ? '<span class="badge bg-primary">Tutoriel</span>'
                     : a.type === 'news'
@@ -179,7 +179,7 @@ function sauvegarder(statut) {
 }
 
 
-// Remplir le formulaire pour modifier
+
 function modifier(a) {
     document.getElementById('edit-id').value = a.id;
     document.getElementById('titre').value = a.titre;
@@ -196,7 +196,7 @@ function supprimer(id) {
     }
 }
 
-// A7 : publier un brouillon en un clic
+
 function publierArticle(a) {
     fetch('/api/conseils/' + a.id, {
         method: 'PUT',

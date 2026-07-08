@@ -1,10 +1,10 @@
 <?php
 session_start();
-// Page PUBLIQUE : tout le monde peut voir la galerie, même sans être connecté.
+
 $estConnecte = isset($_SESSION['user_id']);
 $userId = $estConnecte ? $_SESSION['user_id'] : 0;
 
-// On détermine le dashboard de retour selon le rôle
+
 $monEspace = 'index.php';
 if ($estConnecte) {
     switch ($_SESSION['user_role']) {
@@ -63,7 +63,7 @@ function echapper(t) {
 var estConnecte = <?php echo $estConnecte ? 'true' : 'false'; ?>;
 var tousLesProjets = [];
 
-// On charge tous les projets (galerie publique : pas de id_createur, donc on voit tout)
+
 fetch('/api/projets')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -87,7 +87,7 @@ function afficherProjets() {
 
     var html = '';
     projets.forEach(function(p) {
-        // Photo de couverture (ou image par défaut si vide)
+        
         var photo = p.photo_couverture ? '/' + p.photo_couverture : 'https://via.placeholder.com/400x250?text=Projet';
 
         // Badges

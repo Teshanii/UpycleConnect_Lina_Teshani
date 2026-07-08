@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             envoyerMail($email, "Réinitialisation de mot de passe - UpcycleConnect", $contenu);
         }
 
-        // Toujours le même message pour pas révéler si l'email existe ou pas
+        
         $message = "Si cette adresse est associée à un compte, tu vas recevoir un email.";
         $type    = 'success';
     }

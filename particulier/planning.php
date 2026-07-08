@@ -191,7 +191,7 @@ function afficherEvenements(liste) {
     document.getElementById('evenements').innerHTML = html;
 }
 
-// Paiement réel via Stripe — on appelle stripe_checkout.php qui nous renvoie l'URL Stripe
+
 function payerAtelier(idEvent, prix, titre) {
     fetch('stripe_checkout.php', {
         method: 'POST',
@@ -200,7 +200,7 @@ function payerAtelier(idEvent, prix, titre) {
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
-        // On redirige vers la page de paiement Stripe
+        
         if (data.url) {
             window.location.href = data.url;
         } else {

@@ -55,11 +55,11 @@ include 'includes/header.php';
         let toutesAnnonces = [];
 
         async function load() {
-            // Charger les annonces pour compter le nombre par catégorie
+            
             const resA = await fetch(API_ANNONCES);
             toutesAnnonces = await resA.json() || [];
 
-            // Charger les catégories
+            
             const res = await fetch(API);
             const data = await res.json() || [];
 

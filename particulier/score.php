@@ -71,7 +71,7 @@ fetch('/api/users')
                 document.getElementById('prochain-palier').innerText = 'Score maximum atteint !';
             }
 
-            // badges débloqués
+            
             var badges = '';
             if (score >= 100) badges += '<span class="badge bg-success me-1">Eco-citoyen</span>';
             if (score >= 250) badges += '<span class="badge bg-primary me-1">Recycleur</span>';

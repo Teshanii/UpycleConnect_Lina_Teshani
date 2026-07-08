@@ -80,7 +80,7 @@ function charger() {
 
             var html = '';
             data.forEach(function(p) {
-                // Badge de validation
+                
                 var badge;
                 if (p.statut_validation === 1) {
                     badge = '<span class="badge bg-success">Validée</span>';
@@ -90,28 +90,28 @@ function charger() {
                     badge = '<span class="badge bg-warning text-dark">En attente</span>';
                 }
 
-                // Badge vendu si la prestation a été achetée
+                
                 var badgeVendu = p.vendu === 1
                     ? '<span class="badge bg-dark">Vendue</span>'
                     : '';
 
-                // Photo ou placeholder
+                
                 var photo = p.photo
                     ? '<img src="/' + p.photo + '" class="card-img-top" style="height:180px; object-fit:cover;">'
                     : '<div class="d-flex align-items-center justify-content-center" style="height:180px; background-color:#f0f7f0;"><span class="text-muted">Pas de photo</span></div>';
 
-                // Badge prix
+                
                 var badgePrix = p.prix > 0
                     ? '<span class="badge bg-warning text-dark">' + p.prix.toFixed(2) + ' €</span>'
                     : '<span class="badge bg-success">Gratuit</span>';
 
-                // Motif de refus si refusée
+                
                 var motif = '';
                 if (p.statut_validation === 2 && p.motif_refus) {
                     motif = '<p class="text-danger small mt-1">Motif : ' + p.motif_refus + '</p>';
                 }
 
-                // On n'affiche le bouton supprimer que si la prestation n'est pas vendue
+                
                 var boutonSupprimer = p.vendu === 1
                     ? '<p class="text-muted small mt-2 mb-0 text-center">Prestation vendue</p>'
                     : '<button class="btn btn-sm btn-outline-danger w-100 mt-2" onclick="supprimer(' + p.id + ')">Supprimer</button>';
@@ -145,7 +145,7 @@ function ajouter() {
         return;
     }
 
-    // Si une photo est sélectionnée, on l'upload d'abord
+    
     if (fichier) {
         var formData = new FormData();
         formData.append('photo', fichier);

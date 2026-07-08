@@ -14,7 +14,7 @@ type LoginRequest struct {
 	Mdp   string `json:"mdp"`
 }
 
-// Vérifie le format de l'email
+
 func isEmailValid(e string) bool {
 	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 	return emailRegex.MatchString(e)
@@ -31,7 +31,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Vérifications basiques
+	
 	if u.Nom == "" || u.Pre == "" || u.Mail == "" || u.Mdp == "" || u.IdRole == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Tous les champs sont obligatoires."})
@@ -44,7 +44,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Vérifier si l'email existe déjà
+	
 	var existe int
 	err := bd.QueryRow("SELECT COUNT(*) FROM utilisateurs WHERE email = ?", u.Mail).Scan(&existe)
 	if err != nil || existe > 0 {
@@ -53,7 +53,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Hacher le mot de passe
+	
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Mdp), bcrypt.DefaultCost)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -61,7 +61,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Insertion — est_verifie = 0, PHP s'occupe du token et du mail
+	
 	_, err = bd.Exec(`INSERT INTO utilisateurs 
 		(nom, prenom, email, mot_de_passe, id_role, est_actif, est_verifie) 
 		VALUES (?,?,?,?,?,1,0)`,
@@ -111,7 +111,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Vérifier le mot de passe
+	
 	err = bcrypt.CompareHashAndPassword([]byte(hashMdp), []byte(req.Mdp))
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -119,7 +119,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Vérifier que le compte est activé par email
+	
 	if estVerifie == 0 {
 		w.WriteHeader(http.StatusForbidden)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Votre compte n'est pas encore activé. Vérifiez vos emails."})

@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Déconnexion si logout=1
+
 if (isset($_GET['logout'])) {
     session_destroy();
     session_unset();
@@ -108,8 +108,7 @@ if (isset($_SESSION['user_id'])) {
             };
 
             try {
-                // On envoie email + mdp à init_session.php.
-                // C'est LUI qui appelle l'API Go côté serveur pour vérifier.
+                
                 const sessionRes = await fetch("init_session.php", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -119,7 +118,7 @@ if (isset($_SESSION['user_id'])) {
                 const data = await sessionRes.json();
 
                 if (sessionRes.ok) {
-                    // Redirection selon le rôle renvoyé par le serveur
+                    
                     if (data.id_role === 1) {
                         window.location.href = "admin_backoffice/index.php";
                     } else {

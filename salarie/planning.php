@@ -108,7 +108,7 @@ function formaterDate(d) {
     return jour + ' ' + nomMois + ' ' + dateP[0] + ' à ' + heureP[0] + 'h' + heureP[1];
 }
 
-// Charger mes ateliers validés
+
 fetch('/api/evenements')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -141,7 +141,7 @@ function afficher(liste) {
         return;
     }
 
-    // Trier par date
+    
     liste.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
 
     var html = '';
@@ -151,7 +151,7 @@ function afficher(liste) {
             ? '<span class="badge bg-secondary ms-1">Passé</span>'
             : '<span class="badge bg-success ms-1">À venir</span>';
 
-        // places_max est FIXE : capacité = e.place, restantes = capacité - inscrits
+        
         var capaciteTotale = e.place;
         var restantes = e.place - e.nb_inscrits;
         var tauxRemplissage = capaciteTotale > 0 ? Math.round((e.nb_inscrits / capaciteTotale) * 100) : 0;
@@ -201,7 +201,7 @@ function calculerStats(liste) {
     document.getElementById('kpi-remplissage').innerText = moyenne + '%';
 }
 
-// Basculer entre vue liste et vue calendrier
+
 function switcherVue() {
     vueCalendrier = !vueCalendrier;
     document.getElementById('vue-liste').style.display = vueCalendrier ? 'none' : 'block';
@@ -233,7 +233,7 @@ function initialiserCalendrier() {
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
         events: eventsCalendrier,
-        // Au clic sur un atelier du calendrier, on ouvre la liste des inscrits
+        
         eventClick: function(info) {
             var e = info.event.extendedProps.event;
             voirInscrits(e.id, e.titre);
@@ -241,7 +241,7 @@ function initialiserCalendrier() {
     });
 }
 
-// Voir les inscrits d'un atelier
+
 function voirInscrits(idEvent, titre) {
     document.getElementById('modal-titre').innerText = titre;
     document.getElementById('modal-inscrits').innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" style="color:var(--primary-green);"></div></div>';
@@ -270,7 +270,7 @@ function voirInscrits(idEvent, titre) {
         });
 }
 
-// Envoyer un email de rappel à tous les inscrits de l'atelier
+
 function envoyerRappel(idEvent) {
     var message = prompt("Message à envoyer aux inscrits :", "Rappel : votre atelier approche, pensez à venir !");
     if (!message) return;

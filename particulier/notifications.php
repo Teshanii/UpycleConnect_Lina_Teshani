@@ -50,7 +50,7 @@ fetch('/api/notifications?id_user=' + userId)
         }
         var html = '';
         data.forEach(function(n) {
-            // Une notif non lue est mise en avant
+            
             var style = n.est_lue === 0 ? 'card mb-2 p-3 border-start border-4 border-success' : 'card mb-2 p-3';
             var badge = n.est_lue === 0 ? '<span class="badge bg-success ms-2">Nouveau</span>' : '';
             html += '<div class="' + style + '">' +
@@ -61,7 +61,7 @@ fetch('/api/notifications?id_user=' + userId)
         });
         div.innerHTML = html;
 
-        // On marque les notifications comme lues (elles ne seront plus "Nouveau" au prochain passage)
+        
         fetch('/api/notifications?id_user=' + userId, { method: 'PUT' });
     })
     .catch(function() {

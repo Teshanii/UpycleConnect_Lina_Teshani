@@ -1,6 +1,6 @@
 package main
 
-// --- UTILISATEURS & SECURITE ---
+
 type User struct {
 	Id             int    `json:"id"`
 	Nom            string `json:"nom"`
@@ -25,10 +25,10 @@ type Role struct {
 	Lib string `json:"lib"`
 }
 
-// --- RÉFÉRENTIEL & INTERNATIONALISATION ---
+
 type Categories struct {
 	Id  int    `json:"id"`
-	Nom string `json:"nom"` // Code technique (ex: BOIS)
+	Nom string `json:"nom"` 
 }
 
 type Langue struct {
@@ -68,7 +68,7 @@ type Evenements struct {
 	MotifRefus       string  `json:"motif_refus"`
 }
 
-// --- LOGISTIQUE : BOX & ANNONCES ---
+
 type Box struct {
 	Id            int    `json:"id"`
 	Adresse       string `json:"adresse"`
@@ -175,7 +175,7 @@ type ObjetCatalogue struct {
 	Ville 		   string  `json:"ville"`
 }
 
-// --- CASIERS ---
+
 type Casier struct {
     Id     int    `json:"id"`
     Numero string `json:"numero"`
@@ -183,7 +183,7 @@ type Casier struct {
     IdBox  int    `json:"id_box"`
 }
 
-// --- INSCRIPTIONS ---
+
 type Inscription struct {
 	Id      int     `json:"id"`
 	IdUser  int     `json:"id_user"`
@@ -242,5 +242,5 @@ type Participant struct {
 	IdUser   int    `json:"id_user"`
 	Tache    string `json:"tache"`
 	Statut   string `json:"statut"`
-	NomUser  string `json:"nom_user"` // pour afficher le nom dans le front
+	NomUser  string `json:"nom_user"` 
 }

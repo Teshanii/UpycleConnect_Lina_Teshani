@@ -33,7 +33,7 @@ services:
     networks:
       - net_upcycle
 
-  # PHP Apache qui sert les pages PHP du front
+
   web:
     build:
       context: .

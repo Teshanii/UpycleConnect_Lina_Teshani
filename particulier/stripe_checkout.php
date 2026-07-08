@@ -7,13 +7,12 @@ require_once '../config.php';
 
 \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
 
-// On récupère les données envoyées par le JS
 $data = json_decode(file_get_contents('php://input'), true);
 $id_event = intval($data['id_event']);
 $prix     = intval($data['prix']); // déjà en centimes
 $titre    = htmlspecialchars($data['titre']);
 
-// Créer la session Stripe
+
 $session = \Stripe\Checkout\Session::create([
     'payment_method_types' => ['card'],
     'customer_email' => $_SESSION['user_email'],

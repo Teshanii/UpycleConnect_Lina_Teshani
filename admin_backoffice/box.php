@@ -190,7 +190,7 @@ include 'includes/header.php';
         let modalRefus = new bootstrap.Modal(document.getElementById('modalRefus'));
         let modalCode = new bootstrap.Modal(document.getElementById('modalCode'));
 
-        // Afficher un onglet et cacher les autres
+        
         function afficherOnglet(nom) {
             document.getElementById('onglet-demandes').style.display = 'none';
             document.getElementById('onglet-box').style.display = 'none';
@@ -198,7 +198,7 @@ include 'includes/header.php';
             document.getElementById('onglet-' + nom).style.display = 'block';
         }
 
-        // ===== DEMANDES =====
+        
         async function chargerDemandes() {
             const res = await fetch(API_DEMANDES);
             toutesLesDemandes = await res.json() || [];
@@ -264,7 +264,7 @@ include 'includes/header.php';
 
                 if (res.ok) {
                     const data = await res.json();
-                    // Afficher le code généré dans la modal
+                    
                     document.getElementById('modal-code').innerText = data.code;
                     document.getElementById('modal-casier').innerText = 'Casier : ' + data.casier;
                     modalCode.show();
@@ -298,14 +298,14 @@ include 'includes/header.php';
             chargerDemandes();
         }
 
-        // ===== BOX =====
+        
         async function chargerBox() {
             const res = await fetch(API_BOX);
             toutesLesBox = await res.json() || [];
             const tbody = document.getElementById('corps-box');
             tbody.innerHTML = '';
 
-            // Mettre à jour aussi le select des casiers
+            
             const sel = document.getElementById('id-box-casier');
             sel.innerHTML = '<option value="">Choisir une box...</option>';
 
@@ -350,7 +350,7 @@ include 'includes/header.php';
             }
         }
 
-        // ===== CASIERS =====
+        
         async function chargerCasiers() {
             const res = await fetch(API_CASIERS);
             const data = await res.json() || [];
@@ -367,7 +367,7 @@ include 'includes/header.php';
                     ? '<span class="badge bg-success">Libre</span>'
                     : '<span class="badge bg-danger">Occupé</span>';
 
-                // Trouver l'adresse de la box
+                
                 const box = toutesLesBox.find(b => b.id === c.id_box);
                 const adresseBox = box ? box.adresse : '-';
 
@@ -397,7 +397,7 @@ include 'includes/header.php';
                 e.target.reset();
                 chargerCasiers();
             } else {
-                // On affiche l'erreur renvoyée par l'API (box pleine ou numéro déjà pris)
+                
                 const err = await res.json();
                 alert(err.error || 'Erreur lors de l\'ajout du casier.');
             }
@@ -410,7 +410,7 @@ include 'includes/header.php';
             }
         }
 
-        // Chargement initial
+        
         chargerDemandes();
         chargerBox();
         chargerCasiers();

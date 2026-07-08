@@ -247,7 +247,7 @@ tour.addStep({
     ]
 });
 
-// On enregistre le cookie avec une expiration d'1 an pour que le tuto ne réapparaisse pas tout seul
+
 function marquerTutoVu() {
     var dans1an = new Date();
     dans1an.setFullYear(dans1an.getFullYear() + 1);

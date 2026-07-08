@@ -178,7 +178,7 @@ function afficher() {
     liste.forEach(function(e) {
         var estPasse = new Date(e.date) < maintenant;
 
-        // Badge de validation
+        
         var badgeStatut;
         if (e.statut_validation === 1) {
             badgeStatut = '<span class="badge bg-success">Validé</span>';
@@ -192,7 +192,6 @@ function afficher() {
             ? '<span class="badge bg-light text-dark border">Gratuit</span>'
             : '<span class="badge bg-light text-dark border">' + e.prix + '€</span>';
 
-        // Motif de refus si refusé
         var motif = (e.statut_validation === 2 && e.motif_refus)
             ? '<div class="alert alert-danger mt-2 mb-0 py-1 px-2 small">Motif du refus : ' + e.motif_refus + '</div>'
             : '';
@@ -202,7 +201,7 @@ function afficher() {
         var ligneLieu = e.lieu ? '<span class="text-muted small">Lieu : ' + e.lieu + '</span><br>' : '';
         var ligneDesc = e.description ? '<p class="small mt-1 mb-0">' + e.description + '</p>' : '';
 
-        // Boutons : les ateliers passés sont archivés (pas de Modifier/Supprimer)
+        
         var btnVoir = '<button class="btn btn-outline-success btn-sm me-1 mb-1" onclick="voirInscrits(' + e.id + ', \'' + e.titre.replace(/'/g, "\\'") + '\')">Voir les inscrits</button>';
         var btnDupliquer = '<button class="btn btn-outline-primary btn-sm me-1 mb-1" onclick=\'dupliquer(' + JSON.stringify(e) + ')\'>Dupliquer</button>';
         var btnModifier = '<button class="btn btn-warning btn-sm me-1 mb-1" onclick=\'modifier(' + JSON.stringify(e) + ')\'>Modifier</button>';
@@ -260,7 +259,7 @@ function sauvegarder() {
     var url = id ? '/api/evenements/' + id : '/api/evenements';
     var methode = id ? 'PUT' : 'POST';
 
-    // On désactive le bouton pendant l'envoi (évite le double-clic)
+    
     var btn = document.getElementById('btn-save');
     btn.disabled = true;
     btn.innerText = 'Enregistrement...';
@@ -291,11 +290,11 @@ function sauvegarder() {
     });
 }
 
-// Remplir le formulaire pour modifier
+
 function modifier(e) {
     document.getElementById('edit-id').value = e.id;
     document.getElementById('titre').value = e.titre;
-    // Reconvertir la date pour l'input datetime-local
+    
     if (e.date) {
         document.getElementById('date').value = e.date.replace(' ', 'T').substring(0, 16);
     }
@@ -311,11 +310,11 @@ function modifier(e) {
     window.scrollTo(0, 0);
 }
 
-// B2 : dupliquer un atelier (pré-remplit tout SAUF l'id et la date => création d'un nouveau)
+
 function dupliquer(e) {
-    document.getElementById('edit-id').value = '';   // pas d'id => POST (nouvel atelier)
+    document.getElementById('edit-id').value = '';   
     document.getElementById('titre').value = e.titre;
-    document.getElementById('date').value = '';       // la date est à choisir
+    document.getElementById('date').value = '';       
     document.getElementById('date_fin').value = '';
     document.getElementById('prix').value = e.prix;
     document.getElementById('places').value = e.place;
@@ -358,7 +357,7 @@ function focusForm() {
     window.scrollTo(0, 0);
 }
 
-// --- A1 : voir les inscrits + pointage de presence ---
+
 var modalInscritsCtrl = new bootstrap.Modal(document.getElementById('modalInscrits'));
 var derniersInscrits = [];
 var dernierTitre = '';
@@ -399,7 +398,7 @@ function voirInscrits(idEvent, titre) {
         });
 }
 
-// B5 : exporter la liste des inscrits en CSV (feuille d'emargement)
+
 function exporterCSV() {
     if (derniersInscrits.length === 0) return;
     var lignes = ['Prenom,Nom,Email,Present'];
@@ -413,7 +412,7 @@ function exporterCSV() {
     lien.click();
 }
 
-// Enregistre la presence (1 clic = sauvegarde immediate)
+
 function marquerPresence(idEvent, idUser, present) {
     fetch('/api/presence', {
         method: 'POST',

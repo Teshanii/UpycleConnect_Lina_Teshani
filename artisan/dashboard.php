@@ -206,7 +206,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
 <script>
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
-// Mon score upcycling
+
 fetch('/api/users')
     .then(r => r.json())
     .then(data => {
@@ -214,14 +214,14 @@ fetch('/api/users')
         if (moi) document.getElementById('kpi-score').innerText = moi.score_upcycling;
     });
 
-// Objets disponibles dans le catalogue
+
 fetch('/api/catalogue-artisan')
     .then(r => r.json())
     .then(data => {
         document.getElementById('kpi-objets').innerText = (data || []).length;
     });
 
-// Mes réservations en cours (objets réservés, pas encore récupérés)
+
 fetch('/api/demandes_box')
     .then(r => r.json())
     .then(data => {
@@ -231,7 +231,6 @@ fetch('/api/demandes_box')
         document.getElementById('kpi-recups').innerText = mesRecups.length;
     });
 
-// Mon abonnement (gratuit ou premium)
 fetch('/api/abonnement?id_user=' + userId)
     .then(r => r.json())
     .then(data => {
@@ -239,7 +238,6 @@ fetch('/api/abonnement?id_user=' + userId)
         document.getElementById('kpi-abo').innerText = abo;
     });
 
-// ===== STATISTIQUES AVANCÉES (Premium) =====
 fetch('/api/abonnement?id_user=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(abo) {
@@ -260,7 +258,7 @@ function chargerStats() {
         });
 }
 
-// ===== TUTORIEL ARTISAN =====
+
 function getCookie(name) {
     return document.cookie.split(';').some(c => c.trim().startsWith(name + '='));
 }

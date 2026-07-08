@@ -81,11 +81,11 @@ var toutesPrestations = [];
 var prestationActuelle = null;
 var modalCtrl = new bootstrap.Modal(document.getElementById('modalPrestation'));
 
-// Charger les prestations validées
+
 fetch('/api/prestations')
     .then(function(r) { return r.json(); })
     .then(function(data) {
-        // On garde seulement les prestations validées
+        
         toutesPrestations = (data || []).filter(function(p) { return p.statut_validation === 1; });
         afficher(toutesPrestations);
     })
@@ -169,7 +169,7 @@ function ouvrir(p) {
     modalCtrl.show();
 }
 
-// Acheter — paiement Stripe
+
 function acheter() {
     if (!prestationActuelle) return;
 
@@ -179,7 +179,7 @@ function acheter() {
         body: JSON.stringify({
             id_prestation: prestationActuelle.id,
             nom: prestationActuelle.nom,
-            prix: prestationActuelle.prix * 100 // en centimes pour Stripe
+            prix: prestationActuelle.prix * 100 
         })
     })
     .then(function(r) { return r.json(); })

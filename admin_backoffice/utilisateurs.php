@@ -231,7 +231,7 @@ include 'includes/header.php';
             const id = document.getElementById("edit-id").value;
             const mdp = document.getElementById("mdp").value;
 
-            // Si création, le mot de passe est obligatoire
+            
             if (!id && !mdp) {
                 document.getElementById('msg-form').innerHTML = '<div class="alert alert-danger">Le mot de passe est obligatoire pour créer un utilisateur.</div>';
                 return;
@@ -248,7 +248,7 @@ include 'includes/header.php';
                 est_verifie: parseInt(document.getElementById("est_verifie").value)
             };
 
-            // POST si création, PUT si modification
+            
             const res = await fetch(id ? `${API}/${id}` : API, {
                 method: id ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },

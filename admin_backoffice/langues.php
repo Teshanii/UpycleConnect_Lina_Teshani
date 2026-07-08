@@ -94,8 +94,7 @@ include 'includes/header.php';
         const API_LANGUES = "/api/langues";
         const API_TRADUCTIONS = "/api/traductions";
 
-        // Liste des clés utilisées dans le site (à compléter au fur et à mesure)
-        // C'est cette liste qui sera affichée à l'admin pour qu'il traduise
+        
         const CLES_SITE = [
             // Navigation
             { cle: 'nav_accueil', defaut: 'Accueil' },

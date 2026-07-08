@@ -7,7 +7,7 @@ require_once '../config.php';
 
 \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
 
-// Données envoyées par le JS du catalogue
+
 $data       = json_decode(file_get_contents('php://input'), true);
 $id_demande = intval($data['id_demande']);
 $prix       = intval($data['prix']); // en centimes

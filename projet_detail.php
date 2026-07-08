@@ -1,11 +1,10 @@
 <?php
 session_start();
-// Page PUBLIQUE : tout le monde peut voir le détail, même sans compte.
-// On regarde juste si quelqu'un est connecté pour adapter le bouton "Participer".
+
 $estConnecte = isset($_SESSION['user_id']);
 $userId = $estConnecte ? $_SESSION['user_id'] : 0;
 
-// On récupère l'id du projet depuis l'URL (ex: projet_detail.php?id=5)
+
 $idProjet = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($idProjet === 0) {
     header('Location: galerie.php');
@@ -49,16 +48,15 @@ if ($idProjet === 0) {
         <p class="text-muted">Chargement des étapes...</p>
     </div>
 
-    <!-- Participants -->
     <h5 class="mt-4" style="color:var(--primary-green);">Les participants</h5>
     <div id="zone-participants">
         <p class="text-muted">Chargement...</p>
     </div>
 
-    <!-- Bouton participer -->
+   
     <div class="my-4" id="zone-bouton-participer"></div>
 
-    <!-- Message après action -->
+    
     <div id="msg"></div>
 
 </div>
@@ -71,9 +69,9 @@ function echapper(t) {
 var idProjet = <?php echo $idProjet; ?>;
 var estConnecte = <?php echo $estConnecte ? 'true' : 'false'; ?>;
 var userId = <?php echo $userId; ?>;
-var projetCourant = null; // on garde le projet en mémoire (pour savoir si participation ouverte)
+var projetCourant = null; 
 
-// 1. On charge le projet (on prend tous les projets et on cherche le bon)
+
 fetch('/api/projets')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -113,7 +111,6 @@ function afficherEntete(p) {
     document.getElementById('entete-projet').innerHTML = html;
 }
 
-// 2. On charge les étapes (déjà triées par ordre côté Go)
 fetch('/api/etapes?id_projet=' + idProjet)
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -138,7 +135,7 @@ fetch('/api/etapes?id_projet=' + idProjet)
         zone.innerHTML = html;
     });
 
-// 3. On charge les participants (on n'affiche que les acceptés)
+
 fetch('/api/participants?id_projet=' + idProjet)
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -161,7 +158,6 @@ fetch('/api/participants?id_projet=' + idProjet)
         zone.innerHTML = html;
     });
 
-// 4. Le bouton participer s'adapte selon la situation
 function afficherBoutonParticiper(p) {
     var zone = document.getElementById('zone-bouton-participer');
 
@@ -171,7 +167,7 @@ function afficherBoutonParticiper(p) {
         return;
     }
 
-    // Si l'utilisateur n'est PAS connecté → on l'invite à se connecter/s'inscrire
+    
     if (!estConnecte) {
         zone.innerHTML =
             '<div class="card p-3 text-center" style="background:var(--bg-light);">' +
@@ -183,7 +179,8 @@ function afficherBoutonParticiper(p) {
         return;
     }
 
-    // Si c'est le créateur lui-même → pas de bouton participer
+    
+
     if (p.id_createur === userId) {
         zone.innerHTML = '<div class="alert alert-info">Vous êtes le créateur de ce projet.</div>';
         return;

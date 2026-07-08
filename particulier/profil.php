@@ -94,7 +94,7 @@ var userEmail = "<?php echo $_SESSION['user_email'] ?? ''; ?>";
 var userRoleId = <?php echo $_SESSION['user_role'] ?? 4; ?>;
 var userData = null;
 
-// Charger les infos du profil
+
 fetch('/api/users')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -107,7 +107,7 @@ fetch('/api/users')
         }
     });
 
-// Charger les transactions du user
+
 fetch('/api/transactions?id_user=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -126,7 +126,7 @@ fetch('/api/transactions?id_user=' + userId)
                 ? '<span class="badge bg-warning text-dark">Remboursé</span>'
                 : '<span class="badge bg-secondary">' + t.statut + '</span>';
 
-            // On traduit le type en libellé lisible
+            
             var libelleType;
             if (t.type === 'atelier') {
                 libelleType = 'Atelier';
@@ -140,9 +140,7 @@ fetch('/api/transactions?id_user=' + userId)
                 libelleType = 'Paiement';
             }
 
-            // On n'autorise le remboursement que pour les paiements faits à la plateforme
-            // (abonnement Premium et ateliers). Les objets/prestations ne sont pas remboursables
-            // en ligne car un vendeur a déjà été crédité.
+            
             var actionRemboursement = '';
             if (t.statut === 'succeeded') {
                 if (t.type === 'abonnement' || t.type === 'atelier') {
@@ -173,7 +171,7 @@ fetch('/api/transactions?id_user=' + userId)
         document.getElementById('mes-paiements').innerHTML = '<p class="text-muted small">Impossible de charger les paiements.</p>';
     });
 
-// Demander un remboursement
+
 function demanderRemboursement(ref, idTransaction) {
     if (confirm('Demander un remboursement pour ce paiement ? L\'argent sera recrédité sur votre carte bancaire.')) {
         fetch('remboursement.php', {

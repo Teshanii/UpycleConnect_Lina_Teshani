@@ -177,32 +177,32 @@ function chargerProjets() {
 
             div.innerHTML = html;
 
-            // Charger les étapes et les demandes de participation de chaque projet
+            
             data.forEach(function(p) {
                 chargerEtapes(p.id);
                 chargerParticipants(p.id);
             });
         });
 }
-// Mettre en avant un projet (paiement Stripe)
+
 function sponsoriser(idProjet) {
     if (!confirm("Mettre ce projet en avant pendant 30 jours pour 100€ ?")) return;
     fetch('stripe_sponsoring.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prix: 10000, id_projet: idProjet }) // 10000 centimes = 100€
+        body: JSON.stringify({ prix: 10000, id_projet: idProjet }) 
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.url) {
-            window.location.href = data.url; // redirection vers Stripe
+            window.location.href = data.url; 
         } else {
             alert("Erreur lors de la création du paiement.");
         }
     });
 }
 
-// Charger les étapes d'un projet
+
 function chargerEtapes(idProjet) {
     fetch('/api/etapes?id_projet=' + idProjet)
         .then(function(r) { return r.json(); })
@@ -237,7 +237,7 @@ function chargerEtapes(idProjet) {
         });
 }
 
-// Charger les demandes de participation d'un projet
+
 function chargerParticipants(idProjet) {
     fetch('/api/participants?id_projet=' + idProjet)
         .then(function(r) { return r.json(); })
@@ -251,7 +251,7 @@ function chargerParticipants(idProjet) {
             var html = '<h6 class="text-muted small mt-2">Demandes de participation :</h6><ul class="list-group">';
             data.forEach(function(p) {
                 if (p.statut === 'en_attente') {
-                    // Demande en attente → boutons accepter/refuser
+                    
                     html += '<li class="list-group-item d-flex justify-content-between align-items-center">' +
                         '<span><strong>' + echapper(p.nom_user) + '</strong>' + (p.tache ? ' — ' + echapper(p.tache) : '') + '</span>' +
                         '<span>' +
@@ -268,7 +268,7 @@ function chargerParticipants(idProjet) {
         });
 }
 
-// Accepter ou refuser une demande de participation
+
 function repondreParticipant(idParticipation, statut, tache, idProjet) {
     fetch('/api/participants/' + idParticipation, {
         method: 'PUT',
@@ -279,7 +279,7 @@ function repondreParticipant(idParticipation, statut, tache, idProjet) {
     });
 }
 
-// Créer un projet (avec upload de la photo de couverture)
+
 function creerProjet() {
     var titre = document.getElementById('titre-projet').value.trim();
     var desc = document.getElementById('desc-projet').value.trim();
@@ -303,7 +303,7 @@ function creerProjet() {
         return;
     }
 
-    // Si une photo de couverture est choisie, on l'upload d'abord
+    
     if (fichier) {
         var formData = new FormData();
         formData.append('photo', fichier);
@@ -329,7 +329,7 @@ function envoyerProjet(titre, desc, adresse, ville, ouvert, photoCouverture, deb
             ouvert_participation: ouvert,
             photo_couverture: photoCouverture,
             id_createur: userId,
-            date_debut: debut.replace('T', ' '), // format MySQL (2026-07-05 14:00)
+            date_debut: debut.replace('T', ' '),
             date_fin: fin.replace('T', ' ')
         })
     }).then(function(res) {
@@ -348,10 +348,10 @@ function envoyerProjet(titre, desc, adresse, ville, ouvert, photoCouverture, deb
     });
 }
 
-// Marquer un projet comme terminé
+
 function terminerProjet(id) {
     if (!confirm("Marquer ce projet comme terminé ?")) return;
-    // On récupère d'abord le projet pour garder ses infos, puis on change juste le statut
+    
     fetch('/api/projets?id_createur=' + userId)
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -375,14 +375,14 @@ function terminerProjet(id) {
         });
 }
 
-// Supprimer un projet
+
 function supprimerProjet(id) {
     if (!confirm("Supprimer cette création et toutes ses étapes ?")) return;
     fetch('/api/projets/' + id, { method: 'DELETE' })
         .then(function(res) { if (res.ok) chargerProjets(); });
 }
 
-// Ouvrir le modal pour ajouter une étape
+
 function ouvrirEtape(idProjet) {
     projetEnCours = idProjet;
     document.getElementById('titre-etape').value = '';
@@ -393,7 +393,7 @@ function ouvrirEtape(idProjet) {
     modalCtrl.show();
 }
 
-// Enregistrer une étape (upload photo + appel API)
+
 function enregistrerEtape() {
     var titre = document.getElementById('titre-etape').value.trim();
     var desc = document.getElementById('desc-etape').value.trim();
@@ -437,7 +437,7 @@ function envoyerEtape(titre, desc, ordre, image) {
     });
 }
 
-// Supprimer une étape
+
 function supprimerEtape(id, idProjet) {
     if (!confirm("Supprimer cette étape ?")) return;
     fetch('/api/etapes/' + id, { method: 'DELETE' })

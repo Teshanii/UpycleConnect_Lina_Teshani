@@ -13,19 +13,19 @@ $prenom    = $_SESSION['user_prenom'];
 $email     = $_SESSION['user_email'];
 $date      = date('d/m/Y');
 
-// On détermine le libellé de la ligne de facture
+
 if ($id_event > 0) {
-    // Cas atelier : on récupère le titre depuis la base
+    
     $pdo = new PDO('mysql:host=database;dbname=upcycle_connect', 'root', 'root');
     $stmt = $pdo->prepare("SELECT titre FROM evenements WHERE id_event = ?");
     $stmt->execute([$id_event]);
     $ligne = $stmt->fetchColumn() ?: 'Atelier';
 } else {
-    // Cas abonnement / prestation / autre : on prend le libellé passé en paramètre
+    
     $ligne = $libelle !== '' ? $libelle : 'Achat UpcycleConnect';
 }
 
-// Générer le PDF avec FPDF
+
 $pdf = new FPDF();
 $pdf->AddPage();
 $pdf->SetFont('Arial', 'B', 20);

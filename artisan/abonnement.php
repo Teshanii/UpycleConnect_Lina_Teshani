@@ -78,17 +78,17 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 3) {
 <script>
 var userId = <?php echo $_SESSION['user_id']; ?>;
 
-// On regarde l'abonnement actuel pour afficher le bon état
+
 fetch('/api/abonnement?id_user=' + userId)
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.abonnement === 'premium') {
-            // Déjà premium : on masque le bouton et on affiche le bandeau
+            
             document.getElementById('banniere-premium').classList.remove('d-none');
             document.getElementById('badge-premium').classList.remove('d-none');
             document.getElementById('btn-premium').classList.add('d-none');
         } else {
-            // Gratuit : on montre que c'est l'offre actuelle
+            
             document.getElementById('badge-gratuit').classList.remove('d-none');
         }
     });
@@ -98,7 +98,7 @@ function passerPremium() {
     btn.disabled = true;
     btn.innerText = 'Redirection vers le paiement...';
 
-    // On crée la session de paiement Stripe (15€ = 1500 centimes)
+    
     fetch('stripe_abonnement.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -107,7 +107,7 @@ function passerPremium() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.url) {
-            // On redirige vers la page de paiement Stripe
+            
             window.location.href = data.url;
         } else {
             document.getElementById('msg').innerHTML = '<div class="alert alert-danger">Erreur lors de la création du paiement.</div>';

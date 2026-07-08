@@ -5,7 +5,7 @@ require_once '../includes/db.php';
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-// On récupère le document ET on vérifie qu'il appartient bien à l'utilisateur connecté
+
 $stmt = $pdo->prepare("SELECT nom_fichier FROM documents WHERE id_document = ? AND id_user = ?");
 $stmt->execute([$id, $_SESSION['user_id']]);
 $doc = $stmt->fetch(PDO::FETCH_ASSOC);
